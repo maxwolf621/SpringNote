@@ -223,23 +223,53 @@ color: green;
 ###### tags: `Hibernate`
 # Database table relationships
 [TOC]
- 
+
+
+[Reference](https://stackoverflow.com/questions/3113885/difference-between-one-to-many-many-to-one-and-many-to-many)
+
 - one-to-many 
      > is the most common relationship, and ==it associates a row from a parent table to multiple rows in a child table.==  
 - one-to-one 
      >requires the child table Primary Key to be associated via a Foreign Key with the parent table Primary Key column.  
 - many-to-many 
    > requires a link table containing two Foreign Key columns that reference the two different parent tables.  
+[Many To Many Association](/tJJtCj7_Rs6XlLsqLOtG2A)
+## Direction One to Many and Many to Many 
+
+One-to-Many: One Person Has Many Skills, a Skill is not reused between Person(s)
+- Unidirectional: A Person can directly reference Skills via its Set
+- Bidirectional: Each "child" Skill has a single pointer back up to the Person (which is not shown in your code)
+
+Many-to-Many: One Person Has Many Skills, a Skill is reused between Person(s)
+- Unidirectional: A Person can directly reference Skills via its Set
+- Bidirectional: A Skill has a Set of Person(s) which relate to it.
+
+In a One-To-Many relationship, one object is the "parent" and one is the "child". The parent controls the existence of the child.   
+
+In a Many-To-Many, the existence of either type is dependent on something outside the both of them (in the larger application context).  
 
 
-## `@OneToMany`
+Many-To-Many Bidirectional relationship does not need to be symmetric! 
+- That is, a bunch of People could point to a skill, but the skill need not relate back to just those people. Typically it would, but such symmetry is not a requirement. Take love
 
-### [Link of Reference](https://vladmihalcea.com/the-best-way-to-map-a-onetomany-association-with-jpa-and-hibernate/)
+
+
+## Attribute
+
+- Orphan Removal
+    > JPA 2 supports an additional and more aggressive remove cascading mode which can be specified using the orphanRemoval element of the @OneToOne and @OneToMany annotations
+    >> If `orphanRemoval=true` is specified the disconnected Address instance is automatically removed. 
+    >> This is useful for cleaning up dependent objects (e.g. Address) that should not exist without a reference from an owner object (e.g. Employee).
+
 
 For example
 >![](https://i.imgur.com/Db6bn7z.png)
 >> A Post can have many comments
+- Note that the relationship is based on the Foreign Key column (e.g., post_id) in the child table.
 
+## `@OneToMany`
+
+[Link of Reference](https://vladmihalcea.com/the-best-way-to-map-a-onetomany-association-with-jpa-and-hibernate/)
 
 #### Type of `@OneToMany`
 1. a unidirectional `@OneToMany `association
@@ -248,22 +278,16 @@ For example
 - One Side we can call it `Father Entity` or `MappedBy Side`
 - Many Side we can call it `Child Entity` or `Owning Side`
 
-#### Why Call it Father(MappedBy) and Child(Owning)?
+## Father(MappedBy) and Child(Owning)?
 > Concept
-> : If Father doesn't exist then Child will not exist  
-
-Because `Foreign Key` in Child Entity (which references to Father entity's Primary key)
-> Child's Entity is dependent on Father Entity's Primary
-
+> : If Father doesn't exist then Child will not exist which means child must be dependent on father   
+> - The Foreign Key in Child Entity (which references to Father entity's Primary key)
 
 - So as in database
     > To **identify** Child Entity (Weak Entity).  
-    > The Foreign key in Child Entity must be mapped by the primary Key in Father Entity. 
-    > `Mapped by` means `Maintained By`
+    > The Foreign key in Child Entity must map to the primary Key in Father Entity. 
 
-To see why bidirectional is better than others, we start from Unidirectional association
 ### Unidirectional `@OneToMany`
-
 ```java=
 /* MappedBy Side */
 @Entity(name = "Post")
@@ -275,6 +299,8 @@ public class Post {
     private String title;
     
     // A post can have many Comments
+    //    orphanRemovel every comment should reference to post
+    //    cascadeType.all if post not exists then delete comments
     @OneToMany(cascade = CascadeType.ALL,
                orphanRemoval = true)
     private List<PostComment> comments = new ArrayList<>();
@@ -282,7 +308,7 @@ public class Post {
     public List<PostComment> getComments(){
         return comments;
     }
-    // ....
+    // other setter and getter ...
 }
 
 /* Owning Side */
@@ -311,7 +337,7 @@ Hibernate will execute SQL statements like this
 insert into post (title, id)
 values ('First post', 1)
 
-/* 3 Comments  */
+/* Create 3 Comments  */
 insert into post_comment (review, id)
 values ('My first review', 2)
 insert into post_comment (review, id)
@@ -329,19 +355,17 @@ values (1, 4)
 ```
 ![](https://i.imgur.com/935wP0Z.png)
 - So we got a extra table to link other two tables with extra two of Foreign Keys
-
-
+- Hibernate needs to create post and comments tables and then mapping these two tables together
 
 ## Unidirectional `@OneToMany` with `@JoinColumn`
 
-with `@JoinColumn` annotation it helps Hibernate to know that **there is a post_id `Foreign Key` column in the `post_comment` table**
+When using a unidirectional one-to-many association, only the parent side maps the association.
 
-- We just need to add `@JoinColumn` in MappedBy Side
+only the Post entity will define a `@OneToMany` association to the child PostComment entity:
 
+Just add `@JoinColumn` to our mappedby side and owning side stays the same
 ```java=
 @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-// tell hibernate there is a foreign key 
-//     called `post_id` in post_comment table
 @JoinColumn(name = "post_id")
 private List<PostComment> comments = new ArrayList<>();
 ```
@@ -412,14 +436,20 @@ private List<Task> tasks;
 ![](https://i.imgur.com/0B7yVLD.png)
 
 
-## Bidirectional `@OneToMany(MappedBy)`
-
-- The `mappedBy` element defines a bidirectional relationship.  
-    > This attribute allows you to refer the associated entities from both sides
+## Bidirectional `@OneToMany()`
 
 **Every bidirectional association must have one owning side only (the child side), the other one being referred to as the inverse (or the mappedBy) side.**
-- Owning Side ( Child ==*(Many)*== entity)
-- mappedBy Side ( Fahter ==*(is referred by child entity)*== entity) 
+
+- Using `mappedBy` element defines a bidirectional relationship.  
+    > This attribute allows you to refer the associated entities from both sides
+
+post references to postcomment  
+postcomment references to post
+![](https://i.imgur.com/k6ZZIgv.png)
+- the `@OneToMany` with the mappedBy attribute set, you have a bidirectional association. In our case, both the Post entity has a collection of PostComment child entities, and the child PostComment entity has a reference back to the parent Post entity
+
+
+
 
 ```java=
 @Entity(name = "Post")
@@ -431,7 +461,7 @@ public class Post {
     private String title;
  
     @OneToMany(
-        // post_comment's FK is maintained by post
+        // mappedBy 'post' property in PostComment
         mappedBy = "post",
         cascade = CascadeType.ALL,
         orphanRemoval = true
@@ -439,7 +469,6 @@ public class Post {
     private List<PostComment> comments = new ArrayList<>();
  
     // To synchronize both sides of the bidirectional association.
-    //     we need the followings
     public void addComment(PostComment comment) {
         comments.add(comment);
         comment.setPost(this);
@@ -475,8 +504,7 @@ public class PostComment {
 }
 ```
 - With `@JoinColumn` we indicate hibernate that child entity (post_comment) **must have two keys (PK and FK)**
-- With attribute `mappedBy="post"` **tells hibernate that post's PK is used/referenced by child entity's FK**
-    > which means post maintains post_comment's FK
+
 
 By property of `mappedBy` , the hibernate will do like 
 ```sql=
@@ -494,9 +522,22 @@ values (1, 'My third review', 4)
 
 
 ## Usage of `@JoinColumn`
+[Reference](https://stackoverflow.com/questions/11938253/jpa-joincolumn-vs-mappedby)
 
-Syntax 
-`@JoinColum( name = Relation_AttributeName, referencedColumnName = Where Relation_AttributeName refers to)`
+#### JoinColumn and MappedBy
+
+The annotation `@JoinColumn(name = x , referencedColumnName = y)` indicates that this entity is the owner of the relationship **(that is: the corresponding table has a column with a foreign key `x` to the referenced table `y`)**
+
+The attribute mappedBy indicates that the entity in this side is the inverse of the relationship, and **the owner(控制權) resides in the other entity.**  
+- Simply says To Access the other table from the class with mappedBy (bidirectional relationship).
+
+Syntax   
+```java
+@JoinColum( name = MY_Fk_name , referencedColumnName = Reference To )
+private ReferenceToTableName ref(){
+    //...
+}
+```
 
 For example 
 A Company can have lot of branches
@@ -512,7 +553,7 @@ public class Company {
                cascade = CascadeType.ALL, 
                fetch = FetchType.LAZY, 
                orphanRemoval = true)
-    @JoinColumn(name = "companyId, referencedColumnName = "id")
+    @JoinColumn(name = "companyId", referencedColumnName = "id")
     private List<Branch> branches = new ArrayList<>();
     //...
 }
@@ -530,8 +571,15 @@ public class Branch {
 ```
 - The Entity inside `@JoinColum` , attribute `name` refers to foreign key column name which is `companyId` and attribute `rferencedColumnName` indicates the primary key `id` of the entity company to which the foreign key `companyId` refers  
 
-> [Synchronize](https://vladmihalcea.com/jpa-hibernate-synchronize-bidirectional-entity-associations/)
-> [EagerFetching](https://vladmihalcea.com/eager-fetching-is-a-code-smell/)
+### Two one way relationship 
 
+By specifying the `@JoinColumn` on both models you don't have a two way relationship. 
+
+- You have two one way relationships, and a very confusing mapping of it at that. You're telling both models that they "own" the IDAIRLINE column.  
+Really only one of them actually should! 
+
+> [Synchronize](https://vladmihalcea.com/jpa-hibernate-synchronize-bidirectional-entity-associations/)  
+> [EagerFetching](https://vladmihalcea.com/eager-fetching-is-a-code-smell/)  
+> [MappedBy](https://stackoverflow.com/questions/9108224/can-someone-explain-mappedby-in-jpa-and-hibernate#:~:text=MappedBy%20signals%20hibernate%20that%20the,constraint%20to%20the%20other%20table.)  
 
 
