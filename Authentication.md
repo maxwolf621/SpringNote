@@ -193,12 +193,76 @@ color: green;
 
 It will create ThreadLocal to store current Spring Security's Context (Containing any related with Spring Security) for Current thread
 
-#### SecurityContext
-`SecurityContext` 持有的是代表當前使用者相關資訊的 `Authentication` 的Reference。
+#### Authentication 
+Spring Security 使用一個 `Authentication` 物件來描述當前使用者的相關資訊(details, Credentials, principals, authrotities of the principal)
+
+> Authentication 物件不需要我們自己去建立，在與系統互動的過程中，Spring Security 會自動為我們建立相應的 Authentication 物件(via `UserNamePasswordAuthenticationToken`)，然後賦值給當前的 SecurityContext。
+
+```java
+public interface Authentication extends Principal, Serializable {    
+    /**
+	 - Set by an <code>AuthenticationManager</code> to indicate the authorities that the principal has been granted. 
+	 - Note that classes should not rely on this value as being valid unless it has been set by a trusted <code>AuthenticationManager</code>.
+	 - @return the authorities granted to the principal, or an empty collection if the token has not been authenticated. Never null.
+	 */
+	Collection<? extends GrantedAuthority> getAuthorities();
+
+	/**
+	 * The credentials that prove the principal is correct. 
+	 * This is usually a password,
+	 * but could be anything relevant to the <code>AuthenticationManager</code>. 
+	 * Callers are expected to populate the credentials.
+	 */
+	Object getCredentials();
+
+	/**
+	 * Stores additional details about the authentication request. 
+	 * These might be an IP address, certificate serial number etc.
+	 * @return additional details about the authentication request, 
+	 * or null if not used
+	 */
+	Object getDetails();
+
+	/**
+	 - The identity of the principal being authenticated. 
+	 - In the case of an authentication request with username and password, this would be the username. 
+	 - Callers are expected to populate the principal for an authentication request.
+	 - The <tt>AuthenticationManager</tt> implementation will often return an
+	   `Authentication` containing richer information as the principal for use by the application. 
+	 - Many of the authentication providers will create a @code UserDetails object as the principal.
+	 */
+	Object getPrincipal();
 
 
-Spring Security 使用一個 `Authentication` 物件來描述當前使用者的相關資訊，而 
-- Authentication 物件不需要我們自己去建立，在與系統互動的過程中，Spring Security 會自動為我們建立相應的 Authentication 物件(via `UserNamePasswordAuthenticationToken`)，然後賦值給當前的 SecurityContext。
+	/**
+	 - Used to indicate to {@code AbstractSecurityInterceptor} whether it should present the authentication token to the <code>AuthenticationManager</code>. 
+	 - Typically an <code>AuthenticationManager</code> (or, more often, one of its
+	   <code>AuthenticationProvider</code>s) will return an immutable authentication token
+	 - after successful authentication, in which case that token can safely return
+	   <code>true</code> to this method. 
+	 - Returning <code>true</code> will improve performance, as calling the <code>AuthenticationManager</code> for every request will no longer be necessary.
+	 - For security reasons, implementations of this interface should be very careful about returning <code>true</code> from this method unless they are either
+	   immutable, or have some way of ensuring the properties have not been changed since original creation.
+	 - @return true if the token has been authenticated and the <code>AbstractSecurityInterceptor</code> does not need to present the token to the
+	   <code>AuthenticationManager</code> again for re-authentication.
+	 */
+	boolean isAuthenticated();
+
+	/**
+	 - Implementations should always allow this method to be called with a
+	   <code>false</code> parameter, as this is used by various classes to specify the
+	   authentication token should not be trusted. 
+	 - If an implementation wishes to reject an invocation with a <code>true</code> parameter 
+	   (which would indicate the authentication token is trusted - a potential security risk) the implementation
+	   should throw an {@link IllegalArgumentException}.
+	 - @throws IllegalArgumentException if an attempt to make the authentication token
+	   trusted (by passing <code>true</code> as the argument) is rejected due to the
+	 */
+	void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException;
+}
+```
+
+
 
 To get a Authentication User from Spring Security using `.getPrincipal()`
 ```java=
@@ -215,23 +279,25 @@ if (principal instanceof UserDetails) {
 - `.getContext()` : get Current Security Context  
 - `.getAuthentication()`: Obtains the currently **authenticated principal**, or an authentication **request token**
 
-The identity of the principal being authenticated. 
-:::info
-- **Many of the ==authentication providers== will create a `UserDetails` object as the principal.(so we can access the databse)**  
+#### SecurityContext
+`SecurityContext` 持有的是代表當前使用者相關Authentication資訊的Reference。
 
-- **The `AuthenticationManager` implementation will often return an Authentication(object Authentication) containing richer information as the principal for use by the application**
+
+:::info
+- **Many of the ==authentication providers== will create a `UserDetails` object as the principal.(so we can access the DataBse)**  
+- **The `AuthenticationManager` implementation will often return an Authentication objecti containing information as the principal for use by the application**
 :::
 
 [More about User's Authorization](/Pi3Ra4aQQ_2h4P8IjVfpJA)
 
 ## HTTP basic's Authentication
 
-Request directly tells the server client's password and username via Header like this
+Request directly tells the server client's password and username via Header as the following
 ```json=
  GET /secret HTTP/1.1
  Authorization: Basic QWxpY2U6MTIzNDU2
 ```
-> `QWxpY2U6MTIzNDU2` is Base64encode(password and username)
+- `QWxpY2U6MTIzNDU2` is Base64encode(password and username)
 
 Response if password and username is correct
 ```json=
@@ -301,7 +367,6 @@ If client sends the request with same `norce` as last time, server will reject c
 
 ![](https://i.imgur.com/S8nhgsZ.png)
 
-
 - What we need Security Builder?
     > To build up out filter (chains) via `SecurityConfigurer` Set
     > ##### Filter Chain 
@@ -310,23 +375,21 @@ If client sends the request with same `norce` as last time, server will reject c
 
 There are THREE Security Builders that are provided by Spring Security
 1. `WebSecurity`
-    >Each  `WebSecurityConfigurerAdapter` will create a Filter (To form a Filter Chain)  
+    >Each `WebSecurityConfigurerAdapter` will create a Filter (To form a Filter Chain)  
     >Each `WebSecurityConfigurerAdapter` will create a new `HttpSecurity`
     >![](https://i.imgur.com/nLBXbID.png)
-
-
 2. `HttpSecurity`
-    > As illustration, it contains different Security Configurers to from a Security Configuere Set
+    > As illustration, it contains different Security Configurers to from a Security Configuer Set
 3. `AuthenticationManagerBuilder`
     > Spring Security provides some configuration helpers to quickly get common authentication manager features set up in your application. 
-    >> The most commonly used helper is the AuthenticationManagerBuilder, which is great for setting up in-memory, JDBC, or LDAP user details or for adding a custom UserDetailsService
+    >> The most commonly used helper is the `AuthenticationManagerBuilder`, which is great for setting up in-memory, JDBC, or LDAP user details or for adding a custom `UserDetailsService`
 
 
 ### WebSecurityConfigurerAdapter (To activate Spring Security)
 
 [More details](/Pi3Ra4aQQ_2h4P8IjVfpJA)
  
-- WebSecurityConfigurerAdapter` provides a set of methods to enable specific web security configuration via different Security Builders(e.g HttpSecurity ...) 
+- WebSecurityConfigurerAdapter` provides a set of methods to enable specific web security configuration via different Security Builders (e.g HttpSecurity ...) 
 
 For example
 ```java=
@@ -366,17 +429,16 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 ```
 :::info
 When clients send Request, it will be filtered by FilterSecurityInterceptor Filter with `WebSecurityConfigurerAdapter`.
-
-> Once the Request's URL that requires the authentication則會從SecurityContextHolder 取得這 User 的Authentication，判斷是否已經認證過，決定能不能 access。
+> Once the Request's URL that requires the authentication則會從SecurityContextHolder取得此Client的Authentication，判斷是否已經認證過，決定Client能不能access。
 :::
  
 ## AuthenticationManager and GrantedAuthority
 [GoodeReference](https://blog.csdn.net/weixin_42281735/article/details/105289155)
 
-> Relationship of AuthenticationManager, ProviderManager and AuthenticationProviders
->![](https://i.imgur.com/e5L19Cv.png)
-- Spring Security makes the Authentication of Client's Request using `ProviderManager` that implements `AuthenticationManager`.  
-- `ProviderManager` then *delegates* the numbers of `AuthticationProvider`**s** to do the Authentication
+- Relationship of `AuthenticationManager`, `ProviderManager` and `AuthenticationProviders`
+    >![](https://i.imgur.com/e5L19Cv.png)
+    > - Spring Security makes the Authentication of Client's Request using `ProviderManager` that implements `AuthenticationManager`.  
+    > - `ProviderManager` then *delegates* the numbers of `AuthticationProvider`**s** to do the Authentication
 
 ![](https://i.imgur.com/wddCsgT.png)
 
