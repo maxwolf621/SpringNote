@@ -27,70 +27,6 @@ body > .ui-infobar {
     color: #7FFFD4;
 }
 
-
-/*---FORM---*/
-  .form-control {
-    background: #333;
-    color: #fff;
-  }
-
-  .form-control::placeholder,
-  .form-control::-webkit-input-placeholder,
-  .form-control:-moz-placeholder,
-  .form-control::-moz-placeholder,
-  .form-control:-ms-input-placeholder {
-    color: #eee;
-    
-  }
-
-
-
-/* navbar for bearbeiten, beides, Anzeigen 當游標指向這些物件時的顏色 */
-.navbar .btn-group label.btn-default:focus,
-.navbar .btn-group label.btn-default:hover {
-background-color: #273746;
-color: #eee;
-border-color: yellow;
-}
-
-/* navbar for bearbeiten, beides, Anzeigen while activing */
-.navbar .btn-group label.active {
-background-color: #555;
-color: #eee;
-border-color: ;
-}
-
-.navbar .btn-group label.active:focus,
-.navbar .btn-group label.active:hover {
-background-color: #555;
-color: #eee;
-border-color: #555;
-}
-
-.navbar-default .btn-link:focus,
-.navbar-default .btn-link:hover {
-    color: #eee;
-}
-
-.navbar-default .navbar-nav>.open>a,
-.navbar-default .navbar-nav>.open>a:focus,
-.navbar-default .navbar-nav>.open>a:hover {
-background-color: #555;
-}
-
-.dropdown-header {
-color: #aaa;
-}
-
-.dropdown-menu {
-background-color: #222;
-border: 1px solid #555;
-border-top: none;
-}
-.dropdown-menu>li>a {
-color: #eee;
-}
-
 .dropdown-menu>li>a:focus,
 .dropdown-menu>li>a:hover {
 background-color: #555555;
@@ -219,45 +155,50 @@ color: green;
 # Authentication & Authorization
 [TOC]
 
-[Type of Authentication](https://blog.csdn.net/gdp12315_gu/article/details/79905424)
-[UserDetailsService](https://www.javadevjournal.com/spring-security/spring-security-authentication-providers/)
-[reference](https://matthung0807.blogspot.com/2019/09/spring-security-userdetailsservice.html)
-[Definition of User, Pricipal, Subject](https://matthung0807.blogspot.com/2018/03/spring-security-principal.html)
-[Authentication in HTTP format ](https://blog.csdn.net/kiwi_coder/article/details/28677651)
+[Type of Authentication](https://blog.csdn.net/gdp12315_gu/article/details/79905424)  
+[UserDetailsService](https://www.javadevjournal.com/spring-security/spring-security-authentication-providers/)  
+[reference](https://matthung0807.blogspot.com/2019/09/spring-security-userdetailsservice.html)  
+[Definition of User, Pricipal, Subject](https://matthung0807.blogspot.com/2018/03/spring-security-principal.html)  
+[Authentication in HTTP format ](https://blog.csdn.net/kiwi_coder/article/details/28677651)  
 
 ## Definitions of Authentication and Authorization
-
-[Reference](https://blog.csdn.net/kiwi_coder/article/details/28677651)
-
 - Authentication 
      > To prove who are you
 - Authorization
     > To give a permission  (thing you can do, thing you cant do)
 
 
-### Definitions for Authentication 
+## Definitions in Authentication 
 
 - Subject 
     > **In a security context, a subject is any entity that requests access to an object**. 
     > These are generic terms used to denote the thing requesting access and the thing the request is made against.  
-    > **When you log onto an application you are the subject and the application is the object**.  
-    >>for example when someone knocks on your door the visitor is the subject requesting access and your home is the object access is requested of.
-
+    > ==When you log onto an application you are the subject and the application is the object==.  
+    >>For example  
+    >>when someone knocks on your door the visitor is the subject requesting access and your home is the object access is requested of.
 - Principal 
     >**A subset of subject that is represented by an account, role or other unique identifier.** 
     >> When we get to the level of implementation details, **principals are the unique keys we use in access control lists.**  
     > *They may represent human users, automation, applications, connections, etc.*
-
 - User 
-    > **A subset of principal usually referring to a human operator.**
-    > The distinction is blurring over time because the words "user" or "user ID" are commonly interchanged with "account".
-    >  However, when you need to make the distinction between the broad class of things that are principals and the subset of these that are interactive operators driving transactions in a non-deterministic fashion, "user" is the right word.
+    > **A subset of principal usually referring to a human operator.**  
+    > The distinction is blurring over time because the words "user" or "user ID" are commonly interchanged with "account".  
+    >  However, when you need to make the distinction between the broad class of things that are principals and the subset of these that are interactive operators driving transactions in a non-deterministic fashion, "user" is the right word.  
 
-## Object Authentication
+## Authentication Architecture Components
 
-Spring Security 使用一個 Authentication 物件來描述當前使用者的相關資訊，而 SecurityContext 持有的是代表當前使用者相關資訊的 Authentication 的引用。
+![](https://i.imgur.com/XSbxJTh.png)
 
-這個 Authentication 物件不需要我們自己去建立，在與系統互動的過程中，Spring Security 會自動為我們建立相應的 Authentication 物件(via `UserNamePasswordAuthenticationToken`)，然後賦值給當前的 SecurityContext。
+### SecurityContextHolder
+
+It will create ThreadLocal to store current Spring Security's Context (Containing any related with Spring Security) for Current thread
+
+#### SecurityContext
+`SecurityContext` 持有的是代表當前使用者相關資訊的 `Authentication` 的Reference。
+
+
+Spring Security 使用一個 `Authentication` 物件來描述當前使用者的相關資訊，而 
+- Authentication 物件不需要我們自己去建立，在與系統互動的過程中，Spring Security 會自動為我們建立相應的 Authentication 物件(via `UserNamePasswordAuthenticationToken`)，然後賦值給當前的 SecurityContext。
 
 To get a Authentication User from Spring Security using `.getPrincipal()`
 ```java=
@@ -271,8 +212,8 @@ if (principal instanceof UserDetails) {
     String username = principal.toString();
 }
 ```
-> `.getContext()` : get Current Security Context  
-> `.getAuthentication()`: Obtains the currently **authenticated principal**, or an authentication **request token**
+- `.getContext()` : get Current Security Context  
+- `.getAuthentication()`: Obtains the currently **authenticated principal**, or an authentication **request token**
 
 The identity of the principal being authenticated. 
 :::info
@@ -377,14 +318,15 @@ There are THREE Security Builders that are provided by Spring Security
 2. `HttpSecurity`
     > As illustration, it contains different Security Configurers to from a Security Configuere Set
 3. `AuthenticationManagerBuilder`
-    > Via InMemory、Jdbc or Ldap configurer，to build a Authentication
+    > Spring Security provides some configuration helpers to quickly get common authentication manager features set up in your application. 
+    >> The most commonly used helper is the AuthenticationManagerBuilder, which is great for setting up in-memory, JDBC, or LDAP user details or for adding a custom UserDetailsService
 
 
-### WebSecurityConfigurerAdapter
+### WebSecurityConfigurerAdapter (To activate Spring Security)
 
 [More details](/Pi3Ra4aQQ_2h4P8IjVfpJA)
  
-> `WebSecurityConfigurerAdapter` provides a set of methods to enable specific web security configuration via different Security Builders(e.g HttpSecurity ...) .
+- WebSecurityConfigurerAdapter` provides a set of methods to enable specific web security configuration via different Security Builders(e.g HttpSecurity ...) 
 
 For example
 ```java=
@@ -428,23 +370,37 @@ When clients send Request, it will be filtered by FilterSecurityInterceptor Filt
 > Once the Request's URL that requires the authentication則會從SecurityContextHolder 取得這 User 的Authentication，判斷是否已經認證過，決定能不能 access。
 :::
  
-## Interface UserDetailsService
+## AuthenticationManager and GrantedAuthority
+[GoodeReference](https://blog.csdn.net/weixin_42281735/article/details/105289155)
 
-![](https://i.imgur.com/wddCsgT.png)
-![](https://i.imgur.com/If4HFFG.png)
-
+> Relationship of AuthenticationManager, ProviderManager and AuthenticationProviders
+>![](https://i.imgur.com/e5L19Cv.png)
 - Spring Security makes the Authentication of Client's Request using `ProviderManager` that implements `AuthenticationManager`.  
 - `ProviderManager` then *delegates* the numbers of `AuthticationProvider`**s** to do the Authentication
 
-==Authentication provider's implementations are responsible to perform a specific authentication==
+![](https://i.imgur.com/wddCsgT.png)
+
+### The whole Authentication Logic
+
+![](https://i.imgur.com/IFhrSwP.png)
+![](https://i.imgur.com/If4HFFG.png)
+
+#### A Authentication
+```java=
+Authentication authenticate(Authentication authentication)
+      throws AuthenticationException;
+```
+- It encapusulates userId and password from Client's request as an instance of Authentication
+
+#### Authentication provider's implementations are responsible to perform a specific authentication
 ```java=
 public interface AuthenticationProvider {
     Authentication authenticate(Authentication authentication) throws AuthenticationException;
     boolean supports(Class<?> authentication);
 }
 ```
-> There are many different `AuthenticationProvider` implementations (e.g. `DaoAuthenticationProvider` ... ) for a specific authentication
->> for example `DaoAuthenticationProvider` (dependency)uses the `UserDetailsService` to retrieve user information a username and password.  
+- There are many different `AuthenticationProvider` implementations (e.g. `DaoAuthenticationProvider` ...etc ) for a specific authentication *(of the client's request)*
+    > for example `DaoAuthenticationProvider` (dependency)uses the `UserDetailsService` to retrieve user information a username and password.(as the above figure)  
   
 ```java=
 public interface UserDetailsService {
@@ -452,9 +408,96 @@ public interface UserDetailsService {
     UserDetails loadUserByUsername(String var1) throws UsernameNotFoundException;
 }
 ```
-> `loadUserByUsername` : using `UserDetails` and `JpaRepository` to query database to compare with information from client's request
+- `loadUserByUsername` 
+    > using `UserDetails` and `JpaRepository` to query DataBase to compare with information from client's request
 
-### Customize Authentication Provider implements UserDetailsService
+### DaoAuthenticationProvider and AtuhenticationBuilder
+[SourceCode](https://github.com/spring-projects/spring-security/blob/main/core/src/main/java/org/springframework/security/authentication/dao/DaoAuthenticationProvider.java)
+```java=
+/* To encode Password */
+private PasswordEncoder passwordEncoder;
+
+/* To retrive User Information */
+private UserDetailsService userDetailsService;
+protected final UserDetails retrieveUser(String username,
+    UsernamePasswordAuthenticationToken authentication)
+    throws AuthenticationException {
+  UserDetails loadedUser;
+  try {
+    loadedUser = 
+        this.getUserDetailsService().loadUserByUsername(username);
+  }
+  ....
+  if (loadedUser == null) {
+    throw new InternalAuthenticationServiceException(
+        "UserDetailsService returned null, which is an interface contract violation");
+  }
+  return loadedUser;
+}
+```
+
+Spring Security provides a variety of options for performing authentication. These follow a simple contract – an Authentication request is processed by an AuthenticationProvider and a fully authenticated object with full credentials is returned.
+
+The standard and most common implementation is the DaoAuthenticationProvider – which retrieves the user details from a simple, read-only user DAO – the UserDetailsService. This User Details Service only has access to the username in order to retrieve the full user entity. This is enough for most scenarios.
+
+- **More custom scenarios will still need to access the full Authentication request to be able to perform the authentication process. For example, when authenticating against some external, third party service (such as Crowd) – both the username and the password from the authentication request will be necessary.**
+    - To deal with such we [use builder](https://www.baeldung.com/spring-security-authentication-provider)
+### AbstractUserDetailsAuthenticationProvider
+
+```java=
+// as we said before instance of Authentication containing user's information
+public Authentication authenticate(Authentication authentication)
+    throws AuthenticationException {
+  
+  // Determine username
+  String username = (authentication.getPrincipal() == null) ? "NONE_PROVIDED"
+      : authentication.getName();
+  
+  ...
+  // 1. UsernamePasswordAuthenticatioToken
+  user = retrieveUser(username,
+          (UsernamePasswordAuthenticationToken) authentication);
+  // 2.1 pre-authenticate  
+  preAuthenticationChecks.check(user);
+  // 2.2 additional-authenticate
+  additionalAuthenticationChecks(user,
+        (UsernamePasswordAuthenticationToken) authentication);
+  ...
+  // 2.3 post-authenticate      
+  postAuthenticationChecks.check(user);
+
+  ...
+
+  Object principalToReturn = user;
+
+  if (forcePrincipalAsString) {
+    principalToReturn = user.getUsername();
+  }
+
+  // 3. Encapsulate Successful Authentication 
+  return createSuccessAuthentication(principalToReturn, authentication, user);
+```
+
+```java=
+protected Authentication createSuccessAuthentication(Object principal,
+    Authentication authentication, UserDetails user) {
+  // Ensure we return the original credentials the user supplied,
+  // so subsequent attempts are successful even with encoded passwords.
+  // Also ensure we return the original getDetails(), so that future
+  // authentication events after cache expiry contain the details
+  UsernamePasswordAuthenticationToken result = 
+      new UsernamePasswordAuthenticationToken(
+          principal, authentication.getCredentials(),
+          authoritiesMapper.mapAuthorities(user.getAuthorities()));
+  result.setDetails(authentication.getDetails());
+
+  return result;
+```
+
+Note that
+- `UserDetailsService`、`UserDetails` and `UserDetailsManager` allow us to be implemented by customized class (like ORM, Hibernate framework ... )
+
+### Customize AuthenticationProvider implements UserDetailsService
 
 so we can define **custom authentication** by exposing a custom `UserDetailsService` as a bean(if we dont wnat to use Authentication Providers like DaoAuthenticationProvider ... )
 > Our custom user service can load user based on our data model (Data Base).  
