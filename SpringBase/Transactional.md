@@ -1,71 +1,59 @@
 ###### tags: `Hibernate` , `Spring Boot`
 # Transaction
 
-Once an entity is actively managed by Hibernate, all changes are going to be automatically propagated to the database.
-
-Manipulating domain model entities (along with their associations) is much easier than writing and maintaining SQL statements. 
-
-Without an ORM tool, adding a new column requires modifying all associated INSERT/UPDATE statements.
+Once an entity is actively managed by Hibernate, all changes are going to be automatically propagated to the database.  
+Manipulating domain model entities (along with their associations) is much easier than writing and maintaining SQL statements.  
+Without an ORM tool, adding a new column requires modifying all associated INSERT/UPDATE statements.  
 
 
 ## The Enitity Statses
+#### Related Notes
+[Session Factory](/3xYG4oxDQHq9u3BHlL8qsg)  
+[Hibernate Session](/ItrVlAdSSEuo7vLEjtXGRw)  
+[Reference](https://vladmihalcea.com/a-beginners-guide-to-jpa-hibernate-entity-state-transitions/)  
 
-[Reference](https://vladmihalcea.com/a-beginners-guide-to-jpa-hibernate-entity-state-transitions/)
-![](https://i.imgur.com/ueO4FzQ.png)
-![](https://i.imgur.com/BAd8i1q.png)
+### JPA and Hibernate Transaction
+![](https://i.imgur.com/ueO4FzQ.png)  
+![](https://i.imgur.com/BAd8i1q.png)  
  
 ### New (Transient)
-- A newly created object that hasn’t ever been associated with a Hibernate Session (a.k.a Persistence Context) and is not mapped to any database table row is considered to be in the New (Transient) state.
+A newly created object that 
+1. hasn’t **ever been associated with a Hibernate Session** (a.k.a Persistence Context) 
+2. and is not **mapped to any database** table row is considered to be in the New (Transient) state.
 
 To become persisted we need to either explicitly call the `EntityManager#persist` method or make use of the transitive persistence mechanism.
 
 ### Persistent (Managed)
 **A persistent entity has been associated with a database table row and it’s being managed by the current running Persistence Context.**
 
-During the Session flush-time
-- Any change made to such entity is going to be detected and propagated to the database.
+During the Session flush-time  
+- Any change made to such entity is going to be detected and propagated to the database. 
 
-With Hibernate, we no longer have to execute INSERT/UPDATE/DELETE statements. 
-Hibernate employs a transactional write-behind working style and changes are synchronized at the very last responsible moment, during the current Session flush-time.
+With Hibernate, we no longer have to execute `INSERT/UPDATE/DELETE` statements. 
+Hibernate employs a transactional write-behind working style and changes are synchronized at the very last responsible moment, during the current Session flush-time. 
 
 ### Detached
-Once the current running Persistence Context is closed all the previously managed entities become detached. 
+**Once the current running Persistence Context is closed** all the previously managed entities become detached.  
+Successive changes will no longer be tracked and no automatic database synchronization is going to happen.  
 
-Successive changes will no longer be tracked and no automatic database synchronization is going to happen.
-
-To associate a detached entity to an active Hibernate Session, you can choose one of the following options:
-
-#### Reattaching
-Hibernate (but not JPA 2.1) supports reattaching through the Session#update method.
-
-A Hibernate Session can only associate one Entity object for a given database row. 
-This is because the Persistence Context acts as an in-memory cache (first level cache) and only one value (entity) is associated to a given key (entity type and database identifier).
+To associate a detached entity to an active Hibernate Session,  
+you can choose one of the following options: 
+1. Reattaching
+  > Hibernate (but not JPA 2.1) supports reattaching through the `Session#update` method.  
+  > **A Hibernate Session can only associate one Entity object for a given database row.**  
+  >> This is because the Persistence Context acts as an in-memory cache (first level cache) and only one value (entity) is associated to a given key (entity type and database identifier).  
 
 **An entity can be reattached only if there is no other JVM object (matching the same database row) already associated to the current Hibernate Session.**
 
-#### Merging
-
-**he merge operaration is going to copy the detached entity state (source) to a managed entity instance (destination).**
-
-If the merging entity has no equivalent in the current Session, one will be fetched from the database.
-
-The detached object instance will continue to remain detached even after the merge operation.
+2. Merging
+  > **The merging operaration is going to copy the detached entity state (source) to a managed entity instance (destination).**  
+  > If the merging entity has no equivalent in the current Session, one will be fetched from the database.  
+  > The detached object instance will continue to remain detached even after the merge operation.   
 
 ## Removed
 
-Although JPA demands that managed entities only are allowed to be removed, Hibernate can also delete detached entities (but only through a Session#delete method call).
-
-**A removed entity is only scheduled for deletion and the actual database DELETE statement will be executed during Session ==flush-time.==**
-
-
-
-## Related Notes
-
-[Session Factory](/3xYG4oxDQHq9u3BHlL8qsg)
-[Hibernate Session](/ItrVlAdSSEuo7vLEjtXGRw)
-
-
-
+Although JPA demands that managed entities only are allowed to be removed, Hibernate can also delete detached entities (but only through a Session#delete method call).  
+**A removed entity is only scheduled for deletion and the actual database DELETE statement will be executed during Session ==flush-time.==**  
 ## Begin Transaction 
 
 ![](https://i.imgur.com/Nzdy9nA.png)
@@ -186,29 +174,24 @@ Another cases of using proxies is that only **public methods or classes** should
 #### Flow of transactional
 [Reference](https://virtualmackem.blog/2019/03/28/transactional-gotchas/)
 
-_<u>When a @Transactional method calls another @Transactional method, an uncaught RuntimeException in the second method rolls back the entire transaction</u>_ 
+_<u>When a @Transactional method A calls another @Transactional method B, an uncaught RuntimeException in the second method rolls back the entire transaction</u>_ 
+1. Method A is annotated with `@Transactional`. 
+     > It calls Method B (in a different class) several times. 
+2. Method B is also annotated with `@Transactional`.  
+3. Method B can fail, throwing a `RuntimeException`.  
+4. Method A therefore catches any `RuntimeExceptions` and tidies things up before completing successfully. 
+5. However, you notice that when Method A runs, any `RuntimeExceptions` in Method B always roll back the entire transaction, including the changes made by Method B 
+ - It’s because the default propagation on `@Transactional` is `REQUIRED`. 
+ - The meaning for `REQUIRED` as follows: Support a current transaction, create a new one if none exists
 
-- Method A is annotated with @Transactional. It calls Method B (in a different class) several times. 
-- Method B is also annotated with @Transactional. 
-- Method B can fail, throwing a `RuntimeException`, but when calling it from Method A you don’t want that to roll back the entire transaction. 
-- Method A therefore catches any `RuntimeExceptions` and tidies things up before completing successfully. 
-- However, you notice that when Method A runs, any `RuntimeExceptions` in Method B always roll back the entire transaction, including the changes made by Method A. Why?
+**The @Transactional annotation places `advice` _around_ a method (either with AspectJ or a proxy, more of that later). which means some of the `advice` runs `before` the method and some `after`.**
 
-It’s because the default propagation on `@Transactional` is `REQUIRED`. 
-The documentation for this describes it as follows:
-> Support a current transaction, create a new one if none exists
-
-**The @Transactional annotation places advice around a method (either with AspectJ or a proxy, more of that later).** 
-
-Some of the advice runs before the method and some after.
-So it works like this:
+It works like this:
 ![](https://i.imgur.com/EdM63ve.png)
 - The _before_ advice for Method A creates a transaction then calls Method A
 - Method A then calls Method B
 - The _before_ advice for Method B checks to see if there’s a transaction and there is Method B then runs and the exception is thrown
 - The “after” advice for Method B sees the exception bubble up through it and sets “rollback only” on the transaction. This cannot be undone Thus, the entire transaction (originally created by Method A) is rolled back
-
-
 
 ### Review Exception before `rollback` and `noRollbackFor`
 
