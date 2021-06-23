@@ -1,3 +1,4 @@
+```
 <style>
 html,
 body, 
@@ -150,7 +151,7 @@ cursor: help;
 color: green;
 }
 </style>
-
+```  
 ###### tags: `Spring`
 # Authentication & Authorization
 [TOC]
@@ -166,11 +167,8 @@ color: green;
      > To prove who are you
 - Authorization
     > To give a permission  (thing you can do, thing you cant do)
-
-
 ## Definitions in Authentication 
-
-- Subject 
+- Subject(user that requests something)
     > **In a security context, a subject is any entity that requests access to an object**. 
     > These are generic terms used to denote the thing requesting access and the thing the request is made against.  
     > ==When you log onto an application you are the subject and the application is the object==.  
@@ -190,17 +188,21 @@ color: green;
 ![](https://i.imgur.com/XSbxJTh.png)
 
 ### SecurityContextHolder
+It will create **ThreadLocal** to store current Spring Security's Context (Containing any related with Spring Security) for Current thread
 
-It will create ThreadLocal to store current Spring Security's Context (Containing any related with Spring Security) for Current thread
-
-#### Authentication 
-Spring Security 使用一個 `Authentication` 物件來描述當前使用者的相關資訊(details, Credentials, principals, authrotities of the principal)
-
-> Authentication 物件不需要我們自己去建立，在與系統互動的過程中，Spring Security 會自動為我們建立相應的 Authentication 物件(via `UserNamePasswordAuthenticationToken`)，然後賦值給當前的 SecurityContext。
+### Authentication 
+Spring Security 使用一個 `Authentication` OBJECT 來描述**當前使用者的相關資訊**
+```
+details
+Credentials (password ... etc)
+principals
+authrotities of the principal 
+```
+> **Authentication 物件不需要我們自己去建立，在與系統互動的過程中，Spring Security 會自動為我們建立相應的 Authentication 物件 (via `UserNamePasswordAuthenticationToken`)，然後賦值給當前的 SecurityContext。**
 
 ```java
 public interface Authentication extends Principal, Serializable {    
-    /**
+    	 /**
 	 - Set by an <code>AuthenticationManager</code> to indicate the authorities that the principal has been granted. 
 	 - Note that classes should not rely on this value as being valid unless it has been set by a trusted <code>AuthenticationManager</code>.
 	 - @return the authorities granted to the principal, or an empty collection if the token has not been authenticated. Never null.
@@ -217,6 +219,7 @@ public interface Authentication extends Principal, Serializable {
 
 	/**
 	 * Stores additional details about the authentication request. 
+	 * {@Link Used in the Oauth2User}
 	 * These might be an IP address, certificate serial number etc.
 	 * @return additional details about the authentication request, 
 	 * or null if not used
@@ -264,11 +267,8 @@ public interface Authentication extends Principal, Serializable {
 
 
 
-To get a Authentication User from Spring Security using `.getPrincipal()`
-```java=
-//Spring Security中的principal is from
-//    Authentication.getPrincipal()，
-//        回傳值為被驗證或已被驗證的主體
+To get a **Authenticated User** from Spring Security of thie Current Thread using `.getPrincipal()`
+```java
 Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 if (principal instanceof UserDetails) {
     String username = ((UserDetails)principal).getUsername();
@@ -282,29 +282,23 @@ if (principal instanceof UserDetails) {
 #### SecurityContext
 `SecurityContext` 持有的是代表當前使用者相關Authentication資訊的Reference。
 
+- **Many of the ==authentication providers== will create a `UserDetails` object as the principal.(so we have the right to access the Data Base)**  
+[More about User's Authorization](/Pi3Ra4aQQ_2h4P8IjVfpJA)  
 
-:::info
-- **Many of the ==authentication providers== will create a `UserDetails` object as the principal.(so we can access the DataBse)**  
-- **The `AuthenticationManager` implementation will often return an Authentication objecti containing information as the principal for use by the application**
-:::
-
-[More about User's Authorization](/Pi3Ra4aQQ_2h4P8IjVfpJA)
-
-## HTTP basic's Authentication
-
-Request directly tells the server client's password and username via Header as the following
-```json=
+## HTTP basic's Authentication  
+Request directly tells the server client's password and username via Header as the following  
+```
  GET /secret HTTP/1.1
  Authorization: Basic QWxpY2U6MTIzNDU2
 ```
 - `QWxpY2U6MTIzNDU2` is Base64encode(password and username)
 
 Response if password and username is correct
-```json=
+```
  HTTP/1.1 200 OK
 ```
 else
-```json=
+```
 HTTP/1.1 401 Bad credentials
 WWW-Authenticate: Basic realm="Spring Security Application"
 ```
@@ -314,7 +308,6 @@ Base64 encode is easy to crack (for example Replay attack ...)
 :::
 
 ## HTTP Digest
-
 Process
 1. Client acceess the sever without any information
 2. Server will response with `nonce` to client
@@ -334,89 +327,79 @@ client <<------- response2:OK --------Server
 
 In request1
 >> No password and username involving
-```json=
+```
 GET /secret HTTP/1.1
     ......
-```
-
-#### In response1
+```  
+In response1
 Server will respond a `nonce` to client
-```json=
+```
 HTTP/1.1 401 Full authentication is required to access this resource
 WWW-Authenticate: Digest realm="Contacts Realm via Digest Authentication", qop="auth",nonce="MTQwMTk3OTkwMDkxMzo3MjdjNDM2NTYzMTU2NTA2NWEzOWU2NzBlNzhmMjkwOA=="
-```
+```  
 > `401` means server didn't receive any useful information  
 
-#### In request2
+In request2
 Client will put password or other important information with nonce together and encrypt it via MD5
-```json=
+```
 HTTP/1.1 200 OK
 ...
 ...
-```
-
-
-`nonce` is random values, so each time client accesses server, the `norce` should be different.
+```  
+`nonce` is random values, so each time client accesses server, the `norce` should be different.  
 
 If client sends the request with same `norce` as last time, server will reject client's request, this means a hacker cracks client's request, he/her is not able to pretend as the client to access the server (Replay Attack)
 
 ## Security Builder
-[Good Reference](https://medium.com/@yovan/spring-security-configuration-architecture-c9694435330a)
-[Reference](https://www.javadevjournal.com/spring-security/spring-security-login/)
-`SecurityBuilder` : build up `SecurityConfigurer` Set
-
-![](https://i.imgur.com/S8nhgsZ.png)
-
+[Good Reference](https://medium.com/@yovan/spring-security-configuration-architecture-c9694435330a)  
+[Reference](https://www.javadevjournal.com/spring-security/spring-security-login/)  
+![](https://i.imgur.com/S8nhgsZ.png)  
+- `SecurityBuilder` : build up `SecurityConfigurer` Set  
 - What we need Security Builder?
     > To build up out filter (chains) via `SecurityConfigurer` Set
     > ##### Filter Chain 
-    > ![](https://i.imgur.com/Y1VV0zM.png)
-
+    > ![](https://i.imgur.com/Y1VV0zM.png)  
 
 There are THREE Security Builders that are provided by Spring Security
 1. `WebSecurity`
     >Each `WebSecurityConfigurerAdapter` will create a Filter (To form a Filter Chain)  
     >Each `WebSecurityConfigurerAdapter` will create a new `HttpSecurity`
     >![](https://i.imgur.com/nLBXbID.png)
-2. `HttpSecurity`
+2. `HttpSecurity` (Configure the Web Security)
     > As illustration, it contains different Security Configurers to from a Security Configuer Set
-3. `AuthenticationManagerBuilder`
-    > Spring Security provides some configuration helpers to quickly get common authentication manager features set up in your application. 
-    >> The most commonly used helper is the `AuthenticationManagerBuilder`, which is great for setting up in-memory, JDBC, or LDAP user details or for adding a custom `UserDetailsService`
+3. `AuthenticationManagerBuilder` (How to Authenticate)
+    > Spring Security provides some configuration helpers to quickly get common authentication manager features set up in your application.  
+    > The most commonly used helper is the `AuthenticationManagerBuilder`, which is great for setting up in-memory, JDBC, or LDAP user details or for adding a custom `UserDetailsService`  
+  
+### (`WebSecurity`) WebSecurityConfigurerAdapter (To activate Spring Security)  
+[More details](/Pi3Ra4aQQ_2h4P8IjVfpJA)  
 
-
-### WebSecurityConfigurerAdapter (To activate Spring Security)
-
-[More details](/Pi3Ra4aQQ_2h4P8IjVfpJA)
- 
-- WebSecurityConfigurerAdapter` provides a set of methods to enable specific web security configuration via different Security Builders (e.g HttpSecurity ...) 
+WebSecurityConfigurerAdapter provides a set of methods to enable specific web security configuration via different Security Builders (e.g HttpSecurity ...)  
 
 For example
-```java=
+```java
 //it's enable spring security supports 
 //    with support for the Spring MVC integration.
 @EnableWebSecurity
 public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
-    //configute()  method is used to configure distinct security points 
+    //configure() method is used to configure distinct security points 
     //    for our application (e.g. secure and non-secure urls, success handlers etc.).
     
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-            //Login and register page to be accessible without any login.
-            //Permitting it to all users using the antMatchers pattern.
-            .antMatchers("/login", "/register")
-            .permitAll()
+            //Login and register page to be accessible without any required(Everyone can access theses two pages).
+            .antMatchers("/login", "/register").permitAll()
             //Allowing only logged is customer to access URLs matching with pattern `/account/**`.
             //     Looking for a certain role before allowing the user to access the URL.
             .antMatchers("/account/**").access("hasRole('ROLE_ADMIN')")
             .and()
-            .formLogin(form - > form
-                .loginPage("/login")
-                // A successful authentication, then redirect to
-                .defaultSuccessUrl("/home")
-                // if login fails, then redirect to 
-                .failureUrl("/login?error=true")
+            .formLogin(form - > 
+	    	form.loginPage("/login")
+                	// A successful authentication, then redirect the user to
+                	.defaultSuccessUrl("/home")
+                	// if login fails, then redirect the user to 
+                	.failureUrl("/login?error=true")
             );
     }
 
@@ -428,19 +411,19 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 :::info
-When clients send Request, it will be filtered by FilterSecurityInterceptor Filter with `WebSecurityConfigurerAdapter`.
-> Once the Request's URL that requires the authentication則會從SecurityContextHolder取得此Client的Authentication，判斷是否已經認證過，決定Client能不能access。
+When the users send Request, it will be filtered by FilterSecurityInterceptor Filter with `WebSecurityConfigurerAdapter`.
+> Once the Request's URL that requires the authentication => 從`SecurityContextHolder`取得此Client的`Authentication`，判斷是否已經認證過，決定該User能不能access。
 :::
  
 ## AuthenticationManager and GrantedAuthority
 [GoodeReference](https://blog.csdn.net/weixin_42281735/article/details/105289155)
 
-- Relationship of `AuthenticationManager`, `ProviderManager` and `AuthenticationProviders`
-    >![](https://i.imgur.com/e5L19Cv.png)
-    > - Spring Security makes the Authentication of Client's Request using `ProviderManager` that implements `AuthenticationManager`.  
-    > - `ProviderManager` then *delegates* the numbers of `AuthticationProvider`**s** to do the Authentication
+Relationship of `AuthenticationManager`, `ProviderManager` and `AuthenticationProviders`  
+![](https://i.imgur.com/e5L19Cv.png)  
+- Spring Security makes the Authentication of Client's Request using `ProviderManager` that implements `AuthenticationManager`.  
+- `ProviderManager` then *delegates* the numbers of `AuthticationProvider`**s** to do the Authentication in **different way**
 
-![](https://i.imgur.com/wddCsgT.png)
+![](https://i.imgur.com/wddCsgT.png)  
 
 ### The whole Authentication Logic
 
@@ -448,14 +431,13 @@ When clients send Request, it will be filtered by FilterSecurityInterceptor Filt
 ![](https://i.imgur.com/If4HFFG.png)
 
 #### A Authentication
-```java=
-Authentication authenticate(Authentication authentication)
-      throws AuthenticationException;
+```java
+Authentication authenticate(Authentication authentication) throws AuthenticationException;
 ```
 - It encapusulates userId and password from Client's request as an instance of Authentication
 
 #### Authentication provider's implementations are responsible to perform a specific authentication
-```java=
+```java
 public interface AuthenticationProvider {
     Authentication authenticate(Authentication authentication) throws AuthenticationException;
     boolean supports(Class<?> authentication);
@@ -464,7 +446,7 @@ public interface AuthenticationProvider {
 - There are many different `AuthenticationProvider` implementations (e.g. `DaoAuthenticationProvider` ...etc ) for a specific authentication *(of the client's request)*
     > for example `DaoAuthenticationProvider` (dependency)uses the `UserDetailsService` to retrieve user information a username and password.(as the above figure)  
   
-```java=
+```java
 public interface UserDetailsService {
     // var1 as login id
     UserDetails loadUserByUsername(String var1) throws UsernameNotFoundException;
@@ -473,9 +455,9 @@ public interface UserDetailsService {
 - `loadUserByUsername` 
     > using `UserDetails` and `JpaRepository` to query DataBase to compare with information from client's request
 
-### DaoAuthenticationProvider and AtuhenticationBuilder
+### DaoAuthenticationProvider and AuthenticationBuilder
 [SourceCode](https://github.com/spring-projects/spring-security/blob/main/core/src/main/java/org/springframework/security/authentication/dao/DaoAuthenticationProvider.java)
-```java=
+```java
 /* To encode Password */
 private PasswordEncoder passwordEncoder;
 
@@ -498,15 +480,19 @@ protected final UserDetails retrieveUser(String username,
 }
 ```
 
-Spring Security provides a variety of options for performing authentication. These follow a simple contract – an Authentication request is processed by an AuthenticationProvider and a fully authenticated object with full credentials is returned.
+Spring Security provides a variety of options for performing authentication.  
+- These follow a simple contract
+	> an Authentication request is processed by an AuthenticationProvider and a fully authenticated object with full credentials is returned. 
+- The standard and most common implementation is the `DaoAuthenticationProvider`
+	> which retrieves the user details from a simple, read-only user DAO – the UserDetailsService.  
+	> This User Details Service only has access to the username in order to retrieve the full user entity(This is enough for most scenarios).
 
-The standard and most common implementation is the DaoAuthenticationProvider – which retrieves the user details from a simple, read-only user DAO – the UserDetailsService. This User Details Service only has access to the username in order to retrieve the full user entity. This is enough for most scenarios.
+More custom scenarios will still need to access the full Authentication request to be able to perform the authentication process.   
+For example, when authenticating against some external, third party service (such as Crowd) – both the username and the password from the authentication request will be necessary.  
+To deal with such we [use builder](https://www.baeldung.com/spring-security-authentication-provider)
 
-- **More custom scenarios will still need to access the full Authentication request to be able to perform the authentication process. For example, when authenticating against some external, third party service (such as Crowd) – both the username and the password from the authentication request will be necessary.**
-    - To deal with such we [use builder](https://www.baeldung.com/spring-security-authentication-provider)
 ### AbstractUserDetailsAuthenticationProvider
-
-```java=
+```java
 // as we said before instance of Authentication containing user's information
 public Authentication authenticate(Authentication authentication)
     throws AuthenticationException {
@@ -562,7 +548,8 @@ Note that
 ### Customize AuthenticationProvider implements UserDetailsService
 
 so we can define **custom authentication** by exposing a custom `UserDetailsService` as a bean(if we dont wnat to use Authentication Providers like DaoAuthenticationProvider ... )
-> Our custom user service can load user based on our data model (Data Base).  
+> Our custom user service can load user based on our data model.  
+
 ```java=
 @Service
 public class CustomUserDetailService implements UserDetailsService {
@@ -588,36 +575,31 @@ public class CustomUserDetailService implements UserDetailsService {
 ```
 > we need `JPA/CRUD Repository` to help `UserDetails` fetches user information from data base for comparing validation of client's request
 
-
-### Authentication flow
-
-![](https://i.imgur.com/aLKSado.png)
+## Authentication flow
+![](https://i.imgur.com/aLKSado.png)  
 1. Server creates (via filter) an `UsernamePasswordAuthenticationToken` from (request containing token) the supplied username and password.
 2. It passes the token(get from request) to the *Authentication Manager.*
 3. The *Provider Manager* will **delegate** the authentication to the `DaoAuthenticationProvider` (for thie diargram) including the *authentication token*.
-4. The `DaoAuthenticationProvider` use the custom `UserDetailsService` service to get the *user details* information from the database.
-3. On successful authentication, the authentication object will contain the fully populated object including the authorities details.
+4. The `DaoAuthenticationProvider` uses the custom `UserDetailsService` to get the *user details information from the database*.
+3. On the successful authentication, the authentication object will contain the fully populated object including the authorities details.
 4. **The returned `UsernamePasswordAuthenticationToken` will be set on the `SecurityContextHolder` by the authentication Filter.**
 
 
 ## The Login Workflow
-
-[Note For UsernamePasswordAuthenticationFilter](/WClD1mCtTcqmt2boXxGR7A)
-
-![](https://i.imgur.com/Lv83VUC.png)
-1. Client fills out the credentials on the login page.
-2. ==On form submission, the `UsernamePasswordAuthenticationFilter` creates a `UsernamePasswordAuthenticationToken` by extracting the username and password from the (`URL`) request parameters.==
+[Note For UsernamePasswordAuthenticationFilter](/WClD1mCtTcqmt2boXxGR7A)  
+![](https://i.imgur.com/Lv83VUC.png)  
+1. Client fills out the credentials(e.g, password ...) on the login page.
+2. ==On form submission, the `UsernamePasswordAuthenticationFilter` creates a `UsernamePasswordAuthenticationToken` by extracting the `username` and `password` from the `URL` request parameters(`.../..?password=1234&username=asdf`).==
 3. The `AuthenticationManager` is responsible to validate the user based on the supplied credentials 
 4. If authenticated, Spring security performs several additional operations. 
-    - `SessionAuthenticationStrategy` is notified for new login.  
-    This handles the HTTP session and makes sure a valid session exists and handles any against session-fixation attacks.
+    - `SessionAuthenticationStrategy` is notified for new login. This handles the HTTP session and makes sure a valid session exists and handles any against session-fixation attacks.
     - Spring security stores the user authentication details in the `SecurityContextHolder`. 
         > It will update the `SecurityContextHolder` with authentication details.
     - If `RememberMeServices` service is active, it will activate the `loginSuccess` method. 
     - It will publish an `InteractiveAuthenticationSuccessEvent`.
-    - The `AuthenticationSuccessHandler` is invoked. 
-    This success handler will try to redirect the user to the location when we redirect to the login page **(e.g. If you were moving to my account and got the login page, on successful login, it will redirect you to the account page.)**
+    - The `AuthenticationSuccessHandler` is invoked. This success handler will try to redirect the user to the location when we redirect to the login page
+    	> **(e.g. If you were moving to the account and redirected to the login page, on successful login, it will redirect you to the account page.)**
 5. For the fail attempt, Spring security will also perform a few important steps to make sure it **clears out** all sensitive and secure information.
     - It will clear the `SecurityContextHolder` out.
     - Call the `loginFail` method of the `RememberMeServices` service to remove cookies and other related information.
-    - The `AuthenticationFailureHandler` triggers to perform any additional clean-up action.
+    - (optional)The `AuthenticationFailureHandler` triggers to perform any additional clean-up action.
