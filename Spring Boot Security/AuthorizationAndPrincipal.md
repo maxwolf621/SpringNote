@@ -98,7 +98,8 @@ When a user is authenticated, make sure that all _GrantedAuthorities_ of all its
 >
 > The *user role* with id `ROLE_USER` has the operation
 >> `OP_READ_ACCOUNT`.  
-:::info  
+
+:::info    
 In short   
 - If *an admin* logs in the resulting security context will have the GrantedAuthorities: `ROLE_ADMIN`, `OP_DELETE_ACCOUNT`, `OP_READ_ACCOUNT`, `OP_RUN_BATCH_JOB`
 - If *a user* logs it, it will have: `ROLE_USER`, `OP_READ_ACCOUNT`  
