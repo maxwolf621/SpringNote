@@ -89,18 +89,17 @@ class Operation implements GrantedAuthority {
 ```
 - the `ids` of the roles and operations we create in our database would be the `GrantedAuthority` representation
     > e.g. `ROLE_ADMIN`, `OP_DELETE_ACCOUNT` ... etc.  
+  
 :::danger  
-When a user is authenticated, make sure that all _GrantedAuthorities_ of all its roles and the corresponding operations are returned from the `UserDetails.getAuthorities()` method.
+When a user is authenticated, make sure that all _GrantedAuthorities_ of all its roles and the corresponding operations are returned from the `UserDetails.getAuthorities()` method.  
 :::  
 
-> The *admin role* with id `ROLE_ADMIN` has the operations
->> `OP_DELETE_ACCOUNT`, `OP_READ_ACCOUNT`, `OP_RUN_BATCH_JOB` assigned to it. 
->
-> The *user role* with id `ROLE_USER` has the operation
->> `OP_READ_ACCOUNT`.  
+- The **admin** role with id `ROLE_ADMIN` has the operations
+   > `OP_DELETE_ACCOUNT`, `OP_READ_ACCOUNT`, `OP_RUN_BATCH_JOB` assigned to it. 
+- The **user** role with id `ROLE_USER` has the operation
+   > `OP_READ_ACCOUNT`.  
 
 :::info    
-In short   
 - If *an admin* logs in the resulting security context will have the GrantedAuthorities: `ROLE_ADMIN`, `OP_DELETE_ACCOUNT`, `OP_READ_ACCOUNT`, `OP_RUN_BATCH_JOB`
 - If *a user* logs it, it will have: `ROLE_USER`, `OP_READ_ACCOUNT`  
 :::  
