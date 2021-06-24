@@ -2,8 +2,9 @@
                                 # *Command Keytool的參數*
                                 # **********************
                                 
-# Reference https://blog.csdn.net/u010142437/article/details/16370017   
-                               
+# Reference 
+#     https://blog.csdn.net/u010142437/article/details/16370017   
+#     https://geotrust.cloudmax.com.tw/guide/faq_keytool.asp                               
 # -genkey     : 在使用者主目錄中建立一個預設檔案".keystore",還會產生一個預設alias叫mykey. 
 #             : mykey中包含使用者的Public Key、Private key和Certificate
 #             : (在沒有指定生成位置的情況下,keystore會存在使用者系統預設目錄)
@@ -22,10 +23,9 @@ keytool -keypasswd -alias duke -keypass dukekeypasswd -new newpass
 #-validity    : 指定建立的證照有效期多少天(預設90天)
 #-storepass   : 指定金鑰庫的密碼(獲取keystore資訊所需的密碼)
 #-keypass     : 指定別名條目(ENTRY)的密碼(PRIVATE KEY)
-#-dname       : 指定證照擁有者資訊 例如：  "CN=名字與姓氏,OU=組織單位名稱,O=組織名稱,L=城市或區域名稱,ST=州或省份名稱,C=單位的兩字母國家程式碼"
+#-dname       : 指定證照擁有者資訊 例如：  "CN=名字與姓氏,OU=(O)組織(U)單位名稱,O=組織名稱,L=城市或區域名稱,ST=州或省份名稱,C=單位的兩字母國家程式碼"
 keytool -genkey -alias jian -keypass 1234 -keyalg RSA -keysize 1024 -validity 100 -keystore  -storepass 123456
-keytool -genkey -alias jian -keypass 1234 -keyalg RSA -keysize 1024 -validity 365 -keystore  e:/yushan.keystore -storepass 123456 -dname "CN=(名字與姓氏), OU=(組織單位名稱), O=(組織名稱), L=(城市或區域名稱), ST=(州或省份名稱), C=(單位的兩字母國家程式碼)";
-
+keytool -genkey -alias jian -keypass 1234 -keyalg RSA -keysize 1024 -validity 365 -keystore  /home/pi -storepass 123456 -dname "CN=HashCode, OU=RD, O=GOOGLE, L=Essen, ST=Nordwestfallen, C=de"
 
 #CHECK FOR THE INFORMATION*************************************************
 #-list        顯示金鑰庫中的證照資訊   
