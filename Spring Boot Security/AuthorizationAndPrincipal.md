@@ -27,7 +27,7 @@ The **permissions** with a naming convention that says that a role is a `Granted
 
 #### Difference of Annotation Role btw SpringSecurity 3 and 4
 
-```java=
+```java
 // Spring Security 3
 @PreAuthorize("hasRole('ROLE_XYZ')") // is same as 
 @PreAuthorize("hasAuthority('ROLE_XYZ')")  
@@ -40,7 +40,7 @@ The **permissions** with a naming convention that says that a role is a `Granted
 ### Build up `GrantedAuthority` Entity  
 The `GrantedAuthorities` for the roles have the prefix `ROLE_` and the operations have the prefix `OP_`.     
 For example  
-```java=
+```java
 /* Role */
 @Entity
 class Role implements GrantedAuthority {
