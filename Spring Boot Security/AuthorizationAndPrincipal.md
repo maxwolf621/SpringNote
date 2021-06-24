@@ -126,7 +126,7 @@ public interface GrantedAuthority extends Serializable {
 #### Class SimpleGrantedAuthority 
 - Set A ROLE with the Authority and Store in the DATABASE  
 - USED BY `org.Springframework.security.core.userdetails` to initialize a PRINCIPAL
-```java=
+```java
 public final class SimpleGrantedAuthority implements GrantedAuthority {
     private static final long serialVersionUID = 
         SpringSecurityCoreVersion.SERIAL_VERSION_UID;
@@ -202,7 +202,7 @@ public class UserPrincipal implements UserDetails {
 
 #### Constructor of `core.userdetails.User`
 Construct the User with the details required by `DaoAuthenticationProvider`.
-```java=
+```java
 public User(//the username presented to DaoAuthenticationProvider
             String username,
             //the password that should be 
@@ -239,10 +239,7 @@ configure(HttpSecurity http)
 public BCryptPasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder(); 
 }
-```
 
-
-```java
 /* How Our Authentication authenticates the users */
 @Bean
 public DaoAuthenticationProvider daoAuthenticationProvider() 
@@ -263,9 +260,7 @@ protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 ```
 
 ## UserDetailsService
-
-
-```java=
+```java
 import com.example.springredditclone.model.User;
 import com.example.springredditclone.repository.UserRepository;
 import lombok.AllArgsConstructor;
