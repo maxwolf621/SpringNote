@@ -9,11 +9,15 @@
 #             : mykey中包含使用者的Public Key、Private key和Certificate
 #             : (在沒有指定生成位置的情況下,keystore會存在使用者系統預設目錄)
 #------------------------------------------------------------------------------------
-#-keypasswd   : 修改金鑰庫中指定條目口令    
-#             : keytool -keypasswd -alias 需修改的別名 -keypass 舊密碼 -new 新密碼  -storepass 金鑰庫密碼 -keystore sage
-#------------------------------------------------------------------------------------
-keytool -genkey -alias duke -keypass dukekeypasswd
+#-storepasswd : Change keystore password  
 keytool -keypasswd -alias duke -keypass dukekeypasswd -new newpass
+#-keypasswd   : Change private key    
+#             : keytool -keypasswd -alias ACCESSKEYENTRYNAME -keypass OLDPASSWORD -new NEWPASSWORD -storepass STOREPASSWORD -keystore KEYSTORENAME
+keytool -genkey -alias duke -keypass dukekeypasswd
+
+    
+keytool -storepasswd -keystore e:/yushan.keystore(需修改口令的keystore) -storepass 123456(原始密碼) -new yushan(新密碼)
+
 #-alias       : 產生別名對應一個KEYSTORE
 #             : 所有的keystore入口entries(private key 和信任憑證入口)是通過唯一的別名訪問
 #-keystore    : 指定金鑰庫的名稱(產生的各類資訊將不在.keystore檔案中) 
@@ -65,10 +69,3 @@ keytool -delete -alias 指定需刪除的別名  -keystore 金鑰庫的名稱 -s
 ### Delete The CA whose name is RapaServer in keystore Mykeystore
 keytool -delete -alias RapaServer -keystore Mykeystore
 #**************************************************************************
-
-
-
-#-storepasswd 修改keystore口令      
-keytool -storepasswd -keystore e:/yushan.keystore(需修改口令的keystore) -storepass 123456(原始密碼) -new yushan(新密碼)
-
-
