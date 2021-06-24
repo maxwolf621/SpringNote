@@ -5,27 +5,28 @@
 [Note for java.util.*](/mvZXnbc_RPqqtwYVdU8J1A)  
 [A Login Example](https://blog.csdn.net/pujiaolin/article/details/73928491)  
 [Role And GrantedAuthority](https://stackoverflow.com/questions/37615034/spring-security-spring-boot-how-to-set-roles-for-users/50533455)  
-## GrantedAuthority
-
+## GrantedAuthority  
 Great the permissions are (normally) expressed as `String`s via the `getAuthority` method from Interface `GrantedAuthority`.
-These string let we identify who have the *Authorization/Permission* to access specifics.  
-:::info  
-We can grant different `GrantedAuthoritys` (permissions) to *users* by putting them into the security context.
-By implementing `UserDetailsService` that returns a `UserDetails` implementation (containing the needed `GrantedAuthorities`). 
-:::   
+These `String`s let we identify who have the *Authorization/Permission* to access specifics.
+
+We can grant different `GrantedAuthoritys` (permissions) to *users* by putting them into the _security context_.  
+:::info    
+A `UserDetailsService` implementations returns a `UserDetails` implementation (containing the needed `GrantedAuthorities`).  
+:::  
+
 ## Role (Name Convention)
-The **permissions** with a naming convention that says that a role is a `GrantedAuthority` that **starts with the prefix `ROLE_`.**   
-==A role is just a GrantedAuthority - a permission - a right.==   
+The **permissions** with a naming convention that says that a role is a `GrantedAuthority` that **starts with the prefix `ROLE_`.**  
+==A role is just a GrantedAuthority - a permission - a right.==  
 
 - A lot of places in spring security where the role with its `ROLE_` prefix is handled specially
     > e.g. in the `RoleVoter`, where the `ROLE_` prefix is used as a default. This allows you to provide the role names without the `ROLE_ `prefix.  
 - *Prior to Spring security 4*, this special handling of roles has not been followed very consistently and authorities and **roles were often treated the same(with prefix or without)**  
     > e.g. the implementation of the `hasAuthority()` method in `SecurityExpressionRoot` - which simply calls `hasRole()`).   
-
 - *With Spring Security 4*, the treatment of roles is more consistent and code that deals with roles(like the RoleVoter, the hasRole expression etc.) always adds the `ROLE_` prefix for you.
     > So `hasAuthority('ROLE_ADMIN')` means the the same as `hasRole('ADMIN')` because the `ROLE_` prefix gets added automatically. 
 
-#### Difference of Annotation Role btw SpringSecurity 3/4
+#### Difference of Annotation Role btw SpringSecurity 3 and 4
+
 ```java=
 // Spring Security 3
 @PreAuthorize("hasRole('ROLE_XYZ')") // is same as 
@@ -36,7 +37,7 @@ The **permissions** with a naming convention that says that a role is a `Granted
 @PreAuthorize("hasAuthority('ROLE_XYZ')").
 ```
 
-### Example To build up GrantedAuthority Entity  
+### Build up `GrantedAuthority` Entity  
 The `GrantedAuthorities` for the roles have the prefix `ROLE_` and the operations have the prefix `OP_`.     
 For example  
 ```java=
@@ -112,18 +113,19 @@ We need to use `GrantedAuthority` and `SimpleGrantedAuthority` to authenticate o
 
 
 #### Interface GrantedAuthority 
-```java=
+```java
 public interface GrantedAuthority extends Serializable {
 	/**
-	 * @return a representation of the granted authority (or @code null) 
-	 *	if the granted authority cannot be 
-	 *      expressed as a @String with sufficient precision).
+	 * @return a representation of the granted authority (or @code @null) 
+	 *	If the granted authority cannot be expressed as a @String with sufficient precision).
 	 */
 	String getAuthority();
 }
 ```
 
-Class SimpleGrantedAuthority ( Create A Role and Store in the data base ) 
+#### Class SimpleGrantedAuthority 
+- Set A ROLE with the Authority and Store in the DATABASE  
+- USED BY `org.Springframework.security.core.userdetails` to initialize a PRINCIPAL
 ```java=
 public final class SimpleGrantedAuthority implements GrantedAuthority {
     private static final long serialVersionUID = 
@@ -167,22 +169,20 @@ public final class SimpleGrantedAuthority implements GrantedAuthority {
 ### `org.Springframework.security.core.userdetails`  
 [UserDetails SourceCode](https://github.com/spring-projects/spring-security/blob/master/core/src/main/java/org/springframework/security/core/userdetails/UserDetails.java)  
 [Specification](https://docs.spring.io/spring-security/site/docs/4.2.20.RELEASE/apidocs/org/springframework/security/core/userdetails/UserDetails.html)  
+- We can build up a PRINCIPAL using `org.Springframework.security.core.userdetails`
 
-As the above we said before the `UserDetailsService` would take care to 
-- **collect all roles** 
-- and **all operations of those roles**
-
-Customize userDetails by implementing UserDetails
-```java=
+Customize userDetails by implementing `UserDetails`
+```java
 public class UserPrincipal implements UserDetails {
-    // Login User
+    // Login User (password, name, ... etc ) 
     private User user;
-    // for GrantedAuthority
-    private List<String> roleCodes;
+    // for GrantedAuthority 
+    private List<String> hasRoles;
+    
     // Constructor
-    UserPrincipal(User user,List<String> roleCodes){
+    UserPrincipal(User user,List<String> roles){
         this.user = user;
-        this.roleCodes = roleCodes;
+        this.hasRoles = roles;
     }
 
    /**
@@ -190,7 +190,7 @@ public class UserPrincipal implements UserDetails {
     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roleCodes.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+        return hasRoles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
     //..
 }
@@ -198,9 +198,7 @@ public class UserPrincipal implements UserDetails {
 
 ### `org.springframework.security.core.userdetails.User`
 [Specification](https://docs.spring.io/spring-security/site/docs/4.2.20.RELEASE/apidocs/org/springframework/security/core/userdetails/User.html)
-
 [Reference](https://stackoverflow.com/questions/19525380/difference-between-role-and-grantedauthority-in-spring-security)
-> Why uses USER instead of Userdetails ? 
 
 #### Constructor of `core.userdetails.User`
 Construct the User with the details required by `DaoAuthenticationProvider`.
@@ -224,36 +222,30 @@ public User(//the username presented to DaoAuthenticationProvider
             Collection<? extends GrantedAuthority> authorities)
 ```
 
-## Customized Class that extends `WebSecurityConfigurerAdapter` with `core.userdetails.User`
+## Web security that extends `WebSecurityConfigurerAdapter` with `core.userdetails.User`
 
 [WebSecurityConfigurerAdapter_Methods](https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/config/annotation/web/builders/HttpSecurity.html)  
 [Example](https://blog.csdn.net/weixin_44516305/article/details/88868791)  
 
-To extend `WebSecurityConfigurerAdapter` to (often) override two methods  
-```java=
+A web security often overrides two methods and has A bean of PasswordEnoder 
+```java
+// Builder Up a Authentication Provider to authenticate the user
 configure(AuthenticationManagerBuilder auth)
+
+// set up the web security
 configure(HttpSecurity http)
-```
-> `AuthenticationManagerBuilder` 
-> : - Authentication for Role (register the User)
-> : - Set Up In-Memory User
->
-> `HttpSecurity`
-> : The Authorization of each accessing web page for who/which Role needs to get the Authentication
 
-
-```java=
-// Configure the DauAuthenticationProvider
 @Bean
 public BCryptPasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder(); 
 }
+```
 
-/**
- * @return Provider who can support us Au thentication
- */
+
+```java
+/* How Our Authentication authenticates the users */
 @Bean
-public DaoAuthenticationProvider authenticationProvider() 
+public DaoAuthenticationProvider daoAuthenticationProvider() 
 {
     DaoAuthenticationProvider authenticationProvider = 
         new DaoAuthenticationProvider();
@@ -264,8 +256,9 @@ public DaoAuthenticationProvider authenticationProvider()
 
 @Override
 protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-    // Give Authentication to Authentication Manager
-    auth.authenticationProvider(authenticationProvider()); 
+    // Configure Authentication Method
+    //	using `daoAuthentiationProvider` to authenticate the User accounts
+    auth.authenticationProvider(daoAuthenticationProvider()); 
 }
 ```
 
@@ -292,6 +285,7 @@ import static java.util.Collections.singletonList;
 @Service
 @AllArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
+    
     private final UserRepository userRepository;
 
     @Override
@@ -304,8 +298,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         return new org.springframework.security
                 .core.userdetails.User(user.getUsername(), user.getPassword(),
-                user.isEnabled(), true, true,
-                true, getAuthorities("USER"));
+						user.isEnabled(), true, true,
+						true, getAuthorities("USER"));
     }
     
     // Collection.singleList(T obj)
