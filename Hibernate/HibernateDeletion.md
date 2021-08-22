@@ -3,7 +3,7 @@
 [TOC]
 
 ![](https://i.imgur.com/g4SWzho.png)
-```java=
+```java
 /* Entity category */
 public class Category{
     //...
@@ -24,8 +24,9 @@ public class Product{
     //..
     
     /* Prouduct relates Category 
-        MANY      TO      ONE   */
-    @OneToManey
+     *  MANY      TO      ONE   
+     */
+    @OneToMany
     /* FK is categor_id         */
     @JoinColumn(name="CATEGORY_ID")
     public Category category{
@@ -37,19 +38,19 @@ public class Product{
 
 
 ## Deleting A **Transient** Instance
-```java=
+```java
 session.delete(class instsance);
 ```
 
 For example
-```java=
+```java
 Product product = new Product();
 product.setId(12);
 session.delete(product);
 ```
 
 If delete instance that is associated with information in database, the code will throw `ConstraintViolationException` at **run-time**
-```java=
+```java
 Category category = new Category();
 // Id 18 is existing in the database
 category.setId(18)
@@ -68,7 +69,7 @@ ERROR: Cannot delete or update a parent row: a foreign key constraint fails
 
 ## Deleting A **Persistent** Instance
 
-```java=
+```java
 // To access Database of NameOfClass Entity
 session.load(NameOfClass.class, id);
 
@@ -87,7 +88,7 @@ private boolean delete(Class<?> type, Serializable id){
 ```
 
 Example 
-```java=
+```java
 Serializable id = new Long(17);
 Object persistentInstance = session.laod(Category.class, id);
 // check if id : 17 is in the database
@@ -100,7 +101,7 @@ if(persistantInstance != null){
 ## Using HQL 
 
 Delete entities with more flexibility
-```java=
+```java
 Query q = session.createQuery("delete Product where price > :maxPreice");
 
 int result = q.executeUpdate();
