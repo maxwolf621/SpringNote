@@ -24,8 +24,7 @@ Many-to-Many: One Person Has Many Skills, a Skill is **reused** between Person(s
 - Bidirectional: A Skill has a Set of Person(s) which relate to it.
 
 
-In a One-To-Many relationship, one object is the "parent" and one is the "child". 
-- **The parent controls the existence of the child.**   
+In a One-To-Many relationship, one object is the "parent" and one is the "child". **The parent controls the existence of the child.**   
 
 In a Many-To-Many, the existence of either type is dependent on something outside the both of them (in the larger application context).  
 
@@ -244,8 +243,8 @@ private List<Task> tasks;
 
 
 ![](https://i.imgur.com/k6ZZIgv.png)
-- the `@OneToMany` with the `mappedBy` attribute set, you have a bidirectional association.  
-  >　In our case, both the Post entity has a collection of `PostComment` child entities, and the child `PostComment` entity has a reference back to the parent Post entity
+- `@OneToMany` with the `mappedBy` attribute set, you have a bidirectional association.  
+  > In our case, both the Post entity has a collection of `PostComment` child entities, and the child `PostComment` entity has a reference back to the parent Post entity
 
 
 ```java
