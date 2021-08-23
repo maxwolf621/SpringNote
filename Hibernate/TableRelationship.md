@@ -119,7 +119,6 @@ post.getComments().add(new PostComment("My Third review"));
 ```
 
 Hibernate will execute SQL statements like this
-
 ```sql
 /* Create A New Post */
 insert into post (title, id)
@@ -149,11 +148,53 @@ values (1, 4)
 - We got a extra table to link other two tables with extra two of Foreign Keys  
   >　Hibernate needs to create post and comments tables and then mapping these two tables together
 
+## `@JoinColumn`
+
+- `@JoinColumn` and `@Column` are almost the same
+  >　the difference is `@JoinColumn` describes the attribute columns btw tables (entities) and `@Column` describes attribute in a table
+
+- `@OneToOne`, `@ManyToMany` and `@OneToMany` with `@JoinColumn` have different meaning 
+
+```
+@OneToOne
+@JoinColumn(name = "addr_id")
+public AddressEO getAddress() {
+         return address;
+}
+```
+- If we dont specify `name="addr_id"` then the default name value is `name=entity_RefferenceTablePrimaryKey`
+
+
+#### `@JoinColumn(name = table_x_fk , referenceColumnName = ref_pk)`
+
+For example    
+In one-to-one situation, there are two tables address and customer   
+```sql
+CREATE TABLE address (
+  id int(20) NOT NULL auto_increment,
+  ref_id int int(20) NOT NULL,
+  province varchar(50) ,
+  city varchar(50) ,
+  postcode varchar(50) ,
+  detail varchar(50) ,
+  PRIMARY KEY (id)
+)
+```
+
+attribute `address_id` in table `customer` references to attribute `ref_id` in table `address` 
+```java
+@OneToOne
+@JoinColumn(name = "address_id", referencedColumnName="ref_id")
+public AddressEO getAddress() {
+         return address;
+}
+```
+
+
 ## Unidirectional `@OneToMany` with `@JoinColumn`
 
-When using a unidirectional one-to-many association, only the parent side maps the association.
-
-only the `Post` entity will define a `@OneToMany` association to the child `PostComment` entity:
+When using a unidirectional one-to-many association, only the parent side maps the association.  
+only the `Post` entity will define a `@OneToMany` association to the child `PostComment` entity   
 
 ```java
 /**
@@ -258,7 +299,7 @@ public class Post {
     private String title;
  
     @OneToMany(
-        // mappedBy 'post' property in PostComment
+        // mappedBy 'post' attribute in PostComment
         mappedBy = "post",
         cascade = CascadeType.ALL,
         orphanRemoval = true
@@ -285,6 +326,7 @@ public class PostComment {
     private String review;
  
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id")
     private Post post;
  
     @Override
@@ -301,7 +343,6 @@ public class PostComment {
 }
 ```
 - With `@JoinColumn` we indicate hibernate that child entity (post_comment) **must have two keys (PK and FK)**
-
 
 By property of `mappedBy` , the hibernate will do like 
 ```sql
@@ -320,7 +361,7 @@ insert into post_comment (post_id, review, id)
 values (1, 'My third review', 4)
 ```
 
-##　[`mappedBy` and `@JoinColumn`](https://www.baeldung.com/jpa-join-column)
+- [`mappedBy` and `@JoinColumn`](https://www.baeldung.com/jpa-join-column)
 
 
 ## Usage of `@JoinColumn`
@@ -376,15 +417,11 @@ public class Branch {
 
 ### Two one way relationship 
 
-By specifying the `@JoinColumn` on both models you don't have a two way relationship.  
-
-You have two one way relationships, and a very confusing mapping of it at that.  
-
+By specifying the `@JoinColumn` on both models you don't have a two way relationship.   
+You have two one way relationships, and a very confusing mapping of it at that.    
 You're telling both models that they "own" the identical column.  
-Really only one of them actually should! 
+Really only one of them actually should!   
 
 [Synchronize](https://vladmihalcea.com/jpa-hibernate-synchronize-bidirectional-entity-associations/)  
 [EagerFetching](https://vladmihalcea.com/eager-fetching-is-a-code-smell/)  
 [MappedBy](https://stackoverflow.com/questions/9108224/can-someone-explain-mappedby-in-jpa-and-hibernate#:~:text=MappedBy%20signals%20hibernate%20that%20the,constraint%20to%20the%20other%20table.)  
-
-
