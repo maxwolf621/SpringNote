@@ -24,13 +24,17 @@ Many-to-Many: One Person Has Many Skills, a Skill is **reused** between Person(s
 - Bidirectional: A Skill has a Set of Person(s) which relate to it.
 
 
-- In a One-To-Many relationship, one object is the "parent" and one is the "child". The parent controls the existence of the child.   
-- In a Many-To-Many, the existence of either type is dependent on something outside the both of them (in the larger application context).  
+In a One-To-Many relationship, one object is the "parent" and one is the "child". 
+- **The parent controls the existence of the child.**   
 
+In a Many-To-Many, the existence of either type is dependent on something outside the both of them (in the larger application context).  
 
-Many-To-Many Bidirectional relationship does not need to be symmetric!  
-That is, a bunch of People could point to a skill, but the skill need not relate back to just those people. Typically it would, but such symmetry is not a requirement.  
-
+```diff
++ Many-To-Many Bidirectional relationship does not need to be symmetric!  
+　That is, a bunch of People could point to a skill, 
+  but the skill need not relate back to just those people. 
++ Typically it would, but such symmetry is not a requirement.  
+```
 
 ## Attribute of the Relathionship
 
