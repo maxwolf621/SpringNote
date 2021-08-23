@@ -1,225 +1,3 @@
-<style>
-html,
-body, 
-.ui-content,
-/*Section*/
-.ui-toc-dropdown{
-    background-color: #1B2631;
-    color: #9BCBFC;
-}
-
-body > .ui-infobar {
-    display: none;
-}
-.ui-view-area > .ui-infobar {
-    display: block ;
-    color: #5D6D7E ;
-}
-
-.markdown-body h1,
-.markdown-body h2,
-.markdown-body h3,
-.markdown-body h4,
-.markdown-body h5,
-.markdown-body blockquote{	
-    /*#7FFFD4*/
-    /*#59FFFF*/
-    color: #7FFFD4;
-}
-
-
-/* > */
-.markdown-body blockquote {
-color: #9BCBFC ;
-border-left-color: #B22222 ;
-font-size: 16px;
-}
-
-.markdown-body h6{
-    color: gold;
-}
-.markdown-body h1,
-.markdown-body h2 {
-    border-bottom-color: #5D6D7E;
-    border-bottom-style: ;
-    border-bottom-width: 3px;
-}
-
-.markdown-body img {
-    background-color: transparent;
-}
-
-/* [](htpp://) */
-a,.open-files-container li.selected a {
-    color: #D6EAF8;
-}
-
-/* == == */
-.markdown-body mark,
-mark 
-{
-    background-color: #708090 !important ;
-    color: gold;
-    margin: .1em;
-    padding: .1em .2em;
-    font-family: Helvetica;
-}
-
-/* scroll bar */
-.ui-edit-area .ui-resizable-handle.ui-resizable-e {
-background-color: #303030;
-border: 1px solid #303030;
-box-shadow: none;
-}
-
-/* info bar */
-.ui-infobar {
-color: #999;
-}
-
-/* `` */
-.markdown-body code,
-.markdown-body tt {
-    color: #eee;
-    background-color: #424a55;
-}
-
-/* ``` ``` */
-.markdown-body pre {
-background-color: #1e1e1e;
-border: 1px solid #555 !important;
-color: #dfdfdf;
-}
-
-/* scroll bar */
-.ui-edit-area .ui-resizable-handle.ui-resizable-e {
-background-color: #303030;
-border: 1px solid #303030;
-box-shadow: none;
-}
-
-/* info bar */
-.ui-infobar {
-color: #999;
-}
-
-/*----Prism.js -----*/
-code[class*="language-"],
-pre[class*="language-"] {
-color: #DCDCDC;
-}
-
-:not(pre)>code[class*="language-"],
-pre[class*="language-"] {
-background: #1E1E1E;
-}
-
-.token.comment,
-.token.block-comment,
-.token.prolog,
-.token.cdata {
-color: #57A64A;
-}
-
-.token.doctype,
-.token.punctuation {
-color: #9B9B9B;
-}
-
-.token.tag,
-.token.entity {
-color: #569CD6;
-}
-
-.token.attr-name,
-.token.namespace,
-.token.deleted,
-.token.property,
-.token.builtin {
-color: #9CDCFE;
-}
-
-.token.function,
-.token.function-name {
-color: #dcdcaa;
-}
-
-.token.boolean,
-.token.keyword,
-.token.important {
-color: #569CD6;
-}
-
-.token.number {
-color: #B8D7A3;
-}
-
-.token.class-name,
-.token.constant {
-color: #4EC9B0;
-}
-
-.token.symbol {
-color: #f8c555;
-}
-
-.token.rule {
-color: #c586c0;
-}
-
-.token.selector {
-color: #D7BA7D;
-}
-
-.token.atrule {
-color: #cc99cd;
-}
-
-.token.string,
-.token.attr-value {
-color: #D69D85;
-}
-
-.token.char {
-color: #7ec699;
-}
-
-.token.variable {
-color: #BD63C5;
-}
-
-.token.regex {
-color: #d16969;
-}
-
-.token.operator {
-color: #DCDCDC;
-background: transparent;
-}
-
-.token.url {
-color: #67cdcc;
-}
-
-.token.important,
-.token.bold {
-font-weight: bold;
-}
-
-.token.italic {
-font-style: italic;
-}
-
-.token.entity {
-cursor: help;
-}
-
-.token.inserted {
-color: green;
-}
-  
-</style>
-
 ###### tags: `Hibernate`
 # Database table relationships
 [TOC]
@@ -228,14 +6,15 @@ color: green;
 [Reference](https://stackoverflow.com/questions/3113885/difference-between-one-to-many-many-to-one-and-many-to-many)
 
 - one-to-many 
-     > is the most common relationship, and ==it associates a row from a parent table to multiple rows in a child table.==  
+  > is the most common relationship, and it associates a row from a parent table to multiple rows in a child table. 
 - one-to-one 
-     >requires the child table Primary Key to be associated via a Foreign Key with the parent table Primary Key column.  
+  > requires the child table Primary Key to be associated via a Foreign Key with the parent table Primary Key column.  
 - many-to-many 
-   > requires a link table containing two Foreign Key columns that reference the two different parent tables.  
-[Many To Many Association](/tJJtCj7_Rs6XlLsqLOtG2A)
-## Direction One to Many and Many to Many 
+  > requires a link table containing two Foreign Key columns that reference the two different parent tables.  
+  > [Many To Many Association](/tJJtCj7_Rs6XlLsqLOtG2A)
 
+## Direction One to Many and Many to Many 
+ 
 One-to-Many: One Person Has Many Skills, a Skill is not reused between Person(s)
 - Unidirectional: A Person can directly reference Skills via its Set
 - Bidirectional: Each "child" Skill has a single pointer back up to the Person (which is not shown in your code)
@@ -244,14 +23,16 @@ Many-to-Many: One Person Has Many Skills, a Skill is reused between Person(s)
 - Unidirectional: A Person can directly reference Skills via its Set
 - Bidirectional: A Skill has a Set of Person(s) which relate to it.
 
-In a One-To-Many relationship, one object is the "parent" and one is the "child". The parent controls the existence of the child.   
+In a One-To-Many relationship, one object is the "parent" and one is the "child".  
+The parent controls the existence of the child.   
 
-In a Many-To-Many, the existence of either type is dependent on something outside the both of them (in the larger application context).  
+In a Many-To-Many, the existence of either type is dependent on something outside the both of them  
+(in the larger application context).  
 
 
 Many-To-Many Bidirectional relationship does not need to be symmetric! 
-- That is, a bunch of People could point to a skill, but the skill need not relate back to just those people. Typically it would, but such symmetry is not a requirement. Take love
-
+- That is, a bunch of People could point to a skill, but the skill need not relate back to just those people. 
+  > Typically it would, but such symmetry is not a requirement.
 
 
 ## Attribute
@@ -262,10 +43,9 @@ Many-To-Many Bidirectional relationship does not need to be symmetric!
     >> This is useful for cleaning up dependent objects (e.g. Address) that should not exist without a reference from an owner object (e.g. Employee).
 
 
-For example
+For example A Post can have many comments  
 >![](https://i.imgur.com/Db6bn7z.png)
->> A Post can have many comments
-- Note that the relationship is based on the Foreign Key column (e.g., post_id) in the child table.
+- the relationship is based on the Foreign Key column (e.g., post_id) in the child table.
 
 ## `@OneToMany`
 
@@ -279,16 +59,18 @@ For example
 - Many Side we can call it `Child Entity` or `Owning Side`
 
 ## Father(MappedBy) and Child(Owning)?
-> Concept
+
+Concept
 > : If Father doesn't exist then Child will not exist which means child must be dependent on father   
 > - The Foreign Key in Child Entity (which references to Father entity's Primary key)
 
-- So as in database
-    > To **identify** Child Entity (Weak Entity).  
-    > The Foreign key in Child Entity must map to the primary Key in Father Entity. 
+So as in database
+> To **identify** Child Entity (Weak Entity).  
+> The Foreign key in Child Entity must map to the primary Key in Father Entity. 
 
 ### Unidirectional `@OneToMany`
-```java=
+
+```java
 /* MappedBy Side */
 @Entity(name = "Post")
 @Table(name = "post")
@@ -324,7 +106,7 @@ public class PostComment {
 ```
 
 To persist 1 Post and 3 PostComments
-```java=
+```java
 Post post = new Post("first Post");
 post.getComments().add(new PostComment("My first review"));
 post.getComments().add(new PostComment("My Second review"));
@@ -332,7 +114,7 @@ post.getComments().add(new PostComment("My Third review"));
 ```
 
 Hibernate will execute SQL statements like this
-```sql=
+```sql
 /* Create A New Post */
 insert into post (title, id)
 values ('First post', 1)
@@ -449,9 +231,7 @@ postcomment references to post
 - the `@OneToMany` with the mappedBy attribute set, you have a bidirectional association. In our case, both the Post entity has a collection of PostComment child entities, and the child PostComment entity has a reference back to the parent Post entity
 
 
-
-
-```java=
+```java
 @Entity(name = "Post")
 @Table(name = "post")
 public class Post {
@@ -507,7 +287,7 @@ public class PostComment {
 
 
 By property of `mappedBy` , the hibernate will do like 
-```sql=
+```sql
 /* Create Post */
 insert into post (title, id)
 values ('First post', 1)
@@ -541,7 +321,7 @@ private ReferenceToTableName ref(){
 
 For example 
 A Company can have lot of branches
-```java=
+```java
 /* MappedBy side */
 @Entity
 public class Company {
