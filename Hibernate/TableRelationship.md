@@ -107,7 +107,7 @@ public class PostComment {
 ```
 
 To persist 1 Post and 3 PostComments
-```java=
+```java
 Post post = new Post("first Post");
 post.getComments().add(new PostComment("My first review"));
 post.getComments().add(new PostComment("My Second review"));
@@ -154,8 +154,11 @@ only the `Post` entity will define a `@OneToMany` association to the child `Post
 ```java
 /**
  * Add {@code @JoinColumn = mappedby PK} to our 
- * mappedby side 
- * and owning side stays the same
+ * mappedby side and owning side stays the same
+ * --------------------------------------------
+ * literally it means joincolumn the fk "post_id" to
+ * each comment where it's post_id references 
+ * this entity's pk 
  */
 @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 @JoinColumn(name = "post_id")
@@ -181,7 +184,8 @@ values ('My third review', 4)
 /**
  * Because of 
  * @JoinColum(name = "post_id")
- * Hibernate will set up post_comment's ForeignKey
+ * Hibernate will join a new column post_id as ForeignKey
+ * In post_comment with sepecific post_id value
  */
 update post_comment set post_id = 1 where id = 2
 update post_comment set post_id = 1 where id = 3
@@ -191,7 +195,7 @@ update post_comment set post_id = 1 where id = 4
   > During the collection handling phase, the Foreign Key column is updated accordingly.
 
 If we need to delete a record in the child entity
-```java=
+```java
 post.getComments().remove(0);
 ```
 
