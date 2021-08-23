@@ -68,6 +68,7 @@ So as in database
 
 
 ### Unidirectional `@OneToMany`
+
 ```java
 /**
  * MappedBy Side
@@ -318,6 +319,8 @@ values (1, 'My second review', 3)
 insert into post_comment (post_id, review, id)
 values (1, 'My third review', 4)
 ```
+
+##　[`mappedBy` and `@JoinColumn`](https://www.baeldung.com/jpa-join-column)
 
 
 ## Usage of `@JoinColumn`
