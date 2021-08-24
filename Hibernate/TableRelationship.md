@@ -282,11 +282,11 @@ private List<Task> tasks;
 
 - Using `mappedBy` element defines a bidirectional relationship.  
     > **This attribute allows you to refer the associated entities from both sides**
-
+ 
 
 ![](https://i.imgur.com/k6ZZIgv.png)
 - `@OneToMany` with the `mappedBy` attribute set, you have a bidirectional association.  
-  > In our case, both the Post entity has a collection of `PostComment` child entities, and the child `PostComment` entity has a reference back to the parent Post entity
+   > In our case, both the Post entity has a collection of `PostComment` child entities, and the child `PostComment` entity has a reference back to the parent Post entity
 
 
 ```java
@@ -298,8 +298,11 @@ public class Post {
     private Long id;
     private String title;
  
+    /**
+     * this given column is maintained by the anothr entity
+     * whose attribute/column anmed `post` 
+     */
     @OneToMany(
-        // mappedBy 'post' attribute in PostComment
         mappedBy = "post",
         cascade = CascadeType.ALL,
         orphanRemoval = true
@@ -361,22 +364,17 @@ insert into post_comment (post_id, review, id)
 values (1, 'My third review', 4)
 ```
 
-- [`mappedBy` and `@JoinColumn`](https://www.baeldung.com/jpa-join-column)
+### [`mappedBy` and `@JoinColumn`](https://www.baeldung.com/jpa-join-column)
 
-
-## Usage of `@JoinColumn`
 [Reference](https://stackoverflow.com/questions/11938253/jpa-joincolumn-vs-mappedby)
-
-#### `@JoinColumn` and `ｍappedBy`
 
 The annotation `@JoinColumn(name = x , referencedColumnName = y)` indicates that this entity is the owner of the relationship **(that is: the corresponding table has a column with a foreign key `x` to the referenced table `y`)**
 
-The attribute `mappedBy` indicates that the entity in this side is the inverse of the relationship, and **the owner(控制權) resides in the other entity.**  
-- Simply says To Access the other table from the class with `mappedBy` (bidirectional relationship).
+The attribute `mappedBy` indicates that the entity in this side is the inverse of the relationship, and **the owner(控制權) resides in the other entity.**
 
-Syntax   
+#### Syntax of `@JoinColumn`   
 ```java
-@JoinColum( name = MY_Fk_name , referencedColumnName = Reference To )
+@JoinColum( name = this_table_Fk_name , referencedColumnName = "column_from_other_entity" )
 private ReferenceToTableName ref(){
     //...
 }
@@ -396,9 +394,13 @@ public class Company {
                cascade = CascadeType.ALL, 
                fetch = FetchType.LAZY, 
                orphanRemoval = true)
-    // fk compandId of branch reference to which pk id of Company 
+    /**
+      * join a column named companyId as FK and references it to 
+      * a column named id in other entity
+      */
     @JoinColumn(name = "companyId", referencedColumnName = "id")
     private List<Branch> branches = new ArrayList<>();
+    
     //...
 }
 
@@ -408,7 +410,9 @@ public class Branch {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
     private Integer id;
+    
     private string name;
     // ...
 }
