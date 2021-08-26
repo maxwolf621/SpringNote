@@ -1,17 +1,15 @@
 ###### tags: `Hibernate`
-# Hibernate Query Language
-[TOC]
-[Reference](https://www.codejava.net/frameworks/hibernate/hibernate-query-language-hql-example)
-
+# [Hibernate Query Language](https://www.codejava.net/frameworks/hibernate/hibernate-query-language-hql-example)
 
 ## Properties of HQL
 1. SQL Similarity
-2. Full Object-Oriented
-    > HQL can operated with inheritance, polymorphism ...
-3. Case-Insensitive for keyword
-    > e.g. Select, SELECT, select they are the same
+2. **Full Object-Oriented**
+   > HQL can operated with inheritance, polymorphism ...
+3. Case-Insensitive (for keyword)   
+   > e.g. `Select`, `SELECT`, `select` they are the same
 
 ## Create A Query
+
 ```java
 String hql = "From x where x.value = 'Y' ";
 
@@ -22,9 +20,10 @@ String hql = "From x where x.value = 'Y' ";
  */
 Query query = session.createQuery(hql);
 ```
+
 ## List `list` and int `executeUpdate` methods
 
-Using list or update methods depending on the type of the query
+Using `list` or `executeUpdate` methods depending on the type of the query
 
 For `SELECT` in HQL, then we use `list` method
 ```java
@@ -36,10 +35,13 @@ For `SELECT` in HQL, then we use `list` method
 List<Model_Class> listResult = query.list();
 
 /** FOR EXAMLE **/
+
 String hql = "from Category";
 Query query = session.createQuery(hql);
+
 /**
- * <pre> SELECT FROM CATEGORY </pre>
+ * <pre> SELECT FROM CATEGORY 
+ * </pre>
  */
 List<Category> listCategories = query.list();
  
@@ -52,10 +54,11 @@ for (Category aCategory : listCategories) {
 ```
 
 for `INSERT`, `UPDATE`, `DELETE`, then we use `executeUpdate()`
-```java=
+```java
 /**
  * @return 
- *    if resutlt is bigger than (>) 1 successful
+ * If resutlt(integer) is bigger than (>) 1 
+ * then execute successful
  */ 
 int result = query.executeUpdate();
 ```
@@ -64,13 +67,14 @@ int result = query.executeUpdate();
 
 ```java
 /**
- * <pre> 
- * sql Syntax :Select from xx where xxx 
+ * <pre> sql Syntax :Select from xx where xxx 
  * </pre>
  */
-String hql = "from tableX where value = 'X' ";
+String hql  ="from tableX where value = 'X' ";
 String hql2 ="from tableX where TableY.value = 'X' ";
 Query query = session.createQuery(hql);
+Query query = session.createQuery(hql2);
+
 /**
  * {@code list} means <pre> SELECT <pre> 
  */
@@ -78,9 +82,11 @@ List<Product> listProducts = query.list();
 
 /** FOR EXAMPLE **/
 String hql = "from Product where category.name = 'Computer'";
+
 Query query = session.createQuery(hql);
+
 List<Product> listProducts = query.list();
- 
+
 for (Product aProduct : listProducts) {
     System.out.println(aProduct.getName());
 }
@@ -92,24 +98,24 @@ for (Product aProduct : listProducts) {
 String hql = "from table where value like :keyword";
 
 /**
- * <p> Keywrod = Value </p>
+ * <p> keywrod </p>
  */
 String keyword = "New";
 
 /**
  * <p> create a query 
- *     that asks for {@code keyword} 
- * </p>
+ *     that asks for {@code keyword} </p>
  */
 Query query = session.createQuery(hql);
 
 /* 
- * {@code setParameter(String Keyword, String value)}
+ * {@code setParameter(String Keyword, "%" + String value + "%")}
  */
 query.setParameter("keyword", "%" + keyword + "%");
 
 /**
- * <pre> SELECT from table where value like :keyword </re>
+ * <pre> SELECT from table where value like :keyword 
+ * </pre>
  */
 List<ModelClass> listProducts = query.list();
 ```
@@ -133,16 +139,19 @@ if (rowsAffected > 0) {
 String hqlUp = "update table set valueA_ = :valueA where valueB_ = :valueB";
 String hqlDel = "delete from tableC where Attribute = :value";
 Query query = session.createQuery(hql);
+
 query.setParameter(valueA_, valueA);
 query.setParameter(valueB_, valueB);
  
 int rowsAffected = query.executeUpdate();
 
 
+```java
 /** FOR EXAMPLE **/
+
 String hql = "update Product set price = :price where id = :id";
- 
 Query query = session.createQuery(hql);
+
 query.setParameter("price", 488.0f);
 query.setParameter("id", 43l);
  
@@ -163,6 +172,7 @@ if (rowsAffected > 0) {
 ```
 
 ## Join Query 
+
 HQL supports the following join types (similar to SQL):  
 - innerjoin (can be abbreviated as join).
 - leftouterjoin (can be abbreviated as leftjoin).
@@ -171,14 +181,17 @@ HQL supports the following join types (similar to SQL):
 
 ```java
 /**
- * <p> a query that retrieves results 
+ * <p> a query that retrieves results  
  *     which is a join between 
  *     two tables Product and Category
  * </p>
  */
 String hql = "from Product p inner join p.category";
- 
 Query query = session.createQuery(hql);
+
+/**
+  * {@code Object[]}
+  */
 List<Object[]> listResult = query.list();
  
 for (Object[] aRow : listResult) {
@@ -187,15 +200,19 @@ for (Object[] aRow : listResult) {
     System.out.println(product.getName() + " - " + category.getName());
 }
 ```
+
 Using the join keyword in HQL is called explicit join.  
-Note that a JOIN query returns a list of Object arrays, so we need to deal with the result set differently:  
-`List<Object[]> listResult = query.list();`
-HQL provides with keyword which can be used in case you want to supply extra join conditions. For example:  
-`from Product p inner join p.category with p.price > 500`
-That joins the Product and Category together with a condition specifies that product’s price must be higher than 500.  
-As stated earlier, we can write implicit join query which uses dot-notation. For example:  
-`from Product where category.name = 'Computer'`
-That result in innerjoin in the resulting SQL statement.  
+
+- Note that a JOIN query returns a list of Object arrays, so we need to deal with the result set differently:  
+  > `List<Object[]> listResult = query.list();`
+
+- HQL provides with keyword which can be used in case you want to supply extra join conditions. For example:  
+  > `from Product p inner join p.category with p.price > 500`
+  > That joins the Product and Category together with a condition specifies that product’s price must be higher than 500.  
+
+- we can write implicit join query which uses dot-notation. For example:  
+  > `from Product where category.name = 'Computer'`  
+  >　That result in innerjoin in the resulting SQL statement.  
  
 ## Hibernate Sort Query Example
 
@@ -307,6 +324,7 @@ For example, the following query returns only products with price is ranging fro
 `from Product where price >= 500 and price <= 1000`
 
 ## Using Aggregate Functions in Hibernate Query
+
 HQL supports the following aggregate functions:
 ```
 avg(…) 
@@ -331,119 +349,3 @@ List listResult = query.list();
 Number number = (Number) listResult.get(0);
 System.out.println(number.intValue());
 ```
-<style>
-/*----Prism.js -----*/
-code[class*="language-"],
-pre[class*="language-"] {
-color: #DCDCDC;
-}
-
-:not(pre)>code[class*="language-"],
-pre[class*="language-"] {
-background: #1E1E1E;
-}
-
-.token.comment,
-.token.block-comment,
-.token.prolog,
-.token.cdata {
-color: gold;
-}
-
-.token.doctype,
-.token.punctuation {
-color: #9B9B9B;
-}
-
-.token.tag,
-.token.entity {
-color: #569CD6;
-}
-
-.token.attr-name,
-.token.namespace,
-.token.deleted,
-.token.property,
-.token.builtin {
-color: #9CDCFE;
-}
-
-.token.function,
-.token.function-name {
-color: #dcdcaa;
-}
-
-.token.boolean,
-.token.keyword,
-.token.important {
-color: #569CD6;
-}
-
-.token.number {
-color: #B8D7A3;
-}
-
-.token.class-name,
-.token.constant {
-color: #4EC9B0;
-}
-
-.token.symbol {
-color: #f8c555;
-}
-
-.token.rule {
-color: #c586c0;
-}
-
-.token.selector {
-color: #D7BA7D;
-}
-
-.token.atrule {
-color: #cc99cd;
-}
-
-.token.string,
-.token.attr-value {
-color: #D69D85;
-}
-
-.token.char {
-color: #7ec699;
-}
-
-.token.variable {
-color: #BD63C5;
-}
-
-.token.regex {
-color: #d16969;
-}
-
-.token.operator {
-color: #DCDCDC;
-background: transparent;
-}
-
-.token.url {
-color: #67cdcc;
-}
-
-.token.important,
-.token.bold {
-font-weight: bold;
-}
-
-.token.italic {
-font-style: italic;
-}
-
-.token.entity {
-cursor: help;
-}
-
-.token.inserted {
-color: green;
-}
-</style>
