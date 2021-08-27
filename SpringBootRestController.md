@@ -1,10 +1,7 @@
 ###### tags: `Spring Boot`
-# A BackEnd Spring Project Steps
-[TOC]
-
+## Spring Boot `RestControlle`
 ## Controller
-
-```java=
+```java
 @RestController
 @RequestMapping("/api")
 public class MemberController {
@@ -25,10 +22,7 @@ public class MemberController {
 }
 
 ```
-
-- We can have different controls for different Repositories/ Servers in the Controller
-
-- @RestController = @Controller + @ResponseBody, 
-    > ResponseBody會將返回結果直接寫在Http Response Body中, 因為我們資料傳輸時通常只傳回Json, 所以大部分都會使用這Annotation頁面的導頁與指定會交由前端(React,Angular...etc...)來做
-
+- We can have different controls for different _Repositories/Servers_ in the Controller
+- `@RestController` = `@Controller` + `@ResponseBody`, 
+    > **ResponseBody會將返回結果直接寫在Http Response Body中**, 因為我們資料傳輸時通常只傳回Json, 所以大部分都會使用這Annotation頁面的導頁與指定會交由前端(React,Angular...)來做
 - **`@GetMapping`,` @PostMapping`,` @PutMapping`, `@DeleteMapping`與Http的GET, POST, PUT, DELETE等Methods相對應, 只要遵守RESTful規範直接使用即可**
