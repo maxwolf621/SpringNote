@@ -1,12 +1,12 @@
-###### tags: `Hibernate` , `Spring Boot`
 # Transaction
 
-Once an entity is actively managed by Hibernate, all changes are going to be automatically propagated to the database.  
+Once an entity is actively managed by Hibernate, all changes are going to be automatically propagated to the database.     
+
 Manipulating domain model entities (along with their associations) is much easier than writing and maintaining SQL statements.  
 Without an ORM tool, adding a new column requires modifying all associated INSERT/UPDATE statements.  
 
+## The Entity States
 
-## The Enitity Statses
 #### Related Notes
 [Session Factory](/3xYG4oxDQHq9u3BHlL8qsg)  
 [Hibernate Session](/ItrVlAdSSEuo7vLEjtXGRw)  
@@ -16,10 +16,9 @@ Without an ORM tool, adding a new column requires modifying all associated INSER
 ![](https://i.imgur.com/ueO4FzQ.png)  
 ![](https://i.imgur.com/BAd8i1q.png)  
  
-### New (Transient)
-A newly created object that 
-1. hasn’t **ever been associated with a Hibernate Session** (a.k.a Persistence Context) 
-2. and is not **mapped to any database** table row is considered to be in the New (Transient) state.
+
+### `New` (Transient)
+A newly created object that hasn’t **ever been associated with a Hibernate Session** (a.k.a Persistence Context) and is not **mapped to any database** table row is considered to be in the New (Transient) state.
 
 To become persisted we need to either explicitly call the `EntityManager#persist` method or make use of the transitive persistence mechanism.
 
@@ -58,7 +57,7 @@ Although JPA demands that managed entities only are allowed to be removed, Hiber
 
 ![](https://i.imgur.com/Nzdy9nA.png)
 
-```java=
+```java
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -80,7 +79,7 @@ public class LoadExample {
 ```
 
 To catch an exception 
-```java=
+```java
 try {  
     session = sessionFactory.openSession();  
     tx = session.beginTransaction();  
@@ -104,7 +103,7 @@ finally {
 
 ### @EnableTransactionManagement 
 
-```java=
+```java
 @Configuration
 @EnableTransactionManagement
 public class PersistenceJPAConfig{
@@ -137,7 +136,7 @@ public class PersistenceJPAConfig{
 
 All Transactionals extends   `org.springframework.transaction.PlatformTransactionManager`  
 ![](https://i.imgur.com/x4yye9l.png)
-```java=
+```java
 public interface PlatformTransactionManager {
   TransactionStatus getTransaction(TransactionDefinition definition)
   throws TransactionException;
@@ -152,11 +151,9 @@ public interface PlatformTransactionManager {
 ![](https://i.imgur.com/yC8DnR6.png)
 
 
-:::danger  
-By default, **rollback happens for run-time**, unchecked exceptions only.  
-**The checked exception does not trigger a rollback of the transaction.**
-> We can, of course, configure this behavior with the rollbackFor{ClassName} and noRollbackFor{ClassName} annotation parameters.
-:::  
+By default, **rollback happens for run-time**, unchecked exceptions only.    
+**The checked exception does not trigger a rollback of the transaction.**   
+We can, of course, configure this behavior with the `rollbackFor{ClassName}` and `noRollbackFor{ClassName}` annotation parameters.   
 
 ### Proxy of Transaction
 ![](https://i.imgur.com/chIcGgL.png)
@@ -169,7 +166,7 @@ If the transactional bean is implementing an interface, by default the proxy wil
 
 Another cases of using proxies is that only **public methods or classes** should be annotated with `@Transactional`.  
 
-- Methods of any other visibilities will simply ignore the annotation silently as these are not proxied.
+- Methods of any other visibilities(e.g. `private` ... etc ) will simply ignore the annotation silently as these are not proxies.
 
 #### Flow of transactional
 [Reference](https://virtualmackem.blog/2019/03/28/transactional-gotchas/)
@@ -184,7 +181,7 @@ _<u>When a @Transactional method A calls another @Transactional method B, an unc
  - It’s because the default propagation on `@Transactional` is `REQUIRED`. 
  - The meaning for `REQUIRED` as follows: Support a current transaction, create a new one if none exists
 
-**The @Transactional annotation places `advice` _around_ a method (either with AspectJ or a proxy, more of that later). which means some of the `advice` runs `before` the method and some `after`.**
+**The `@Transactional` annotation places `advice` _around_ a method (either with AspectJ or a proxy, more of that later). which means some of the `advice` runs `before` the method and some `after`.**
 
 It works like this:
 ![](https://i.imgur.com/EdM63ve.png)
@@ -224,8 +221,6 @@ ClassNotFoundException
 
 ### Attribute of `@Transactional`
 
-
-
 The annotation `@Transactional` supports further configuration :
 - the `Propagation` Type of the transaction
 - the `Isolation` Level of the transaction
@@ -235,16 +230,11 @@ The annotation `@Transactional` supports further configuration :
     > ![](https://i.imgur.com/0gMnn28.png)
 - the `Rollback` rules for the transaction
 
-
-
-
-[Details](https://medium.com/@rameez.s.shaikh/spring-boot-transaction-tutorial-understanding-transaction-propagation-ad553f5d85d4)
-[DetailsCN](https://blog.csdn.net/m0_37779570/article/details/81352587?utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control&dist_request_id=&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control)
-### Rollback 
+[Details](https://medium.com/@rameez.s.shaikh/spring-boot-transaction-tutorial-understanding-transaction-propagation-ad553f5d85d4)   
 
 The default rollback behavior in the declarative approach will rollback on run-time exceptions.
-```java=
-// A default behaviour
+```java
+// A default behavior
 @Transactional
 public void createCourseDeclarativeWithRuntimeException(Course course) {
     courseDao.create(course);
@@ -253,7 +243,7 @@ public void createCourseDeclarativeWithRuntimeException(Course course) {
 ```
 
 #### RollBack for a checked exception
-```java=
+```java
 @Transactional(rollbackFor = { SQLException.class })
 public void createCourseDeclarativeWithCheckedException(Course course) throws SQLException {
     courseDao.create(course);
@@ -262,246 +252,10 @@ public void createCourseDeclarativeWithCheckedException(Course course) throws SQ
 ```
 
 #### noRollback for a unchecked exception
-```java=
+```java
 @Transactional(noRollbackFor = { SQLException.class })
 public void createCourseDeclarativeWithNoRollBack(Course course) throws SQLException {
     courseDao.create(course);
     throw new SQLException("Throwing exception for demoing rollback");
 }
 ```
-
-
-
-<style>
-html,
-body, 
-.ui-content,
-/*Section*/
-.ui-toc-dropdown{
-    background-color: #1B2631;
-    color: #9BCBFC;
-}
-
-body > .ui-infobar {
-    display: none;
-}
-.ui-view-area > .ui-infobar {
-    display: block ;
-    color: #5D6D7E ;
-}
-
-.markdown-body h1,
-.markdown-body h2,
-.markdown-body h3,
-.markdown-body h4,
-.markdown-body h5,
-.markdown-body blockquote{	
-    /*#7FFFD4*/
-    /*#59FFFF*/
-    color: #7FFFD4;
-}
-
-/* > */
-.markdown-body blockquote {
-color: #9BCBFC ;
-border-left-color: #B22222 ;
-font-size: 16px;
-}
-
-.markdown-body h6{
-    color: gold;
-}
-.markdown-body h1,
-.markdown-body h2 {
-    border-bottom-color: #5D6D7E;
-    border-bottom-style: ;
-    border-bottom-width: 3px;
-}
-
-.markdown-body h1 .octicon-link,
-.markdown-body h2 .octicon-link,
-.markdown-body h3 .octicon-link,
-.markdown-body h4 .octicon-link,
-.markdown-body h5 .octicon-link,
-.markdown-body h6 .octicon-link {
-    color: yellow;
-}
-
-.markdown-body img {
-    background-color: transparent;
-}
-
-.ui-toc-dropdown .nav>.active:focus>a, .ui-toc-dropdown .nav>.active:hover>a, .ui-toc-dropdown .nav>.active>a {
-    color: gold;
-    border-left: 2px solid white;
-}
-/*dropdown Bar*/
-.ui-toc-label.btn {
-    background-color: #191919;
-    color: #eee;
-}
-/*inside the bar*/
-.ui-toc-dropdown .nav>li>a:focus, 
-.ui-toc-dropdown .nav>li>a:hover {
-    color: gold;
-    border-left: 1px solid white;
-}
-
-/* [](htpp://) */
-a,.open-files-container li.selected a {
-    color: #2C3E50;
-}
-
-/* == == */
-.markdown-body mark,
-mark 
-{
-    background-color: #708090 !important ;
-    color: gold;
-    margin: .1em;
-    padding: .1em .2em;
-    font-family: Helvetica;
-}
-
-/* scroll bar */
-.ui-edit-area .ui-resizable-handle.ui-resizable-e {
-background-color: #303030;
-border: 1px solid #303030;
-box-shadow: none;
-}
-/* info bar */
-.ui-infobar {
-color: #999;
-}
-
-/* `` */
-.markdown-body code,
-.markdown-body tt {
-    color: #eee;
-    background-color: #424a55;
-}
-
-/* ``` ``` */
-.markdown-body pre {
-background-color: black ;
-border: 1px solid !important;
-  color: #dfdfdf;
-}
-  
-/*----Prism.js -----*/
-code[class*="language-"],
-pre[class*="language-"] {
-color: #DCDCDC;
-}
-
-:not(pre)>code[class*="language-"],
-pre[class*="language-"] {
-background: #1E1E1E;
-}
-
-.token.comment,
-.token.block-comment,
-.token.prolog,
-.token.cdata {
-color: #57A64A;
-}
-
-.token.doctype,
-.token.punctuation {
-color: #9B9B9B;
-}
-
-.token.tag,
-.token.entity {
-color: #569CD6;
-}
-
-.token.attr-name,
-.token.namespace,
-.token.deleted,
-.token.property,
-.token.builtin {
-color: #9CDCFE;
-}
-
-.token.function,
-.token.function-name {
-color: #dcdcaa;
-}
-
-.token.boolean,
-.token.keyword,
-.token.important {
-color: #569CD6;
-}
-
-.token.number {
-color: #B8D7A3;
-}
-
-.token.class-name,
-.token.constant {
-color: #4EC9B0;
-}
-
-.token.symbol {
-color: #f8c555;
-}
-
-.token.rule {
-color: #c586c0;
-}
-
-.token.selector {
-color: #D7BA7D;
-}
-
-.token.atrule {
-color: #cc99cd;
-}
-
-.token.string,
-.token.attr-value {
-color: #D69D85;
-}
-
-.token.char {
-color: #7ec699;
-}
-
-.token.variable {
-color: #BD63C5;
-}
-
-.token.regex {
-color: #d16969;
-}
-
-.token.operator {
-color: #DCDCDC;
-background: transparent;
-}
-
-.token.url {
-color: #67cdcc;
-}
-
-.token.important,
-.token.bold {
-font-weight: bold;
-}
-
-.token.italic {
-font-style: italic;
-}
-
-.token.entity {
-cursor: help;
-}
-
-.token.inserted {
-color: green;
-}
-
-
-</style>

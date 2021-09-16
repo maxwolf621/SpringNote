@@ -1,166 +1,11 @@
-```
-<style>
-html,
-body, 
-.ui-content,
-/*Section*/
-.ui-toc-dropdown{
-    background-color: #1B2631;
-    color: #9BCBFC;
-}
-
-body > .ui-infobar {
-    display: none;
-}
-.ui-view-area > .ui-infobar {
-    display: block ;
-    color: #5D6D7E ;
-}
-
-.markdown-body h1,
-.markdown-body h2,
-.markdown-body h3,
-.markdown-body h4,
-.markdown-body h5,
-.markdown-body blockquote{	
-    /*#7FFFD4*/
-    /*#59FFFF*/
-    color: #7FFFD4;
-}
-
-.dropdown-menu>li>a:focus,
-.dropdown-menu>li>a:hover {
-background-color: #555555;
-color: #eee;
-}
-
-
-/* > */
-.markdown-body blockquote {
-color: #9BCBFC ;
-border-left-color: #B22222 ;
-font-size: 16px;
-}
-
-.markdown-body h6{
-    color: gold;
-}
-.markdown-body h1,
-.markdown-body h2 {
-    border-bottom-color: #5D6D7E;
-    border-bottom-style: ;
-    border-bottom-width: 3px;
-}
-
-.markdown-body h1 .octicon-link,
-.markdown-body h2 .octicon-link,
-.markdown-body h3 .octicon-link,
-.markdown-body h4 .octicon-link,
-.markdown-body h5 .octicon-link,
-.markdown-body h6 .octicon-link {
-    color: yellow;
-}
-
-.markdown-body img {
-    background-color: transparent;
-}
-
-.ui-toc-dropdown .nav>.active:focus>a, .ui-toc-dropdown .nav>.active:hover>a, .ui-toc-dropdown .nav>.active>a {
-    color: gold;
-    border-left: 2px solid white;
-}
-
-.expand-toggle:hover, 
-.expand-toggle:focus, 
-.back-to-top:hover, 
-.back-to-top:focus, 
-.go-to-bottom:hover, 
-.go-to-bottom:focus {
-    color: gold;
-}
-
-/* [](htpp://) */
-a,.open-files-container li.selected a {
-    color: #D2B4DE;
-}
-/* == == */
-.markdown-body mark,
-mark 
-{
-    background-color: #708090 !important ;
-    color: gold;
-    margin: .1em;
-    padding: .1em .2em;
-    font-family: Helvetica;
-}
-/* `` */
-.markdown-body code,
-.markdown-body tt {
-    color: #eee;
-    background-color: #424a55;
-}
-/* ``` ``` */
-.markdown-body pre {
-background-color: #1e1e1e;
-border: 1px solid #555 !important;
-color: #dfdfdf;
-}
-
-/* scroll bar */
-.ui-edit-area .ui-resizable-handle.ui-resizable-e {
-background-color: #303030;
-border: 1px solid #303030;
-box-shadow: none;
-}
-
-.token.char {
-color: #7ec699;
-}
-
-.token.variable {
-color: #BD63C5;
-}
-
-.token.regex {
-color: #d16969;
-}
-
-.token.operator {
-color: #DCDCDC;
-background: transparent;
-}
-
-.token.url {
-color: #67cdcc;
-}
-
-.token.important,
-.token.bold {
-font-weight: bold;
-}
-
-.token.italic {
-font-style: italic;
-}
-
-.token.entity {
-cursor: help;
-}
-
-.token.inserted {
-color: green;
-}
-</style>
-```  
-###### tags: `Spring`
 # Authentication & Authorization
 [TOC]
 
-[Type of Authentication](https://blog.csdn.net/gdp12315_gu/article/details/79905424)  
-[UserDetailsService](https://www.javadevjournal.com/spring-security/spring-security-authentication-providers/)  
-[reference](https://matthung0807.blogspot.com/2019/09/spring-security-userdetailsservice.html)  
-[Definition of User, Pricipal, Subject](https://matthung0807.blogspot.com/2018/03/spring-security-principal.html)  
-[Authentication in HTTP format ](https://blog.csdn.net/kiwi_coder/article/details/28677651)  
+[Type of Authentication](https://blog.csdn.net/gdp12315_gu/article/details/79905424)   
+[UserDetailsService](https://www.javadevjournal.com/spring-security/spring-security-authentication-providers/)   
+[reference](https://matthung0807.blogspot.com/2019/09/spring-security-userdetailsservice.html)   
+[Definition of User, Pricipal, Subject](https://matthung0807.blogspot.com/2018/03/spring-security-principal.html)    
+[Authentication in HTTP format ](https://blog.csdn.net/kiwi_coder/article/details/28677651)    
 
 ## Definitions of Authentication and Authorization
 - Authentication 
@@ -192,17 +37,17 @@ It will create **ThreadLocal** to store current Spring Security's Context (Conta
 
 ### Authentication 
 Spring Security 使用一個 `Authentication` OBJECT 來描述**當前使用者的相關資訊**
-```
+```console
 details
 Credentials (password ... etc)
 principals
-authrotities of the principal 
+authorities of the principal 
 ```
 > **Authentication 物件不需要我們自己去建立，在與系統互動的過程中，Spring Security 會自動為我們建立相應的 Authentication 物件 (via `UserNamePasswordAuthenticationToken`)，然後賦值給當前的 SecurityContext。**
 
 ```java
 public interface Authentication extends Principal, Serializable {    
-    	 /**
+    /**
 	 - Set by an <code>AuthenticationManager</code> to indicate the authorities that the principal has been granted. 
 	 - Note that classes should not rely on this value as being valid unless it has been set by a trusted <code>AuthenticationManager</code>.
 	 - @return the authorities granted to the principal, or an empty collection if the token has not been authenticated. Never null.
@@ -265,9 +110,7 @@ public interface Authentication extends Principal, Serializable {
 }
 ```
 
-
-
-To get a **Authenticated User** from Spring Security of thie Current Thread using `.getPrincipal()`
+To get a **Authenticated User** from Spring Security of this Current Thread using `.getPrincipal()`
 ```java
 Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 if (principal instanceof UserDetails) {
@@ -287,25 +130,24 @@ if (principal instanceof UserDetails) {
 
 ## HTTP basic's Authentication  
 Request directly tells the server client's password and username via Header as the following  
-```
- GET /secret HTTP/1.1
- Authorization: Basic QWxpY2U6MTIzNDU2
+
+```json
+GET /secret HTTP/1.1
+Authorization: Basic QWxpY2U6MTIzNDU2
 ```
 - `QWxpY2U6MTIzNDU2` is Base64encode(password and username)
 
 Response if password and username is correct
-```
- HTTP/1.1 200 OK
+```json
+HTTP/1.1 200 OK
 ```
 else
-```
+```json
 HTTP/1.1 401 Bad credentials
 WWW-Authenticate: Basic realm="Spring Security Application"
 ```
 
-:::danger
 Base64 encode is easy to crack (for example Replay attack ...)
-:::
 
 ## HTTP Digest
 Process
@@ -327,13 +169,13 @@ client <<------- response2:OK --------Server
 
 In request1
 >> No password and username involving
-```
+```json
 GET /secret HTTP/1.1
     ......
 ```  
 In response1
 Server will respond a `nonce` to client
-```
+```json
 HTTP/1.1 401 Full authentication is required to access this resource
 WWW-Authenticate: Digest realm="Contacts Realm via Digest Authentication", qop="auth",nonce="MTQwMTk3OTkwMDkxMzo3MjdjNDM2NTYzMTU2NTA2NWEzOWU2NzBlNzhmMjkwOA=="
 ```  
@@ -341,7 +183,7 @@ WWW-Authenticate: Digest realm="Contacts Realm via Digest Authentication", qop="
 
 In request2
 Client will put password or other important information with nonce together and encrypt it via MD5
-```
+```json
 HTTP/1.1 200 OK
 ...
 ...
@@ -410,10 +252,9 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 }
 ```
-:::info
-When the users send Request, it will be filtered by FilterSecurityInterceptor Filter with `WebSecurityConfigurerAdapter`.
-> Once the Request's URL that requires the authentication => 從`SecurityContextHolder`取得此Client的`Authentication`，判斷是否已經認證過，決定該User能不能access。
-:::
+- When the users send Request, it will be filtered by `FilterSecurityInterceptor` Filter with `WebSecurityConfigurerAdapter`.
+  > Once the Request's URL that requires the authentication => 從`SecurityContextHolder`取得此Client的`Authentication`，判斷是否已經認證過，決定該User能不能access。
+
  
 ## AuthenticationManager and GrantedAuthority
 [GoodeReference](https://blog.csdn.net/weixin_42281735/article/details/105289155)
@@ -430,7 +271,7 @@ Relationship of `AuthenticationManager`, `ProviderManager` and `AuthenticationPr
 ![](https://i.imgur.com/IFhrSwP.png)
 ![](https://i.imgur.com/If4HFFG.png)
 
-#### A Authentication
+#### An Authentication
 ```java
 Authentication authenticate(Authentication authentication) throws AuthenticationException;
 ```
@@ -526,7 +367,7 @@ public Authentication authenticate(Authentication authentication)
   return createSuccessAuthentication(principalToReturn, authentication, user);
 ```
 
-```java=
+```java
 protected Authentication createSuccessAuthentication(Object principal,
     Authentication authentication, UserDetails user) {
   // Ensure we return the original credentials the user supplied,
@@ -541,16 +382,14 @@ protected Authentication createSuccessAuthentication(Object principal,
 
   return result;
 ```
-
-Note that
 - `UserDetailsService`、`UserDetails` and `UserDetailsManager` allow us to be implemented by customized class (like ORM, Hibernate framework ... )
 
 ### Customize AuthenticationProvider implements UserDetailsService
 
-so we can define **custom authentication** by exposing a custom `UserDetailsService` as a bean(if we dont wnat to use Authentication Providers like DaoAuthenticationProvider ... )
+so we can define **custom authentication** by exposing a custom `UserDetailsService` as a bean(if we don't want to use Authentication Providers like DaoAuthenticationProvider ... )
 > Our custom user service can load user based on our data model.  
 
-```java=
+```java
 @Service
 public class CustomUserDetailService implements UserDetailsService {
 

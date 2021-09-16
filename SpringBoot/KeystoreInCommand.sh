@@ -14,7 +14,6 @@ keytool -keypasswd -alias duke -keypass dukekeypasswd -new newpass
 #-keypasswd   : Change private key    
 #             : keytool -keypasswd -alias ACCESSKEYENTRYNAME -keypass OLDPASSWORD -new NEWPASSWORD -storepass STOREPASSWORD -keystore KEYSTORENAME
 keytool -genkey -alias duke -keypass dukekeypasswd
-
     
 keytool -storepasswd -keystore e:/yushan.keystore(需修改口令的keystore) -storepass 123456(原始密碼) -new yushan(新密碼)
 
@@ -40,18 +39,20 @@ keytool -list  -v -keystore e:/keytool /yushan.keystore -storepass 123456
 
 
 #EXPORT/IMPORT THE CERTIFICATE****************************************************************************
-###-export    :將別名指定的CERTIFICATE/PUBLIC KEY匯出到指定的FILE.cer  
-###-file      :File that Stores the certificate that authenticates someone's public key or trusted cerficate
+# -export    :將別名指定的CERTIFICATE/PUBLIC KEY匯出到指定的FILE.cer  
+# -file      :File that Stores the certificate that authenticates someone's public key or trusted cerficate
 #             :keytool -export -alias 需要匯出的別名 -keystore 金鑰庫的名稱 -file 指定匯出的CERTIFICATE位置及CERTIFICATE名稱 -storepass 密碼
-### Export the Cert to the File 
+## Export the Cert to the File 
 #    When A client requests the Authenticated Certificate from you
 keytool -export -alias mykey -file MJ.cer
+
 ### This sample command exports jane’s certificate to the file janecertfile.cer. 
 #     That is, if jane is the alias for a key entry, the command exports the certificate at the bottom of the certificate chain in that keystore entry. 
 #     This is the certificate that authenticates jane’s public key.
 #     If, instead, jane is the alias for a trusted certificate entry, then that trusted certificate is exported
 keytool -export -alias jane -file janecertfile.cer
-###-import    : To import a certificate from a file.cer
+
+### -import    : To import a certificate from a file.cer
 #             : keytool -import -alias 指定匯入條目的別名 -keystore 指定keystore -file 需匯入的CERTIFICATE
 ### Import a certificate for two reasons:
 #   1. add it to the list of trusted certificates, or
@@ -59,9 +60,11 @@ keytool -export -alias jane -file janecertfile.cer
 ### This sample command imports "the certificate(s) in the file jcertfile.cer" 
 #       and stores it in the keystore entry identified by the alias joe.
 keytool -import -alias joe -file jcertfile.cer
-###-printcert :檢視匯出的CERTIFICATE資訊                       
+
+# -printcert :檢視匯出的CERTIFICATE資訊                       
 keytool -printcert -file The_Certificate.crt
 #*********************************************************************************************************
+
 
 #DELETE THE ALIAS**********************************************************
 ###-delete  : 刪除金鑰庫中某條目          

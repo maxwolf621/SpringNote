@@ -7,15 +7,15 @@
 
 ## OnePerRequestFilter
 
-[Explanation](https://stackoverflow.com/questions/13152946/what-is-onceperrequestfilter)
-[SourceCode of abstract OncePerRequestFilter](https://github.com/spring-projects/spring-framework/blob/master/spring-web/src/main/java/org/springframework/web/filter/OncePerRequestFilter.java)
-[Methods](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter/OncePerRequestFilter.html)
-[chainFilter.doFilter](https://stackoverflow.com/questions/2057607/what-is-chain-dofilter-doing-in-filter-dofilter-method)
-[JWT](/o9RYmd2DR96e4XId64Ao5w)
-[Authentication & Authorization](/CrTB3w_mRm-2SFVF648fpw)
-[Login Project](/Pi3Ra4aQQ_2h4P8IjVfpJA)
-[Operation of Userdetails](https://www.mdeditor.tw/pl/gOR8/zh-tw)
-[A login Project](https://blog.csdn.net/weixin_44516305/article/details/88868791)
+[Explanation](https://stackoverflow.com/questions/13152946/what-is-onceperrequestfilter)   
+[SourceCode of abstract OncePerRequestFilter](https://github.com/spring-projects/spring-framework/blob/master/spring-web/src/main/java/org/springframework/web/filter/OncePerRequestFilter.java)   
+[Methods](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter/OncePerRequestFilter.html)  
+[chainFilter.doFilter](https://stackoverflow.com/questions/2057607/what-is-chain-dofilter-doing-in-filter-dofilter-method)  
+[JWT](/o9RYmd2DR96e4XId64Ao5w)   
+[Authentication & Authorization](/CrTB3w_mRm-2SFVF648fpw)  
+[Login Project](/Pi3Ra4aQQ_2h4P8IjVfpJA)   
+[Operation of Userdetails](https://www.mdeditor.tw/pl/gOR8/zh-tw)   
+[A login Project](https://blog.csdn.net/weixin_44516305/article/details/88868791)   
 
 ![](https://i.imgur.com/br6ByIm.png)
 
@@ -193,7 +193,7 @@ public abstract class OncePerRequestFilter extends GenericFilterBean {
 To valid the token from client we need to customize the method `doFilterInternal` in `JwtAuthenticationFilter` extends `OncePerRequestFilter`
 [SourceCode of UserNamePasswordAuthenticationToken](https://github.com/spring-projects/spring-security/blob/master/core/src/main/java/org/springframework/security/authentication/UsernamePasswordAuthenticationToken.java)
 
-```java=
+```java
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
@@ -240,16 +240,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 }
 ```
 
-## Relationship `UserDetails` and `UsernamePasswordAuthenticaitonToken` 
+## Relationship `UserDetails` and `UsernamePasswordAuthenticationToken` 
 ![](https://i.imgur.com/UPaxj2r.png)
 
-#### Userdetails
+#### UserDetails
 
-UserDetails will fetch the authenticated user via Authentication Provider and return a userDetails value
+UserDetails will fetch the authenticated user via Authentication Provider and return a userDetails Instance
 
 [SourceCode](https://github.com/spring-projects/spring-security/blob/main/core/src/main/java/org/springframework/security/core/userdetails/UserDetails.java)
 
-```java=
+
+```java
 public interface UserDetails extends Serializable {
 
 	/**
@@ -303,10 +304,11 @@ public interface UserDetails extends Serializable {
 
 }
 ```
+- Interface `UserDetails` will be used by interface UserDetailsService (Read-Only)
+  > we can have implementation of `UserDetails` to have more advanced operations for authentication
 
-used by interface UserDetailsService (Read-Only)
-[SorceCode](https://github.com/spring-projects/spring-security/blob/main/core/src/main/java/org/springframework/security/core/userdetails/UserDetailsService.java)
-```java=
+[SourceCode](https://github.com/spring-projects/spring-security/blob/main/core/src/main/java/org/springframework/security/core/userdetails/UserDetailsService.java)
+```java
 public interface UserDetailsService {
 
 	/**
@@ -331,8 +333,7 @@ public interface UserDetailsService {
 
 - An Authentication implementation that is designed for simple presentation of a username and password.
 
-
-```java=
+```java
 /**
  * This constructor should only be used by
  * <code>AuthenticationManager</code> 
@@ -357,7 +358,7 @@ public UsernamePasswordAuthenticationToken(Object principal, Object credentials,
 
 ## Interface Authentication
 
-```java=
+```java
 public interface Authentication extends Principal, Serializable {
 
 	/**
@@ -425,36 +426,32 @@ public interface Authentication extends Principal, Serializable {
 
 interface Principal represents the abstract notion of a principal, which can be used to represent any entity, such as **an individual, a corporation, and a login id.**
 
-- Principle是指一個存取系統資源(database)的實體(Entity)，**簡單來說就是登入合法的使用者**。
+- Principle是指一個存取系統資源(database)的實體(Entity)，**簡單來說就是登入合法的使用者(獨立性)**。
 
-:::danger
 Principle與User的差異是，==Principal是指一個可辨識的唯一身分(e.g. person with Id card)==，用來代表一個人，一個公司，一個裝置或另一個系統，並不限定於代表一個人；而使用者(User)是指與系統互動的Operator (e.g. client)
-:::
 
 - Spring Security中的principal是來自Authentication.getPrincipal()，**回傳值為被驗證或已被驗證的主體**。
     > 在一個帶有使用者名稱(username)及密碼(password)的驗證請求(authentication request)中，principal即為username。
 
 - ==Spring Security通常用UserDetails來封裝principle資訊==
 
-
 ### credentials
 
-- 根據Authentication.getCredentials()的說明，Credential（憑證）是指用來證明Principal身分的東西，通常是密碼(password)。
+- 根據`Authentication.getCredentials()`的說明，Credential（憑證）是指用來證明Principal身分的東西，通常是密碼(password)。
 
 Spring Security取得credential的方法如下
 ```java 
 Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 Object credentials = auth.getCredentials();
 String password = (String) credentials;
-Authentication.getCredentials()取出的credential是Object型別的物件。
+Authentication.getCredentials() //取出的credential是Object型別的物件。
 ```
 
-:::info
-如果是使用Token驗證，通常credential會被包在token裡面。
-:::
+- 如果是使用Token驗證，通常credential會被包在token裡面。
 
 #### `StringUtils.hasText(String words)` 
-```java=
+
+```java
 StringUtils.hasText(null) = false
 StringUtils.hasText("") = false
 StringUtils.hasText(" ") = false
@@ -468,7 +465,7 @@ StringUtils.hasText(" 12345 ") = true
 ![](https://i.imgur.com/U0WFL88.png)
 [More Details](/CrTB3w_mRm-2SFVF648fpw)  
 
-#### Authentication, AuthenticaionManager and AuthenticationProvide
+#### Authentication, AuthenticationManager and AuthenticationProvider
 
 - Simply put, the AuthenticationManager is the main strategy interface for authentication.
     ```java
@@ -492,7 +489,7 @@ If the principal of the input authentication is valid and verified, Authenticati
 ![](https://i.imgur.com/mRmYugo.png)
 
 
-```java=
+```java
 /**
  * Provides a convenient base class for creating a {@link WebSecurityConfigurer} instance.
  * The implementation allows customization by overriding methods.
@@ -512,7 +509,7 @@ public abstract class WebSecurityConfigurerAdapter implements WebSecurityConfigu
 
 
 Using `addFilterBefore` add our customized filter
-```java=
+```java
 @EnableWebSecurity
 @AllArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -583,7 +580,7 @@ public DaoAuthenticationProvider authProvider() {
 - **Spring's Security `DaoAuthenticationProvider` is a simple authentication provider that uses a Data Access Object (DAO) to retrieve user information from a relational database. It leverages a UserDetailsService (as a DAO) in order to lookup the username, password and GrantedAuthority s.**
 
 userDetailsService method
-```java=
+```java
 public <T extends UserDetailsService> DaoAuthenticationConfigurer<AuthenticationManagerBuilder, T> userDetailsService(
         T userDetailsService) throws Exception {
     this.defaultUserDetailsService = userDetailsService;
@@ -593,7 +590,7 @@ public <T extends UserDetailsService> DaoAuthenticationConfigurer<Authentication
 
 #### DaoAuthenticationComfigurer
 [Source Code](https://github.com/spring-projects/spring-security/blob/e51ca79954096c0897a730ff48367051f6fa8387/config/src/main/java/org/springframework/security/config/annotation/authentication/configurers/userdetails/DaoAuthenticationConfigurer.java#L31)
-```java=
+```java
 public class DaoAuthenticationConfigurer<B extends ProviderManagerBuilder<B>, U extends UserDetailsService>
 		extends AbstractDaoAuthenticationConfigurer<B, DaoAuthenticationConfigurer<B, U>, U> {
 	/**

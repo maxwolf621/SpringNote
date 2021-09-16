@@ -10,9 +10,8 @@ Great the permissions are (normally) expressed as `String`s via the `getAuthorit
 These `String`s let we identify who have the *Authorization/Permission* to access specifics.
 
 We can grant different `GrantedAuthoritys` (permissions) to *users* by putting them into the _security context_.  
-:::info    
+
 A `UserDetailsService` implementations returns a `UserDetails` implementation (containing the needed `GrantedAuthorities`).  
-:::  
 
 ## Role (Name Convention)
 The **permissions** with a naming convention that says that a role is a `GrantedAuthority` that **starts with the prefix `ROLE_`.**  

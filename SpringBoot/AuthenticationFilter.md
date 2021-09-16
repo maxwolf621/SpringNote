@@ -2,7 +2,7 @@
 
 To authenticate the User via UsernamePasswordAuthenticationFilter (it extends AbstractAuthenticationProcessingFilter)
 
-```
+```java
 public class UsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
 

@@ -1,31 +1,30 @@
-
-
-// Graph of Endpoints  https://miro.medium.com/max/530/1*2NztLNRqXhMRtq73sPN4Sg.png 
-    from https://medium.com/@Junx/oauth%E5%8E%9F%E7%90%86%E8%88%87laravel-passport%E5%AF%A6%E4%BD%9C-4-7e17c0115c67
-// Session https://ithelp.ithome.com.tw/articles/10246787
+/** 
+ * Graph of Endpoints  https://miro.medium.com/max/530/1*2NztLNRqXhMRtq73sPN4Sg.png 
+ * from https://medium.com/@Junx/oauth%E5%8E%9F%E7%90%86%E8%88%87laravel-passport%E5%AF%A6%E4%BD%9C-4-7e17c0115c67
+ * Session https://ithelp.ithome.com.tw/articles/10246787
+ */
 
 /************************************************************************
- * Parameter for OAuth2 Prameters                                       *
+ * Parameter for OAuth2 Parameters                                       *
  * (e.g. Authorization Request, Access Token request/response ... etc ) *
  ************************************************************************/
 
-public interface OAuth2ParameterNames {
-
-  // Used Authorization Request
+public interface OAuth2ParameterNames {	
+	// Used Authorization Request
 	String RESPONSE_TYPE = "response_type"; 
   
-  /**
-   * used in Authorization Request and Access Token Request.
-   */
+   /**
+    * used in Authorization Request and Access Token Request.
+    */
 	String CLIENT_ID = "client_id"; 
 	String REDIRECT_URI = "redirect_uri";
-  String CODE = "code";
+	String CODE = "code";
 	String ACCESS_TOKEN = "access_token";
 	
-  String ERROR = "error";
+    String ERROR = "error";
 	String ERROR_DESCRIPTION = "error_description";
 	String ERROR_URI = "error_uri";
-  String TOKEN_TYPE = "token_type";
+    String TOKEN_TYPE = "token_type";
 	String EXPIRES_IN = "expires_in";
 
 
@@ -33,13 +32,13 @@ public interface OAuth2ParameterNames {
     * used in Access Token Request 
     */
 	String GRANT_TYPE = "grant_type";       // get from Authorization Response
-  String CLIENT_SECRET = "client_secret"; 
+	String CLIENT_SECRET = "client_secret"; 
 	
-  String CLIENT_ASSERTION_TYPE = "client_assertion_type";
+	String CLIENT_ASSERTION_TYPE = "client_assertion_type";
 	String CLIENT_ASSERTION = "client_assertion";
-  String ASSERTION = "assertion";
+	String ASSERTION = "assertion";
   
-  String USERNAME = "username";
+	String USERNAME = "username";
 	String PASSWORD = "password";
   
 
@@ -76,7 +75,7 @@ public interface OAuth2ParameterNames {
 
 
 /**************************************************
- * AuthorizationEndpoint HTTPSESSION repository   *
+ * AuthorizationEndpoint HTTP SESSION repository   *
  **************************************************/
 
 package org.springframework.security.oauth2.client.web;
@@ -91,6 +90,8 @@ import javax.servlet.http.HttpSession;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.util.Assert;
+
+import jdk.jfr.DataAmount;
 
 /**
  * An implementation of an {@link AuthorizationRequestRepository} that stores
@@ -110,8 +111,8 @@ public final class HttpSessionOAuth2AuthorizationRequestRepository
 	private boolean allowMultipleAuthorizationRequests;
 
 
-  /* get state paramater inside Payload from HttpServletRequest 
-   *     turn into Authorization Reuqest form and get state attribute in reuqest 
+  /* get state parameter inside Payload from HttpServletRequest 
+   *     turn into Authorization Request form and get state attribute in request 
    *
    */
 	@Override
@@ -128,9 +129,9 @@ public final class HttpSessionOAuth2AuthorizationRequestRepository
 
 
   /* getSession() : Returns the current session associated with this request, or if the request does not have a session, creates one.
-   * saveAuthorizationReuqest : check if state attribute exists in Authorization Reuqest , then set object of Authorization Reuqest in httpsession contains
+   * saveAuthorizationRequest : check if state attribute exists in Authorization Request , then set object of Authorization Reuqest in httpsession contains
    *   
-   *   In Servlet Contains the Server sotres
+   *   In Servlet Contains the Server stores
    *      httpSession_1                          httpSession_2      
    *   |  name      | attribute |             |  name      | attribute |
    *   | -----------------------|             |------------------------|
@@ -154,7 +155,7 @@ public final class HttpSessionOAuth2AuthorizationRequestRepository
 		String state = authorizationRequest.getState();
 		Assert.hasText(state, "authorizationRequest.state cannot be empty");
 		
-    /* Is allowMutiple Auth Reqeusts then we need to create a Map authorizationReuqests */
+    /* Is allowMultiple Auth Requests then we need to create a Map authorizationRequests*/
     if (this.allowMultipleAuthorizationRequests) {
 			Map<String, OAuth2AuthorizationRequest> authorizationRequests = this.getAuthorizationRequests(request);
 			authorizationRequests.put(state, authorizationRequest);
