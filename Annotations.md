@@ -88,3 +88,127 @@
     - The scale for a decimal(資料顯示到小數點第幾位) (exact numeric) column.
     1.`double` in java maps to `double` in database : precision,scale not allow. but If our field that mapped to database's column is `double` but set up `columnDefinition`'s datatype as `decimal`, then the column which will be mapped define a datatype as `decimal` not `double`   
     2.`BigDecimal` in java maps to `decimal` in database
+
+
+
+
+
+[REF](https://www.journaldev.com/16966/spring-annotations)
+## Annotations (often used)
+
+* `@Configuration`
+    - To indicate that **A class declares one or more `@Bean` methods from bean class**.
+    > ==These Configuration classes are processed by the **Spring Container** to generate bean **definitions** and **server requests at run-time**==
+    ![](https://i.imgur.com/CpZdLGY.png)
+
+
+#### @Bean
+- Indicates that a method produces a bean to be managed by the Spring container.  
+- This is one of the most used and important spring annotation.   
+- It also can be used with parameters like **name, initMethod and destroyMethod.**  
+
+For example  :: To Indicate bean method from a bean class (class Computer) in configuration Class
+```java
+@Configuration
+public class AppConfig {
+    @Bean(name = "comp", initMethod = "turnOn", destroyMethod = "turnOff")
+    Computer computer(){
+        return new Computer();
+    }
+}
+```
+
+Bean Class Computer
+```java
+public class Computer {
+/* define Init and destroy Method */
+    public void turnOn(){
+       //..
+    }
+    public void turnOff(){
+        //...
+    }
+}
+```
+
+There are also other way for parameters `initMethod` and `destroyMethod`.  
+
+They are `@PreDestroy` and `@PostConstruct`
+
+```java
+ public class Computer {
+    @PostConstruct
+    public void turnOn(){
+        //..
+    }
+
+    @PreDestroy
+    public void turnOff(){
+        //..
+    }
+}
+```
+:::info
+Second Approach is recommended
+:::
+
+
+#### Layers in Spring Framework
+
+![](https://i.imgur.com/3cmZ6Ro.png)
+
+#### @Component
+- Indicates that an annotated class is a **component**.   
+- ==Such classes are considered as candidates for **auto-detection** when using annotation-based configuration and classpath scanning.==  
+- Spring only picks up and *registers* beans with `@Component` and doesn't look for `@Service` and `@Repository` in general.  
+- ==Components are registered in **ApplicationContext** because they themselves are annotated with `@Component`==
+    > ![](https://i.imgur.com/ULOm9bX.png)
+
+#### @ComponentScan
+- Configures component scanning directives for use with  Configuration classes.  
+- Here we can specify the base packages to scan for spring components.  
+
+#### @Service
+- Indicates that an annotated class is at **Service Layer**.
+- **This annotation serves as a specialization of `@Component`**, allowing for implementation classes to be autodetected through classpath scanning.  
+
+#### @Repository
+- Indicates that an annotated class is at **Repository Layer**.  
+- This annotation serves as a specialization of `@Component` and advisable to use with DAO classes.  
+
+#### @Autowired
+
+Spring `@Autowired` annotation is used for automatic injection of beans.   
+
+for example
+```java
+// normally without annotation
+public class Person{
+    //..
+}
+public class UsePerson{
+    private Person person;
+    
+    public UsePerson(Person person_1){
+        this.person = new Person();
+        this.person = person_1;
+        
+    }
+}
+// with annotation
+public class UsePerson{
+    @Autowired
+    private Person person;
+    pubic UsePerson(Person person_1){
+        this.person = person_1;
+    }
+}
+```
+#### @PropertySource
+- Provides a simple declarative mechanism for adding a property source to Spring’s Environment.  
+- There is a similar annotation for adding an array of property source files   
+    > i.e `@PropertySources`.  
+## Security Annotations
+`@EnableWebSecurity` is used with `@Configuration` class to have the Spring Security configuration defined
+
+

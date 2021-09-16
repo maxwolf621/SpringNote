@@ -10,7 +10,6 @@
 [FIG1CN](https://reurl.cc/qmeqOp)
 ![](https://i.imgur.com/GlgHsa2.png)
 
-
 ## BO
 `BO = SET(PO,JO,POJO)`
 ![](https://i.imgur.com/55MFXG8.png) 

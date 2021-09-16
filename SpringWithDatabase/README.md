@@ -11,7 +11,7 @@
 - [Hibernate Cache](HibernateCache.md)   
   > reduce to retrieve query data directly from database 
 - [HibernateDeletion](HibernateDeletion.md)
-
+- [Transaction](Transactional.md)
 ## Hibernate Query and JPA
 
 - **[JPA](JPA.md)**
