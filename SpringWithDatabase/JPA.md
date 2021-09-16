@@ -2,6 +2,9 @@
 
 [Code Java Tutorial](https://www.codejava.net/frameworks/hibernate/java-hibernate-jpa-annotations-tutorial-for-beginners)  
 
+
+
+
 ## Java Persistence API (JPA) (package `javax.persistence`)  
 JPA is a Java API specification for relational data management in applications using Java SE and Java EE.      
 JPA defines Java Persistence Query Language (JPQL) which is an object-oriented query language.    
@@ -20,6 +23,7 @@ This annotation indicates that the class is mapped to a database table.
 
 `@Table`
 **This annotation is used if the class name is different than the database table name**  
+
 ```java
 /**
   * Since the class name is User and the table name is Users
@@ -72,9 +76,71 @@ public Integer getId() {
     return id;
 }
 ```
+- `SEQUENCE`： PK was hold by database's `sequence`
+   >  IDENTITY generation disables batch updates.
+- `IDENTITY`： PK was hold by database's  `auto-increment`
+  > This generator uses sequences if they're supported by our database, and switches to table generation if they aren't.
+  > To customize the sequence name, we can use the @GenericGenerator annotation with SequenceStyleGenerator strategy:
+- `AUTO`：PK was created via JPA
 
 
-## Spring MVC EntityManager and EntityManagerFactory
+### TABLE 
+The TableGenerator uses an underlying database table that holds segments of identifier generation values.
+```java
+/**
+  * @TableGenerator to customize GenerationType.TABLE
+  */
+@Entity
+public class Department {
+    @Id
+    @GeneratedValue(strategy = GenerationType.TABLE, 
+      generator = "table-generator")
+    @TableGenerator(name = "table-generator", 
+      table = "dep_ids", 
+      pkColumnName = "seq_id", 
+      valueColumnName = "seq_value")
+    private long depId;
+
+    // ...
+}
+```
+- In this example, we can see that other attributes such as the pkColumnName and valueColumnName can also be customized.
+- The disadvantage of this method is that it doesn't scale well and can negatively affect performance.
+
+
+## `@GenericGenerator`
+
+Custom PK-generationType via hibernate 
+
+```java
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(generator = "sequence-generator")
+    @GenericGenerator(
+      name = "sequence-generator",
+      strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+      parameters = {
+        @Parameter(name = "sequence_name", value = "user_sequence"),
+        @Parameter(name = "initial_value", value = "4"),
+        @Parameter(name = "increment_size", value = "1")
+        }
+    )
+    private long userId;
+    
+    // ...
+}
+```
+- In this example, we've also set an initial value for the sequence, which means the primary key generation will start at 4.
+- SEQUENCE is the generation type recommended by the Hibernate documentation.
+- The generated values are unique per sequence. If you don't specify a sequence name, Hibernate will re-use the same hibernate_sequence for different types.
+
+[Custom-GenerationType Define](https://www.baeldung.com/hibernate-identifiers#5-custom-generator)   
+
+
+## Spring MVC `EntityManager` and `EntityManagerFactory`
+
+The Conception of `EntityManager` and `EntityManagerFactory` is kinda like session in hibernate
 
 EntityManager  
 **An EntityManager instance is associated with a persistence context, and it is used to interact(`persist()`) with the database.**  
@@ -105,30 +171,30 @@ First To tell Hibernate how to connect to the database, we need to configure a X
             <property name="javax.persistence.jdbc.password" value="4321" />
             <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver" />
             <property name="hibernate.show_sql" value="true" /> <!--show logs in terminal-->
-            <property name="hibernate.format_sql" value="true" /> <!-- formmat sql statements -->
+            <property name="hibernate.format_sql" value="true" /> <!-- format sql statements -->
         </properties>
     </persistence-unit>     
 </persistence>
 ```
 
-Create an EntityManagerFactory from a persistence unit
+#### Create an EntityManagerFactory from a persistence unit
 ```java
 EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("PostDB");
 ```
 
-Create an EntityManager from the EntityManagerFactory
+#### Create an EntityManager from the EntityManagerFactory
 ```java
 EntityManager entityManager = entityManagerFactory.createEntityManager();
 ```
 
-Begin a transaction
+#### Begin a transaction
 ```java
 entityManager.getTransaction().begin();
 ```
 
-Manage entity instances (`create`, `update`, `remove`, `find`, `query`, ...)
+### To Manage entity instances (`create`, `update`, `remove`, `find`, `query`, ...)
 
-`EntityManager#persist(Model model)`
+#### `EntityManager#persist(Model model)`
 ```java
 /**
   * create the post
@@ -142,7 +208,7 @@ Post post = Post().builder()
 entityManager.persist(post);
 ```
 
-`EntityManager#merge(Model model)`
+#### `EntityManager#merge(Model model)`
 ```java
 /**
   * Update the existing post
@@ -158,7 +224,7 @@ entityManager.merge(post);
 ```
 
 
-`EntityManager#remove(Model model)`
+#### `EntityManager#remove(Model model)`
 ```java
 Integer primaryKey = 1;
 Model reference = entityManager.getReference(Model.class, primaryKey);
@@ -166,23 +232,25 @@ Model reference = entityManager.getReference(Model.class, primaryKey);
 entityManager.remove(reference);
 ```
 
-`EntityManager#find(Model model,  Object<?> primaryKey)`
+#### `EntityManager#find(Model model,  Object<?> primaryKey)`
 ```java
 Integer primaryKey = 1;
 Post post = entityManager.find(Post.class, primaryKey);
 ```
 
 
-
-Commit the transaction
+#### Commit the transaction
 ```java
 entityManager.getTransaction().commit();
 ```
 
-Close the EntityManager and EntityManagerFactory
+#### Close the EntityManager and EntityManagerFactory
 ```java 
 entityManager.close();
 entityManagerFactory.close();
 ```
 
+## JPA methods 
+[Transient operations](https://www.javaguides.net/2018/11/guide-to-jpa-and-hibernate-cascade-types.html)      
+![image](https://user-images.githubusercontent.com/68631186/131173715-cb24c972-f2a9-4e45-b823-71fefc874431.png)      
 

@@ -25,14 +25,10 @@ private Long id;
 @GeneratedValue(strategy = GenerationType.IDENTITY)
 private Long id;
 ```
-
-
 # 1:1 Association via `@PrimaryKeyJoinColumn`
-[REF](https://www.codejava.net/frameworks/hibernate/hibernate-one-to-one-association-on-primary-key-annotations-example)
+[Source Code](https://www.codejava.net/frameworks/hibernate/hibernate-one-to-one-association-on-primary-key-annotations-example)   
 
 ![](https://i.imgur.com/qJYmIBh.png)
-
-
 ## Model Class
 product.java 
 ```java
@@ -67,16 +63,16 @@ public class Product
     //..
 }
 ```
-> `@OneToOne` 
-> : it tells Hibernate creates a one-to-one association with the `ProductDetail`
->
-> `@PrimaryKeyJoinColumn`
-> : it specifies a primary key column that is used as a foreign key to join to another table
-> ![](https://i.imgur.com/IX9hRG8.png)
+- `@OneToOne` 
+   > it tells Hibernate creates a one-to-one association with the `ProductDetail`
+
+- `@PrimaryKeyJoinColumn`
+   > it specifies a primary key column that is used as a foreign key to join to another table   
+   > ![](https://i.imgur.com/IX9hRG8.png)    
 
 
-[***REF***_Difference BTW PrimaryKeyJoinColumn and JoinColumn](https://stackoverflow.com/questions/3417097/jpa-difference-between-joincolumn-and-primarykeyjoincolumn#:~:text=The%20PrimaryKeyJoinColumn%20annotation%20is%20used,in%20which%20the%20primary%20key)  
-[***REF***_CascadeType and FetchType](https://openhome.cc/Gossip/EJB3Gossip/CascadeTypeFetchType.html)  
+[Difference BTW PrimaryKeyJoinColumn and JoinColumn](https://stackoverflow.com/questions/3417097/jpa-difference-between-joincolumn-and-primarykeyjoincolumn#:~:text=The%20PrimaryKeyJoinColumn%20annotation%20is%20used,in%20which%20the%20primary%20key)   
+[CascadeType and FetchType](https://openhome.cc/Gossip/EJB3Gossip/CascadeTypeFetchType.html)    
 
 
 ProductDetail.java
@@ -96,7 +92,7 @@ public class ProductDetail {
     @Id
     @GeneratedValue(generator = "foreigngen")
     @GenericGenerator(strategy = "foreign", name="foreigngen",
-            parameters = @Parameter(name = "property", value="product"))
+        parameters = @Parameter(name = "property", value="product"))
     @Column(name = "PRODUCT_ID")
     public long getProductId() {
         return productId;
@@ -114,27 +110,25 @@ public class ProductDetail {
 ```
 
 > `@GeneratedValue` 
-> : Make a conjunction to map a field as the primary key of the table (normally, PK's values are atuo-generated)
+> : Make a conjunction to map a field as the primary key of the table (normally, PK's values are auto-generated)
 >
 > `@GenericGenerator` 
-> : Specify a foreign key strategy in order to generate values for the product_id column as a foreign key
->
-> parameter generator in `@GeneratedValue` must be same as parameter name in `@GenericGenerator`
+> : Specify a foreign key strategy in order to generate values for the `product_id` column as a foreign key, parameter generator in `@GeneratedValue` must be same as parameter name in `@GenericGenerator`
 
 
 ## Configure hibernate.cfg.xml 
 
-for XML descriptor in the hibernate.cfg.xml file to tell Hibernate which database to connect
+for XML descriptor in the `hibernate.cfg.xml` file to tell Hibernate which database to connect
 
 ```xml
 <hibernate-configuration>
   <session-factory>
-    <mapping class="net.codejava.hibernate.Product"/>
-    <mapping class="net.codejava.hibernate.ProductDetail"/>
+    <!-- where your model classes stores -->
+    <mapping class="com.xxxx.hibernate.Product"/>
+    <mapping class="com.xxxx.hibernate.ProductDetail"/>
   </session-factory>
 </hibernate-configuration>
 ```
-
 
 # 1:1 Foreign Key Annotations via `@JoinColum`
 #### [Code Example](https://www.codejava.net/frameworks/hibernate/hibernate-one-to-one-mapping-with-foreign-key-annotations-example)
@@ -184,8 +178,7 @@ public class Book {
     }
  
     @OneToOne(cascade = CascadeType.ALL)
-    //    @JoinColum means 
-    //        Each Book Enity references to Author_ID
+    // 1:1 @JoinColum means Each Book Entity references to attributes Author_ID from other entity
     @JoinColumn(name = "AUTHOR_ID")
     public Author getAuthor() {
         return author;

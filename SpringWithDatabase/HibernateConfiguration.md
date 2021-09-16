@@ -1,8 +1,12 @@
 ###### tags: `Hibernate`
   
-- [hibernate-dynamic-configuration](https://www.codejava.net/frameworks/hibernate/hibernate-programmatic-configuration-example)   
+[hibernate-dynamic-configuration](https://www.codejava.net/frameworks/hibernate/hibernate-programmatic-configuration-example)   
 # Hibernate Configuration (Session Factory and Session)
 
+What is Hibernate?   
+**Hibernate is a popular Object Relational Mapping (ORM) framework that aims at simplifying database programming for developers**
+
+### Review of [`Session`](HibernateSession.md)
 - `SessionFactory` is a factory class for Session objects. 
   > It is available for the whole application while a Session is only available for particular transaction.**
 - `Session` is short-lived while `SessionFactory` objects are long-lived.
@@ -173,7 +177,7 @@ Basic Configuration in  `hibernate.cfg.xml`
 </hibernate-configuration>
 ```
 
-The Following java moethod help us change these properties in `hibernate.cfg.xml`
+The Following java method help us change these properties in `hibernate.cfg.xml`
 
 ### (RUN TIME) Create Database Configuration via JAVA class `Configuration`
 

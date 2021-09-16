@@ -2,13 +2,14 @@
 # [Hibernate Query Language](https://www.codejava.net/frameworks/hibernate/hibernate-query-language-hql-example)
 
 ## Properties of HQL
+
 1. SQL Similarity
 2. **Full Object-Oriented**
    > HQL can operated with inheritance, polymorphism ...
 3. Case-Insensitive (for keyword)   
    > e.g. `Select`, `SELECT`, `select` they are the same
 
-## Create A Query
+## Create A Query(" .... HQL QUERIES ...")
 
 ```java
 String hql = "From x where x.value = 'Y' ";
@@ -21,9 +22,12 @@ String hql = "From x where x.value = 'Y' ";
 Query query = session.createQuery(hql);
 ```
 
-## List `list` and int `executeUpdate` methods
+## `List list()` and `int executeUpdate()` methods
 
 Using `list` or `executeUpdate` methods depending on the type of the query
+
+`list` : doesn't modify database
+`executeUpdate()` : do modifying the database
 
 For `SELECT` in HQL, then we use `list` method
 ```java
@@ -34,7 +38,7 @@ For `SELECT` in HQL, then we use `list` method
  */
 List<Model_Class> listResult = query.list();
 
-/** FOR EXAMLE **/
+/** FOR EXAMPLE **/
 
 String hql = "from Category";
 Query query = session.createQuery(hql);
@@ -57,13 +61,13 @@ for `INSERT`, `UPDATE`, `DELETE`, then we use `executeUpdate()`
 ```java
 /**
  * @return 
- * If resutlt(integer) is bigger than (>) 1 
+ * If result(integer) is bigger than (>) 1 
  * then execute successful
  */ 
 int result = query.executeUpdate();
 ```
 
-### Search
+### `Select` examples
 
 ```java
 /**
@@ -82,7 +86,6 @@ List<Product> listProducts = query.list();
 
 /** FOR EXAMPLE **/
 String hql = "from Product where category.name = 'Computer'";
-
 Query query = session.createQuery(hql);
 
 List<Product> listProducts = query.list();
@@ -98,7 +101,7 @@ for (Product aProduct : listProducts) {
 String hql = "from table where value like :keyword";
 
 /**
- * <p> keywrod </p>
+ * <p> keyword </p>
  */
 String keyword = "New";
 
@@ -123,32 +126,36 @@ List<ModelClass> listProducts = query.list();
 ### insert
 
 ```java
-String hql = "insert into Category (id, name)"
-        + " select id, name from OldCategory";
+S
+tring hql = "insert into Category (id, name)" + " select id, name from OldCategory";
 Query query = session.createQuery(hql);
  
+
 int rowsAffected = query.executeUpdate();
 if (rowsAffected > 0) {
     System.out.println(rowsAffected + "(s) were inserted");
 }
 ```
 
-### Update & Delete
+### do multiple queries at same time
 
+For example :: Update & Delete in once
 ```java
-String hqlUp = "update table set valueA_ = :valueA where valueB_ = :valueB";
+String hqlUpdate =  "update table set valueA_ = :valueA where valueB_ = :valueB";
 String hqlDel = "delete from tableC where Attribute = :value";
 Query query = session.createQuery(hql);
+
+int valueA = ... ;
+int valueB = ... ;
 
 query.setParameter(valueA_, valueA);
 query.setParameter(valueB_, valueB);
  
 int rowsAffected = query.executeUpdate();
-
+```
 
 ```java
 /** FOR EXAMPLE **/
-
 String hql = "update Product set price = :price where id = :id";
 Query query = session.createQuery(hql);
 
@@ -174,10 +181,11 @@ if (rowsAffected > 0) {
 ## Join Query 
 
 HQL supports the following join types (similar to SQL):  
-- innerjoin (can be abbreviated as join).
-- leftouterjoin (can be abbreviated as leftjoin).
-- rightouterjoin (can be abbreviated as rightjoin).
-- fulljoin
+- `innerjoin` (can be abbreviated as join).
+- `leftouterjoin` (can be abbreviated as `leftjoin`).
+- `rightouterjoin` (can be abbreviated as `rightjoin`).
+- `fulljoin`
+
 
 ```java
 /**
@@ -250,8 +258,9 @@ for (Object[] aRow : listResult) {
 ```
 
 
-## Pagination Query Example
+## Pagination Query Example (count of retrieving data)
 To return a subset of a result set, the Query interface has two methods for limiting the result set:
+
 
 ```java 
 /**
@@ -262,9 +271,9 @@ String hql = "from Product";
  
 /**
  * @Description
- * {@code setFirstResult(intfirstResult)}: 
+ * {@code setFirstResult(int_FirstResult)}: 
  *   sets the first row to retrieve.
- * {@code setMaxResults(intmaxResults)}:
+ * {@code setMaxResults(int_MaxResults)}:
  *   sets the maximum number of rows to retrieve.
  */
 Query query = session.createQuery(hql);
@@ -280,6 +289,7 @@ for (Product aProduct : listProducts) {
 
 ## Date Range Query Example
 A nice feature of Hibernate is that it is able to defer parameter type to generate the resulting SQL statement accordingly.  
+
 ```java 
 /**
  * <pre> from .. where .. :xx and .. :yy 
@@ -319,14 +329,14 @@ For expressions used in the WHERE clause, HQL supports all basic arithmetic expr
 - mathematical operators: `+`, `-`, `*`, `/`
 - binary comparison operators: `=`, `>=`, `<=`, `<>`, `!=`, `like`
 - logical operators: `and`, `or`, `not`
-- 
-For example, the following query returns only products with price is ranging from 500 to 1000 dollars:
+
+For instance, the following query returns only products with price is ranging from 500 to 1000 dollars:
 `from Product where price >= 500 and price <= 1000`
 
 ## Using Aggregate Functions in Hibernate Query
 
 HQL supports the following aggregate functions:
-```
+```sql
 avg(…) 
 sum(…) 
 min(…)
@@ -336,6 +346,7 @@ count(…)
 count(distinct…)
 count(all…)
 ```
+
 For example, the following :
 ```java
 /** 

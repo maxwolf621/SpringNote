@@ -2,6 +2,7 @@
 # Database table relationships  
 [Reference](https://stackoverflow.com/questions/3113885/difference-between-one-to-many-many-to-one-and-many-to-many)  
 
+
 - one-to-many 
   > is the most common relationship, and ==it associates a row (PK) from a parent table to multiple rows in a child table.==  
 - one-to-one 
@@ -10,6 +11,15 @@
   > requires a link table containing two Foreign Key columns that reference the two different parent tables.     
   > [Many To Many Association](/tJJtCj7_Rs6XlLsqLOtG2A)    
   
+
+## annotation and field
+
+```java
+@xxxx
+private entity entity_instance
+```
+- `xxxx` describes/defines the entity
+
 ## Difference btw One-To-Many and Many-To-Many  
 
 The Difference btw them is `reusability` 
@@ -161,34 +171,60 @@ public AddressEO getAddress() {
 ```
 - If we don't specify `name="addr_id"` then the default name value is `name=entity_ReferenceTablePrimaryKey`
 
-
-#### `@JoinColumn(name = table_x_fk , referenceColumnName = ref_pk)`
-
-For example   
-Assume given two tables(address and customer) in one-to-one situation
-```sql
-CREATE TABLE address (
-  id int(20) NOT NULL auto_increment,
-  ref_id int int(20) NOT NULL,
-  province varchar(50) ,
-  city varchar(50) ,
-  postcode varchar(50) ,
-  detail varchar(50) ,
-  PRIMARY KEY (id)
-)
-```
-
-Attribute `address_id` in table `customer` references to attribute `ref_id` in table `address` 
 ```java
-@OneToOne
-@JoinColumn(name = "address_id", referencedColumnName="ref_id")
-public AddressEO getAddress() {
-         return address;
+@JoinColum(name = this_table_Fk_name , referencedColumnName = "column_from_other_entity" )
+private this_table name_of_table(){
+    //...
 }
 ```
 ## Unidirectional `@OneToMany` with `@JoinColumn`
 
 **When using a unidirectional one-to-many association, only the parent side maps the association.**  
+
+
+For example :: A Company can have lot of branches
+```java
+/* MappedBy side */
+@Entity
+public class Company {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Integer id;
+    private String name;
+
+
+    @OneToMany(targetEntity= Branch.class,
+               cascade = CascadeType.ALL, 
+               fetch = FetchType.LAZY, 
+               orphanRemoval = true)
+    /**
+      * Each Branch entity has 
+      * a column named companyId as FK 
+      * and references it to a column named id in this entity (Company)
+      */
+    @JoinColumn(name = "companyId", referencedColumnName = "id")
+    private List<Branch> branches = new ArrayList<>();
+    
+    //...
+}
+
+/* Owning Side*/
+@Entity
+public class Branch {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
+    private Integer id;
+    
+    private string name;
+    // ...
+}
+```
+- The Entity inside `@JoinColum` , attribute `name` refers to foreign key column name which is `companyId` and attribute `referencedColumnName` indicates the primary key `id` of the entity company to which the foreign key `companyId` refers  
+
+
+For example : Given post and comment entities    
 
 So in the post and comments relationship, it means only the `Post` entity will define a `@OneToMany` association to the child `PostComment` entity       
 ```java
@@ -249,6 +285,29 @@ where post_id = 1 and id = 2
 -- delete row of post_comment's id=2's
 delete from post_comment where id=2
 ```
+## Unidirectional` @OneToOne` with `@JoinColumn`
+
+For example :: Given two tables(address and customer) in one-to-one situation
+```sql
+CREATE TABLE address (
+  id int(20) NOT NULL auto_increment,
+  ref_id int int(20) NOT NULL,
+  province varchar(50) ,
+  city varchar(50) ,
+  postcode varchar(50) ,
+  detail varchar(50) ,
+  PRIMARY KEY (id)
+)
+```
+
+Attribute `address_id` in table `customer` references to attribute `ref_id` in table `address` 
+```java
+@OneToOne
+@JoinColumn(name = "address_id", referencedColumnName="ref_id")
+public AddressEO getAddress() {
+         return address;
+}
+```
 
 ## [Unidirectional `@OneToMany` with `@JoinTable`](https://stackoverflow.com/questions/5478328/in-which-case-do-you-use-the-jpa-jointable-annotation)
 
@@ -276,11 +335,9 @@ private List<Task> tasks;
 - Using `mappedBy` element defines a bidirectional relationship.  
     > **This attribute allows you to refer the associated entities from both sides**
  
-
-![](https://i.imgur.com/k6ZZIgv.png)
+![](https://i.imgur.com/k6ZZIgv.png)   
 - `@OneToMany` with the `mappedBy` attribute set, you have a bidirectional association.  
-   > In our case, both the Post entity has a collection of `PostComment` child entities, and the child `PostComment` entity has a reference back to the parent Post entity
-
+  > In our case, both the Post entity has a collection of `PostComment` child entities, and the child `PostComment` entity has a reference back to the parent Post entity
 
 ```java
 @Entity(name = "Post")
@@ -292,8 +349,8 @@ public class Post {
     private String title;
  
     /**
-     * this given column is maintained by the anothr entity
-     * whose attribute/column anmed `post` 
+     * this given column is maintained by the another entity
+     * whose attribute/column named `post` 
      */
     @OneToMany(
         mappedBy = "post",
@@ -311,8 +368,7 @@ public class Post {
         comments.remove(comment);
         comment.setPost(null);
     }
-}
- 
+} 
 @Entity(name = "PostComment")
 @Table(name = "post_comment")
 public class PostComment {
@@ -338,7 +394,7 @@ public class PostComment {
     //...
 }
 ```
-- With `@JoinColumn` we indicate hibernate that child entity (post_comment) **must have two keys (PK and FK)**
+- With `@JoinColumn` we indicate hibernate that child entity (`post_comment`) **must have two keys (PK and FK)**
 
 By property of `mappedBy` , the hibernate will do like 
 ```sql
@@ -347,7 +403,7 @@ insert into post (title, id)
 values ('First post', 1)
 
 /**
-  *　post will maintain post_comment
+  *　post will maintain post_comment one at time\
   */
 insert into post_comment (post_id, review, id)
 values (1, 'My first review', 2)
@@ -356,66 +412,19 @@ values (1, 'My second review', 3)
 insert into post_comment (post_id, review, id)
 values (1, 'My third review', 4)
 ```
+### [`mappedBy` and `@JoinColumn`](https://www.baeldung.com/jpa-join-column)   
 
-### [`mappedBy` and `@JoinColumn`](https://www.baeldung.com/jpa-join-column)
+[Reference](https://stackoverflow.com/questions/11938253/jpa-joincolumn-vs-mappedby)   
 
-[Reference](https://stackoverflow.com/questions/11938253/jpa-joincolumn-vs-mappedby)
-
-The annotation `@JoinColumn(name = x , referencedColumnName = y)` indicates that this entity is the owner of the relationship **(that is: the corresponding table has a column with a foreign key `x` to the referenced table `y`)**
-
-The attribute `mappedBy` indicates that the entity in this side is the inverse of the relationship, and **the owner(控制權) resides in the other entity.**
-
-#### Syntax of `@JoinColumn`   
-```java
-@JoinColum( name = this_table_Fk_name , referencedColumnName = "column_from_other_entity" )
-private ReferenceToTableName ref(){
-    //...
-}
-```
-
-For example  
-A Company can have lot of branches
-```java
-/* MappedBy side */
-@Entity
-public class Company {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
-    private String name;
-    @OneToMany(targetEntity=Branch.class,
-               cascade = CascadeType.ALL, 
-               fetch = FetchType.LAZY, 
-               orphanRemoval = true)
-    /**
-      * join a column named companyId as FK and references it to 
-      * a column named id in other entity
-      */
-    @JoinColumn(name = "companyId", referencedColumnName = "id")
-    private List<Branch> branches = new ArrayList<>();
-    
-    //...
-}
-
-/* Owning Side*/
-@Entity
-public class Branch {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private Integer id;
-    
-    private string name;
-    // ...
-}
-```
-- The Entity inside `@JoinColum` , attribute `name` refers to foreign key column name which is `companyId` and attribute `rferencedColumnName` indicates the primary key `id` of the entity company to which the foreign key `companyId` refers  
-
+- The annotation `@JoinColumn(name = x , referencedColumnName = y) private entity this_entity` indicates that this entity is the owner of the relationship **(that is: the corresponding table has a column with a foreign key `x` to the referenced table's attribute `y`)**
+  > this entity has fk named `x` and reference to pk `y` from another table
+- The attribute `@..To..(mappedBy = entity_1 ) private entity this_entity` indicates that this entity is the inverse of the relationship, and **the owner(控制權) resides in the other entity (entity_1).**
+ 
 ### Two one way relationship 
 
 By specifying the `@JoinColumn` on both models you don't have a two way relationship.   
 You have two one way relationships, and a very confusing mapping of it at that.    
+
 You're telling both models that they "own" the identical column.  
 Really only one of them actually should!   
 

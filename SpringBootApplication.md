@@ -33,5 +33,32 @@ public class DemoApplication {
 We can also add up other (usual) annotations, for example...
 - `@EnableConfigurationProperties({Properties.class})` : use custom class named `Properties.class` that operates configurations in file `application.properties` - -
   > or using `@ConfigurationPropertiesScan()`
-- `@EnableAsync` :　Enables Spring's asynchronous method execution capabilit
+- `@EnableAsync` :　Enables Spring's asynchronous method execution capability
 - `@Import(SwaggerConfig.class)` : import our custom configuration (e.g `SwaggerConfig.class`)
+
+
+# Spring Boot `RestController`
+## Controller
+```java
+@RestController
+@RequestMapping("/api")
+public class MemberController {
+    @Autowired
+    private MemberRepository memberRepository;
+    /**
+     * when the user in the uri : `../api/members`
+     */   
+    @GetMapping("/members")
+    public Collection<Member> members() {
+        // it will display all members on the webpage via Repository
+        return memberRepository.findAll();
+    }
+    
+    //...
+}
+
+```
+- We can have different controls for different _Repositories/Servers_ in the Controller
+- `@RestController` = `@Controller` + `@ResponseBody`, 
+    > **ResponseBody會將返回結果直接寫在Http Response Body中**, 因為我們資料傳輸時通常只傳回Json, 所以大部分都會使用這Annotation頁面的導頁與指定會交由前端(React,Angular...)來做
+- **`@GetMapping`,` @PostMapping`,` @PutMapping`, `@DeleteMapping`與Http的GET, POST, PUT, DELETE等Methods相對應, 只要遵守RESTful規範直接使用即可**
