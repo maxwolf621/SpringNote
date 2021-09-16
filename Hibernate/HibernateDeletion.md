@@ -1,11 +1,12 @@
 ###### tags: `Hibernate`
 # Deletion of entity from Database
-[TOC]
 
 ![](https://i.imgur.com/g4SWzho.png)
+
 ```java
 /* Entity category */
 public class Category{
+    
     //...
     
     /**
@@ -23,7 +24,7 @@ public class Category{
 public class Product{
     //..
     
-    /* Prouduct relates Category 
+    /* Product relates Category 
      *  MANY      TO      ONE   
      */
     @OneToMany
@@ -35,51 +36,59 @@ public class Product{
 }
 ```
 
-
-
 ## Deleting A **Transient** Instance
+
+Syntax
 ```java
-session.delete(class instsance);
+session.delete(class<T> entity);
 ```
 
-For example
+For Example
 ```java
 Product product = new Product();
 product.setId(12);
 session.delete(product);
 ```
 
-If delete instance that is associated with information in database, the code will throw `ConstraintViolationException` at **run-time**
+If instance that is associated with information in database, the code will throw `ConstraintViolationException` at **run-time**
 ```java
 Category category = new Category();
-// Id 18 is existing in the database
+
+// Id 18 is already existing in the database
 category.setId(18)
-// you cant delete information
-//    in the databse
+
+// you cant delete information in the database
 session.delete(category);
+
 // throwing ConstraintViolationException
 ```
 
-The given information would look like
+The given information in console would look like
 ```sql
 ERROR: Cannot delete or update a parent row: a foreign key constraint fails
 (`stockdb`.`product`, CONSTRAINT `fk_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`category_id`))
 ```
 
-
 ## Deleting A **Persistent** Instance
 
+
+Syntax
 ```java
-// To access Database of NameOfClass Entity
+/**
+  * load a session for communicating with database
+  * To retrieve certain data from Database 
+  * @param NameOfClass.class : Entity's name
+  * @param id : attribute of this entity
+  */
 session.load(NameOfClass.class, id);
 
 /**
- * Or we can create A method 
- * For example ... 
+ * Deletion Method
+ * Because of persistence , We need {@code Serializable} 
  */
 private boolean delete(Class<?> type, Serializable id){
-    Object persistentInstance = session.laod(type,id);
-    if(persistenInstance != null){
+    Object persistentInstance = session.load(type,id);
+    if(persistentInstance != null){
         session.delete(persistentInstance);
         return true;
     }
@@ -87,29 +96,12 @@ private boolean delete(Class<?> type, Serializable id){
 }
 ```
 
-Example 
+For Example 
 ```java
 Serializable id = new Long(17);
-Object persistentInstance = session.laod(Category.class, id);
+Object persistentInstance = session.load(Category.class, id);
 // check if id : 17 is in the database
-if(persistantInstance != null){
+if(persistentInstance != null){
     session.delete(persistentInstance)
 }
 ```
-
-
-## Using HQL 
-
-Delete entities with more flexibility
-```java
-Query q = session.createQuery("delete Product where price > :maxPreice");
-
-int result = q.executeUpdate();
-
-if(result > 0)
-{
-    system.out.println("Products were removed");
-}
-```
-> However, it doesn't remove associated instances
-> 

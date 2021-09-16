@@ -8,18 +8,22 @@
 there are 4 options to generate primary keys
 
 ```java
-// option 1
-//    Let the persistence provider choose the generation strategy
+/**
+  * option 1 
+  * <p>let the persistence provider choose the generation strategy </p>
+  */
 @Id
 @GeneratedValue(strategy = GenerationType.Auto)
 private Long id;
-// option 2
-//    Let the Database generate a new value with each insert operation
-// Drawback : It requires a primary key value for each managed entity and therefore has to perform the insert statement immediately
+
+/**  
+  * option 2
+  * Let the Database generate a new value with each insert operation
+  * <strong> Drawback : It requires a primary key value for each managed entity and therefore has to perform the insert statement immediately </strong>
+  */
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)
 private Long id;
-// option 3
 ```
 
 
@@ -139,7 +143,6 @@ for XML descriptor in the hibernate.cfg.xml file to tell Hibernate which databas
 
 
 ## Model Classes
-
 ```java
 /* Entity of author */
 @Entity
@@ -155,7 +158,7 @@ public class Author{
   //..
 }
 
-/* Enity of book */
+/* Entity of book */
 @Entity
 @Table(name = "BOOK")
 public class Book {
@@ -190,5 +193,5 @@ public class Book {
 }
 ```
 - `@Temproal`
-    > Must be sured with `util.Data` field to sepcify the acutial SQL type of the column
+    > Must be sure with `util.Data` field to specify the actual SQL type of the column
 

@@ -3,13 +3,12 @@
 [Reference](https://stackoverflow.com/questions/3113885/difference-between-one-to-many-many-to-one-and-many-to-many)  
 
 - one-to-many 
-  > is the most common relationship, and ==it associates a row from a parent table to multiple rows in a child table.==  
+  > is the most common relationship, and ==it associates a row (PK) from a parent table to multiple rows in a child table.==  
 - one-to-one 
   >requires the child table Primary Key to be associated via a Foreign Key with the parent table Primary Key column.  
 - many-to-many 
-  > requires a link table containing two Foreign Key columns that reference the two different parent tables.  
-  > [Many To Many Association](/tJJtCj7_Rs6XlLsqLOtG2A)  
-  
+  > requires a link table containing two Foreign Key columns that reference the two different parent tables.     
+  > [Many To Many Association](/tJJtCj7_Rs6XlLsqLOtG2A)    
   
 ## Difference btw One-To-Many and Many-To-Many  
 
@@ -24,27 +23,27 @@ Many-to-Many: One Person Has Many Skills, a Skill is **reused** between Person(s
 - Bidirectional: A Skill has a Set of Person(s) which relate to it.
 
 
-In a One-To-Many relationship, one object is the "parent" and one is the "child". **The parent controls the existence of the child.**   
+In a One-To-Many relationship, one object is the parent and one is the "child".   
+**The parent controls the existence of the child.**     
 
 In a Many-To-Many, the existence of either type is dependent on something outside the both of them (in the larger application context).  
 
 ```diff
 + Many-To-Many Bidirectional relationship does not need to be symmetric!  
 　That is, a bunch of People could point to a skill, 
-  but the skill need not relate back to just those people. 
-+ Typically it would, but such symmetry is not a requirement.  
+  but the skill needs not relate back to just those people. 
+  Typically it would, but such symmetry is not a requirement.  
 ```
-
-## Attribute of the Relathionship
+## Attribute of the Relationship
 
 Orphan Removal
 - JPA 2 supports an additional and more aggressive remove cascading mode which can be specified using the orphanRemoval element of the `@OneToOne` and `@OneToMany` annotations
- > If `orphanRemoval=true` is specified the disconnected Address instance is automatically removed. 
- > **The attribute is useful for cleaning up dependent objects** (e.g. Address) that should not exist without a reference from an owner object (e.g. Employee).
+  > If `orphanRemoval=true` is specified the disconnected Address instance is automatically removed. 
+  > **The attribute is useful for cleaning up dependent objects** (e.g. Address) that should not exist without a reference from an owner object (e.g. Employee).
 
-For example A Post can have many comments
-- The relationship is based on the Foreign Key column (e.g. `post_id`) in the child table.
->![](https://i.imgur.com/Db6bn7z.png)
+#### For example A Post can have many comments
+The relationship is based on the Foreign Key column (e.g. `post_id`) in the child table.  
+![](https://i.imgur.com/Db6bn7z.png)  
 
 
 ## [`@OneToMany`](https://vladmihalcea.com/the-best-way-to-map-a-onetomany-association-with-jpa-and-hibernate/)  
@@ -62,11 +61,6 @@ Concept
 If Father doesn't exist then Child will not exist which means child must be dependent on father   
 - The Foreign Key in Child Entity (which references to Father entity's Primary key)
 
-So as in database
-- To **identify** Child Entity (Weak Entity).  
-  > The Foreign key in Child Entity must map to the primary Key in Father Entity.   
-
-
 ### Unidirectional `@OneToMany`
 
 ```java
@@ -76,13 +70,14 @@ So as in database
 @Entity(name = "Post")
 @Table(name = "post")
 public class Post {
+    
     @Id
     @GeneratedValue
     private Long id;
     private String title;
     
     /** A post can have many Comments
-     *   {@code orphanRemovel} :　Each comment should reference to post
+     *   {@code orphanRemoval} :　Each comment should reference to post
      *   {@code cascadeType.all}　: If post does not exists then comments should be deleted
      */
     @OneToMany(cascade = CascadeType.ALL,
@@ -150,25 +145,27 @@ values (1, 4)
 
 ## `@JoinColumn`
 
+#### (IMPORTANT!!!!) **`@OneToOne`, `@ManyToMany` and `@OneToMany` with `@JoinColumn` have different meaning**
+
+
 - `@JoinColumn` and `@Column` are almost the same
-  >　the difference is `@JoinColumn` describes the attribute columns btw tables (entities) and `@Column` describes attribute in a table
+  >　the difference is `@JoinColumn` describes the **attribute columns btw tables (entities)** and **`@Column` describes attribute in a table**
 
-- `@OneToOne`, `@ManyToMany` and `@OneToMany` with `@JoinColumn` have different meaning 
 
-```
+```java
 @OneToOne
 @JoinColumn(name = "addr_id")
 public AddressEO getAddress() {
          return address;
 }
 ```
-- If we dont specify `name="addr_id"` then the default name value is `name=entity_RefferenceTablePrimaryKey`
+- If we don't specify `name="addr_id"` then the default name value is `name=entity_ReferenceTablePrimaryKey`
 
 
 #### `@JoinColumn(name = table_x_fk , referenceColumnName = ref_pk)`
 
-For example    
-In one-to-one situation, there are two tables address and customer   
+For example   
+Assume given two tables(address and customer) in one-to-one situation
 ```sql
 CREATE TABLE address (
   id int(20) NOT NULL auto_increment,
@@ -181,7 +178,7 @@ CREATE TABLE address (
 )
 ```
 
-attribute `address_id` in table `customer` references to attribute `ref_id` in table `address` 
+Attribute `address_id` in table `customer` references to attribute `ref_id` in table `address` 
 ```java
 @OneToOne
 @JoinColumn(name = "address_id", referencedColumnName="ref_id")
@@ -189,21 +186,18 @@ public AddressEO getAddress() {
          return address;
 }
 ```
-
-
 ## Unidirectional `@OneToMany` with `@JoinColumn`
 
-When using a unidirectional one-to-many association, only the parent side maps the association.  
-only the `Post` entity will define a `@OneToMany` association to the child `PostComment` entity   
+**When using a unidirectional one-to-many association, only the parent side maps the association.**  
 
+So in the post and comments relationship, it means only the `Post` entity will define a `@OneToMany` association to the child `PostComment` entity       
 ```java
 /**
  * Add {@code @JoinColumn = mappedby PK} to our 
  * mappedby side and owning side stays the same
  * --------------------------------------------
- * literally it means joincolumn the fk "post_id" to
- * each comment where it's post_id references 
- * this entity's pk 
+ * literally it means 
+ * each comment needs update their row called post_id (FK) to this post 
  */
 @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 @JoinColumn(name = "post_id")
@@ -230,7 +224,7 @@ values ('My third review', 4)
  * Because of 
  * @JoinColum(name = "post_id")
  * Hibernate will join a new column post_id as ForeignKey
- * In post_comment with sepecific post_id value
+ * In post_comment with specific post_id value
  */
 update post_comment set post_id = 1 where id = 2
 update post_comment set post_id = 1 where id = 3
@@ -247,14 +241,14 @@ post.getComments().remove(0);
 Hibernate will work like this
 ```sql
 update post_comment 
-/* post_comment's id=2's freign key references to null */
+
+-- post_comment's id=2's foreign key references to null */
 set post_id = null 
 where post_id = 1 and id = 2
 
-/* delete row of post_comment's id=2's */
+-- delete row of post_comment's id=2's
 delete from post_comment where id=2
 ```
-
 
 ## [Unidirectional `@OneToMany` with `@JoinTable`](https://stackoverflow.com/questions/5478328/in-which-case-do-you-use-the-jpa-jointable-annotation)
 
@@ -274,7 +268,6 @@ delete from post_comment where id=2
 private List<Task> tasks;
 ```
 ![](https://i.imgur.com/0B7yVLD.png)
-
 
 ## Bidirectional `@OneToMany()`
 
