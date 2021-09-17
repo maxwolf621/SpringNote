@@ -36,8 +36,9 @@
 - **[Database Relationship](SpringWithDatabase/TableRelationship.md)**  
   > `@JoinTable` , `@JoinColumn` , `bidirectional`
   > **[GenerationType](SpringWithDatabase\GenerationType.md)**
-- [OneToOne](SpringWithDatabase/HibernateOneToOne.md)
-- [OneToMany](SpringWithDatabase\HibernateOneToMany.md)
-- **[MayToMany](SpringWithDatabase\HibernateManyToMany.md)**
-  > **[`@Embedded` and `@Emenddable`](SpringWithDatabase\AnnotationEmbeddedAndEmbeddable.md)**
-- [Different btw OneToMany and ManyToMany ](SpringWithDatabase\ManyToMany&OneToMany.md)
+  > **[CascadeType](SpringWithDatabase\CascadeType.md)**   
+- [OneToOne](SpringWithDatabase/HibernateOneToOne.md)  
+- [OneToMany](SpringWithDatabase\HibernateOneToMany.md)   
+- **[MayToMany](SpringWithDatabase\HibernateManyToMany.md)**   
+  > **[`@Embedded` and `@Emenddable`](SpringWithDatabase\AnnotationEmbeddedAndEmbeddable.md)**    
+- [Different btw OneToMany and ManyToMany ](SpringWithDatabase\ManyToMany&OneToMany.md)   

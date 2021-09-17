@@ -76,9 +76,7 @@ insert into student_course(student_id, course_id) values(?, ?)
 insert into student_course(student_id, course_id) values(?, ?)
 ```
 
-
 ## [Tag and Posts ManyToMany Relationship](https://vladmihalcea.com/the-best-way-to-use-the-manytomany-annotation-with-jpa-and-hibernate/)
-
 
 ```java
 @Entity(name = "Post")
