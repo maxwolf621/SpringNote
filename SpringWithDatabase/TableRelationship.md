@@ -2,9 +2,10 @@
 # Database table relationships  
 [Reference](https://stackoverflow.com/questions/3113885/difference-between-one-to-many-many-to-one-and-many-to-many)  
 
+[TOC]
 
 - one-to-many 
-  > is the most common relationship, and ==it associates a row (PK) from a parent table to multiple rows in a child table.==  
+  > The most common relationship, and it associates a row (PK) from a parent table to multiple rows in a child table.
 - one-to-one 
   >requires the child table Primary Key to be associated via a Foreign Key with the parent table Primary Key column.  
 - many-to-many 
@@ -65,7 +66,7 @@ Type of `@OneToMany`
 - One Side we can call it `Father Entity` or `MappedBy Side`
 - Many Side we can call it `Child Entity` or `Owning Side`
 
-## Father(MappedBy) and Child(Owning)?
+## Father(MappedBy) and Child(Owning)
 
 Concept  
 If Father doesn't exist then Child will not exist which means child must be dependent on father   
@@ -418,7 +419,10 @@ values (1, 'My third review', 4)
 
 - The annotation `@JoinColumn(name = x , referencedColumnName = y) private entity this_entity` indicates that this entity is the owner of the relationship **(that is: the corresponding table has a column with a foreign key `x` to the referenced table's attribute `y`)**
   > this entity has fk named `x` and reference to pk `y` from another table
-- The attribute `@..To..(mappedBy = entity_1 ) private entity this_entity` indicates that this entity is the inverse of the relationship, and **the owner(控制權) resides in the other entity (entity_1).**
+- The attribute `@..To..(mappedBy = entity_1 ) private entity entity_instance` indicates that `entity_instance` is the inverse of the relationship, and **the owner(控制權) resides in the other entity (entity_1).**
+  > it also means that you can access the other table (`entity_1`) from the class which you've annotated with `mappedBy` (fully bidirectional relationship).
+
+
  
 ### Two one way relationship 
 
@@ -431,3 +435,57 @@ Really only one of them actually should!
 [Synchronize](https://vladmihalcea.com/jpa-hibernate-synchronize-bidirectional-entity-associations/)  
 [EagerFetching](https://vladmihalcea.com/eager-fetching-is-a-code-smell/)  
 [MappedBy](https://stackoverflow.com/questions/9108224/can-someone-explain-mappedby-in-jpa-and-hibernate#:~:text=MappedBy%20signals%20hibernate%20that%20the,constraint%20to%20the%20other%20table.)  
+
+
+## Efficiency for `@OneToMany` and `@ManyToOne`
+
+[Ref](https://thorben-janssen.com/best-practices-many-one-one-many-associations-mappings/)  
+
+The JPA specification defines `FetchType.EAGER` as the default for to-one relationships. 
+
+It tells Hibernate to initialize the association, when it loads the entity. 
+That is not a big deal, if you just load one entity. It requires just 1 additional query if you use JPQL query and Hibernate creates an INNER JOIN when you use the `EntityManager.find` method.
+
+But that dramatically changes when you select multiple Item entities.
+```sql
+select
+    item0_.id as id1_0_,
+    item0_.name as name2_0_,
+    item0_.fk_order as fk_order4_0_,
+    item0_.version as version3_0_ 
+from
+    Item item0_
+
+select
+    purchaseor0_.id as id1_1_0_,
+    purchaseor0_.version as version2_1_0_ 
+from
+    PurchaseOrder purchaseor0_ 
+where
+    purchaseor0_.id=?
+
+
+select
+    purchaseor0_.id as id1_1_0_,
+    purchaseor0_.version as version2_1_0_ 
+from
+    PurchaseOrder purchaseor0_ 
+where
+    purchaseor0_.id=?
+
+select
+    purchaseor0_.id as id1_1_0_,
+    purchaseor0_.version as version2_1_0_ 
+from
+    PurchaseOrder purchaseor0_ 
+where
+    purchaseor0_.id=?
+
+select
+    purchaseor0_.id as id1_1_0_,
+    purchaseor0_.version as version2_1_0_ 
+from
+    PurchaseOrder purchaseor0_ 
+where
+    purchaseor0_.id=?
+```

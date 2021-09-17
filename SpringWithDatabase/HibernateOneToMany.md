@@ -4,7 +4,7 @@
 ![](https://i.imgur.com/G1wyJoo.png)
 
 ## dependencies in pom.xml
-```xml=
+```xml
 <dependencies>
     <dependency>
         <groupId>org.hibernate</groupId>
@@ -20,11 +20,7 @@
 ```
 
 ## Model Class
-- `MappedBy` signals hibernate that the key for the relationship is on the other(owning) side.
-    > This means that although you link 2 tables together, **only 1 of these tables has a foreign key constraint to the other one.** 
-- `MappedBy` allows you to still link from the table not containing the constraint to the other table.
-
-```java=
+```java
 @Entity
 @Table(name = "CATEGORY")
 public class Category {
@@ -32,7 +28,7 @@ public class Category {
 
     private Set<Product> products;
 
-    // we dont need to initialize id
+    // we don't need to initialize id
     //    because @GeneratedValue
     public Category(String name) {
         this.name = name;
@@ -44,7 +40,17 @@ public class Category {
         return id;
     }
  
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+
+    /**
+      *  Although you link 2 tables together, 
+      *  only 1 of these tables has a foreign key constraint to the other one.
+      *  It allows you to still link 
+      *  from the table not containing 
+      *  the constraint to the other table.
+      */
+    @OneToMany(
+        mappedBy = "category", 
+        cascade = CascadeType.ALL)
     public Set<Product> getProducts() {
         return products;
     }
@@ -54,7 +60,7 @@ public class Category {
 ```
 
 
-```java=
+```java
 @Entity
 @Table(name = "PRODUCT")
 public class Product {
@@ -88,9 +94,8 @@ public class Product {
 ```
 
 
-## Set up hibernate.cfg.xml
-
-```java=
+Set up `hibernate.cfg.xml`
+```java
 <hibernate-configuration>       
   <session-factory>
     <!-- Database connection settings -->
@@ -101,8 +106,8 @@ public class Product {
     <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
     <property name="show_sql">true</property>
      
-    <mapping class="net.codejava.hibernate.Category"/>
-    <mapping class="net.codejava.hibernate.Product"/>
+    <mapping class="com.project.hibernate.Category"/>
+    <mapping class="com.project.hibernate.Product"/>
        
   </session-factory>
 </hibernate-configuration>
@@ -110,9 +115,7 @@ public class Product {
 
 ## Run Program
 
-[Note for Session Factory](/3xYG4oxDQHq9u3BHlL8qsg)
-
-```java=
+```java
 public class StockManager {
     public static void main(String[] args) {
         // loads configuration and mappings
@@ -139,6 +142,7 @@ public class StockManager {
         Product tablet = new Product("iPad 3", "Apple Best-selling tablet", 1099, category);
          
         Set<Product> products = new HashSet<Product>();
+
         products.add(pc);
         products.add(laptop);
         products.add(phone);

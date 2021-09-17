@@ -9,28 +9,35 @@
 ## Spring Boot
 
 - [Spring Boot Application and Rest](SpringBootApplication.md)
-## Hibernate
+
+#### Spring boot Security
+
+- [CORS](SpringBoot/CORS.md)    
+- [filter](SpringBoot/Filter.md)  
+  > [ UsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter](SpringBoot/AuthenticationFilter.md)
+- [Authentication](SpringBoot/Authentication.md)
+- [Authorization](SpringBoot/Authorization.md)
+
+## Hibernate && JPA
+
 #### Basic
-- [SessionAndHibernate](HibernateSession.md)
+- [SessionAndHibernate](SpringWithDatabase/HibernateSession.md)
   > How Session works in Hibernate Framework for communicating with database via a web request as per session...    
   > Factory creates a session, a session we can have transactions to commit to database     
-- [HibernateConfiguration](HibernateConfiguration.md)   
+- [HibernateConfiguration](SpringWithDatabase/HibernateConfiguration.md)   
   > How to configure hibernate for spring framework via java class `Configuration` instead of `xml`
   > What is SessionFactory and Session
-- [Hibernate Cache](HibernateCache.md)   
+- [Hibernate Cache](SpringWithDatabase/HibernateCache.md)   
   > reduce to retrieve query data directly from database 
-- [Transaction](Transactional.md)   
-#### Hibernate Query
+- [Transaction](SpringWithDatabase/Transactional.md)   
+#### Hibernate and JPA Query
 
-- **[Database Relationship](TableRelationship.md)**  
-  > `@JoinTable` , `@JoinColumn` , `Bidrection`
-- [OneToOne](HibernateOneToOne.md)
-- **[HQL](HQL.md)**
-
-## Spring boot Security
-
-- [CORS](CORS.md)    
-- [filter](Filter.md)  
-  > [ UsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter](AuthenticationFilter.md)
-- [Authentication](Authentication.md)
-- [Authorization](Authorization.md)
+- **[HQL](SpringWithDatabase/HQL.md)**
+- **[Database Relationship](SpringWithDatabase/TableRelationship.md)**  
+  > `@JoinTable` , `@JoinColumn` , `bidirectional`
+  > **[GenerationType](SpringWithDatabase\GenerationType.md)**
+- [OneToOne](SpringWithDatabase/HibernateOneToOne.md)
+- [OneToMany](SpringWithDatabase\HibernateOneToMany.md)
+- **[MayToMany](SpringWithDatabase\HibernateManyToMany.md)**
+  > **[`@Embedded` and `@Emenddable`](SpringWithDatabase\AnnotationEmbeddedAndEmbeddable.md)**
+- [Different btw OneToMany and ManyToMany ](SpringWithDatabase\ManyToMany&OneToMany.md)
