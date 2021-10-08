@@ -14,3 +14,32 @@
 
 [Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)
 
+
+
+## Cache Configuration via `CachingConfigurerSupport`
+### Register the CacheErrorHandler in `CachingConfigurerSupport`
+
+It overrides `CacheErrorHandler`
+
+```java
+import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.interceptor.CacheErrorHandler;   
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class CachingConfiguration extends CachingConfigurerSupport {  
+    @Override
+    public CacheErrorHandler errorHandler() {
+        return new CustomCacheErrorHandler();
+    }
+}
+```
+
+### CacheResolver 
+
+Using `CacheResolver` 
+- If you need to pick the cache manager on case by case.
+- You need to pick the cache manager **at runtime based on type of request**.
+
+
+
