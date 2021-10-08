@@ -1,11 +1,10 @@
 # Redis
 
-[Ref](https://www.mindbowser.com/spring-boot-with-redis-cache-using-annotation/)
-[Ref2](https://www.netsurfingzone.com/spring-boot/spring-boot-redis-cache-example/)  
 Redis Stands For Remote Dictionary Serve 
 
+[Ref](https://www.mindbowser.com/spring-boot-with-redis-cache-using-annotation/)
+[Ref2](https://www.netsurfingzone.com/spring-boot/spring-boot-redis-cache-example/)  
 [Ref3](https://kumarshivam-66534.medium.com/implementation-of-spring-boot-data-redis-for-caching-in-my-application-218d02c31191)   
-
 
 ## Jedis
 
@@ -50,19 +49,22 @@ spring.redis.timeout=1000
 
 ## Configuration 
 
-Configure `RedisTemplate`
-- `RedisTemplate` can be used for querying data with a custom repository
+Configure `RedisTemplate` objects
+- `RedisTemplate` objects can be used for querying data (get data, delete data , ... etc)
 
 
-RedisTemplate's Serializer Types
+### RedisTemplate's Serializer Types
+They are implementation of `RedisSerializer<T>`    
 
-They are implementation of `RedisSerializer<T>`
-
-- JDK   (e.g.  key : `\xac\xed\x00\x05t\x00\x05KeyName`, value : `\xac\xed\x00\x05t\x00\x05Value` )
+- JDK  (DEFAULT)  (e.g.  key : `\xac\xed\x00\x05t\x00\x05KeyName`, value : `\xac\xed\x00\x05t\x00\x05Value` )
 - String (MOST USED)
 - JSON   
-- XML   
+- XML     
 
+[Other built-in Serializers](https://stackoverflow.com/questions/31608394/get-set-value-from-redis-using-redistemplate)
+
+
+### Configuration Example 
 
 ```java
 @Configuration
@@ -73,8 +75,7 @@ public class RedisConfig {
 
         // Create RedisTemplate Object
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(connectionFactory);
-​
+        ​
         // Using Jackson2JsonRedisSerialize 
         Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
 ​
@@ -84,6 +85,7 @@ public class RedisConfig {
 ​
         jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
 ​
+        redisTemplate.setConnectionFactory(connectionFactory);
 
         // Serializer for Key-Value Pair
         redisTemplate.setKeySerializer(new StringRedisSerializer());
@@ -99,13 +101,15 @@ public class RedisConfig {
 }
 ```
 
+Configuration with `LettuceConnectionFactory`
 ```java
 @Configuration
 public class RedisConfig {
 
     @Bean
     @Primary
-    public LettuceConnectionFactory redis1LettuceConnectionFactory(RedisStandaloneConfiguration redis1RedisConfig,GenericObjectPoolConfig redis1PoolConfig) {
+    public LettuceConnectionFactory redis1LettuceConnectionFactory(RedisStandaloneConfiguration redis1RedisConfig,
+                                                                   GenericObjectPoolConfig redis1PoolConfig) {
         LettuceClientConfiguration clientConfig =
                 LettucePoolingClientConfiguration.builder()
                         .commandTimeout(Duration.ofMillis(100))
@@ -117,6 +121,7 @@ public class RedisConfig {
     @Bean
     public RedisTemplate<String, String> redis1Template(
             @Qualifier("redis1LettuceConnectionFactory") LettuceConnectionFactory redis1LettuceConnectionFactory) {
+        
         RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
 
         // Key-Value
@@ -133,6 +138,7 @@ public class RedisConfig {
         redisTemplate.setConnectionFactory(redis1LettuceConnectionFactory);
         
         redisTemplate.afterPropertiesSet();
+
         return redisTemplate;
     }
 
@@ -179,11 +185,8 @@ public class RedisConfig {
 }
 ```
 
-[Configuration Example with `CachingConfigurerSupport`](https://www.tpisoftware.com/tpu/articleDetails/1525)  
 
-`CachingConfigurerSupport` class and by overriding the `cacheManager()` method. 
-This method returns a bean which will be the default cache manager for our application:
-
+[Configuration Example with `CachingConfigurerSupport`](https://www.tpisoftware.com/tpu/articleDetails/1525)   
 ```java
 @Configuration
 @EnableCaching
@@ -195,16 +198,22 @@ public class RedisConfig extends CachingConfigurerSupport {
 		return new JedisConnectionFactory();
 	}
 
-	// key值命名
+
+    // custom keyGenerator
 	@Bean
 	public KeyGenerator wiselyKeyGenerator() {
 		return new KeyGenerator() {
 			@Override
 			public Object generate(Object target, Method method, Object... params) {
-				StringBuilder sb = new StringBuilder();
-               sb.append(target.getClass().getName());
-				sb.append(method.getName());
-				for (Object obj : params) {
+                StringBuilder sb = new StringBuilder();
+                
+                // get class name
+                sb.append(target.getClass().getName());
+                // get method name
+                sb.append(method.getName());
+				
+                // get other params
+                for (Object obj : params) {
 					sb.append(obj.toString());
 				}
 				
@@ -229,8 +238,8 @@ public class RedisConfig extends CachingConfigurerSupport {
 				.fromSerializer(new GenericJackson2JsonRedisSerializer());
                 
 		RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-				.serializeValuesWith(pair) // 序列化方式
-				.entryTtl(Duration.ofHours(1)); // 過期時間
+				.serializeValuesWith(pair) // serializer 
+				.entryTtl(Duration.ofHours(1)); //  expired time
 
 		return RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(factory))
 				.cacheDefaults(defaultCacheConfig).build();
@@ -257,7 +266,92 @@ public class Student implements Serializable{
 - Define `TTLs` : Time-to-live (TTL), is the time span after which your Cache will be deleting an entry. If you want to fetch data only once a minute, just guard it with a` @Cacheable` Annotation and set the TTL to `1` minute.
 
 - Implement Serializable: If you are adding an object in Redis cache then the object should implement a Serializable interface.
-Redis Cache Limits: When cache size reaches the memory limit, old data is removed to make a place for a new one. Although Redis is very fast, it still has no limits on storing any amount of data on a 64-bit system. It can only store 3GB of data on a 32-bit system.
-Never Call Cacheable Method from the same class: The reason is that Spring proxy the access to these methods to make the Cache Abstraction work. When you call it within the same class this Proxy mechanic is not kicking in. By this, you basically bypass your Cache and make it non-effective.
-Use Lettuce, If you need something highly scalable: Lettuce is a scalable thread-safe, non-blocking Redis client based on netty and Reactor. Jedis is easy to use and supports a vast number of Redis features, however, it is not thread-safe and needs connection pooling to work in a multi-threaded environment.
 
+- Redis Cache Limits: When cache size reaches the memory limit, old data is removed to make a place for a new one. Although Redis is very fast, it still has no limits on storing any amount of data on a 64-bit system. **It can only store 3GB of data on a 32-bit system.**
+
+- Never Call Cacheable Method from the same class: The reason is that Spring proxy the access to these methods to make the Cache Abstraction work. When you call it within the same class this Proxy mechanic is not kicking in. By this, you basically bypass your Cache and make it non-effective.
+
+- Use `Lettuce`, If you need something highly scalable: `Lettuce` is a scalable thread-safe, non-blocking Redis client based on netty and Reactor. `Jedis` is easy to use and supports a vast number of Redis features, however, it is not thread-safe and needs connection pooling to work in a multi-threaded environment.
+
+
+## RedisTemplate methods for querying data 
+
+
+for `String` : `opsForValue`
+for `List` : `opsForList`
+for `Set` :  `opsForSet`
+for `Hash` : `opsForHash`
+for `Zset` (sorted set) : `opsForZSet`
+[Examples](https://zhuanlan.zhihu.com/p/139528556)
+[Example for custom operation](https://zhuanlan.zhihu.com/p/336033293)  
+[](https://blog.csdn.net/yu102655/article/details/112217778)
+[](https://blog.csdn.net/qq_36781505/article/details/86612988)
+
+```java
+
+@Autowired
+RedisTemplate<String,Object> redisTemplate;
+​
+
+
+/**
+  * redisTemplate for key
+  */
+String key = "example";
+
+Boolean exist = redisTemplate.hasKey(key);
+
+// set expired time for this key 
+long time = 60;
+// (key , time , unit)
+redisTemplate.expire(key, time, TimeUnit.SECONDS);
+
+// get expired time for this key
+Long expire = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+
+// delete via key
+redisTemplate.delete(key);
+
+/**
+  * <p> optForHash </p>
+  */
+
+// save a hash key value pair
+// via put(key, map_key, map_value) 
+String key = "key_forCache";
+String item = "map_key";
+String value = "map_value";
+redisTemplate.opsForHash().put(key, item, value);
+
+// save a MAP
+// via putAll(Key, Value)
+@Autowired
+RedisTemplate<String,Object> redisTemplate;
+
+String key = "key_forCache";
+Map<String, String> maps = new Map<String, String>();
+maps.put("map_key_1", "map_value_1");
+maps.put("map_key_2", "map_value_2");
+redisTemplate.putAll(key, maps);
+
+// get entries of a bucket via hash
+String key = "bucket_name"
+Map<String, String> entries = redisTemplate.opsForHash().entries(key);
+
+// get map's value 
+String key = "key_forCache";
+String item = "map_key_1";
+Object value = redisTemplate.opsForHash().get(key, item); // return value map_value_1
+
+// delete item via key
+redisTemplate.opsForHash().delete(key, item);
+
+// Check if entry/item exists via key
+String key = "map_forCache";
+
+String item = "map_key_1";
+Boolean exist = redisTemplate.opsForHash().hasKey(key, item);
+
+// false
+System.out.println(exist);
+```

@@ -17,6 +17,7 @@
 
 
 ## Cache Configuration via `CachingConfigurerSupport`
+
 ### Register the CacheErrorHandler in `CachingConfigurerSupport`
 
 It overrides `CacheErrorHandler`
@@ -42,4 +43,93 @@ Using `CacheResolver`
 - You need to pick the cache manager **at runtime based on type of request**.
 
 
+Create Resolver 
 
+```java
+public class MultipleCacheResolver implements CacheResolver {
+    
+    // Managers
+    private final CacheManager simpleCacheManager;
+    private final CacheManager caffeineCacheManager;
+
+    // CACHE NAMES
+    private static final String ORDER_CACHE = "orders";    
+    private static final String ORDER_PRICE_CACHE = "orderprice";
+    
+    // (SETTER) Assign Managers 
+    public MultipleCacheResolver(CacheManager simpleCacheManager,CacheManager caffeineCacheManager) {
+        this.simpleCacheManager = simpleCacheManager;
+        this.caffeineCacheManager = caffeineCacheManager;
+        
+    }
+
+    @Override
+    public Collection<? extends Cache> resolveCaches(CacheOperationInvocationContext<?> context) {
+
+        Collection<Cache> caches = new ArrayList<Cache>();
+        
+        if ("getOrderDetail".equals(context.getMethod().getName())) {
+
+            caches.add(caffeineCacheManager.getCache(ORDER_CACHE));
+        } else {
+
+            caches.add(simpleCacheManager.getCache(ORDER_PRICE_CACHE));
+        }
+        return caches;
+    }
+}
+```
+
+Add Bean of `CacheResolver` in `CachingConfigurerSupport` to apply multiple cache applications
+```java
+@Configuration
+@EnableCaching
+public class MultipleCacheManagerConfig extends CachingConfigurerSupport {
+
+    @Bean
+    public CacheManager cacheManager() {
+
+        // CaffeineCacheManager(String... cacheNames)
+        // Construct a static CaffeineCacheManager, managing caches for the specified cache customer and orders
+        // e.g. @Cacheable(cacheNames = customers , ...) or @Cacheable(cacheNames = orders , ...)
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager("customers", "orders");
+        cacheManager.setCaffeine(Caffeine.newBuilder()
+                    .initialCapacity(200)
+                    .maximumSize(500)
+                    .weakKeys()
+                    .recordStats());
+        
+        return cacheManager;
+    }
+
+    @Bean
+    public CacheManager alternateCacheManager() {
+        return new ConcurrentMapCacheManager("customerOrders", "orderprice");
+    }
+
+    // Bean of Resolver
+    @Bean
+    public CacheResolver cacheResolver() {
+        return new MultipleCacheResolver(alternateCacheManager(), cacheManager());
+    }
+}
+```
+
+```java
+@Component
+public class OrderDetailBO {
+
+    @Autowired
+    private OrderDetailRepository orderDetailRepository;
+
+    @Cacheable(cacheNames = "orders", cacheResolver = "cacheResolver")
+    public Order getOrderDetail(Integer orderId) {
+        return orderDetailRepository.getOrderDetail(orderId);
+    }
+
+    @Cacheable(cacheNames = "orderprice", cacheResolver = "cacheResolver")
+    public double getOrderPrice(Integer orderId) {
+        return orderDetailRepository.getOrderPrice(orderId);
+    }
+}
+```
