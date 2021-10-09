@@ -166,7 +166,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 }
 ```
 
-## Via Spring Cache
+## Assistance via Spring Cache 
 
 Add dependency
 ```xml

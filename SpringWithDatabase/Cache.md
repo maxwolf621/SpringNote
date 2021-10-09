@@ -1,34 +1,72 @@
 [Implementing a Cache with Spring Boot](https://reflectoring.io/spring-boot-cache/)
 [A Guide To Caching in Spring](https://www.baeldung.com/spring-cache-tutorial)
-[Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)
-[install wsl window 10 and redis](https://redis.com/blog/redis-on-windows-10/)
-[disable wsl 10](https://www.windowscentral.com/install-windows-subsystem-linux-windows-10)
 
 
-[redis](https://iter01.com/28296.html)
-
-
-[(NO CACHE) Getting Started With Spring Data Redis](https://frontbackend.com/spring-boot/getting-started-with-spring-data-redis)
+[Getting Started With Spring Data Redis](https://frontbackend.com/spring-boot/getting-started-with-spring-data-redis)
 [](https://medium.com/@MatthewFTech/spring-boot-cache-with-redis-56026f7da83a)
 
+[Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)   
+[Annotations](https://howtodoinjava.com/spring-boot2/spring-boot-cache-example/)   
 
-[Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)
 
+## CacheManager
 
-
+CacheManager configures Cache Providers (e.g `Caffeine`, `Reddis` , ... etc) 
 ## Cache Configuration via `CachingConfigurerSupport`
 
+We can override these methods to configure our custom cache configuration
+`CacheManager cacheManager()` : Return the cache manager bean to use for annotation-driven cache management.
+`CacheResolver cacheResolver()` : Return the CacheResolver bean to use to resolve regular caches for annotation-driven cache management.
+`CacheErrorHandler errorHandler()` : Return the CacheErrorHandler to use to handle cache-related errors.
+`KeyGenerator keyGenerator()` : Return the key generator bean to use for annotation-driven cache management.
+
+
+### [Create Custom `CacheErrorHandler`](https://hellokoding.com/spring-caching-custom-error-handler/)
+
+To customize `ErrorHandling` 
+
+```java
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.cache.Cache;
+import org.springframework.cache.interceptor.CacheErrorHandler;
+
+@Slf4j
+public class CustomCacheErrorHandler implements CacheErrorHandler {
+    @Override
+    public void handleCacheGetError(RuntimeException e, Cache cache, Object o) {
+        log.error(e.getMessage(), e);
+    }
+
+    @Override
+    public void handleCachePutError(RuntimeException e, Cache cache, Object o, Object o1) {
+        log.error(e.getMessage(), e);
+    }
+
+    @Override
+    public void handleCacheEvictError(RuntimeException e, Cache cache, Object o) {
+        log.error(e.getMessage(), e);
+    }
+
+    @Override
+    public void handleCacheClearError(RuntimeException e, Cache cache) {
+        log.error(e.getMessage(), e);
+    }
+}
+```
 ### Register the CacheErrorHandler in `CachingConfigurerSupport`
 
 It overrides `CacheErrorHandler`
 
 ```java
+import xxx.yyy.CustomCacheErrorHandler
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.interceptor.CacheErrorHandler;   
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class CachingConfiguration extends CachingConfigurerSupport {  
+    
     @Override
     public CacheErrorHandler errorHandler() {
         return new CustomCacheErrorHandler();
@@ -44,7 +82,6 @@ Using `CacheResolver`
 
 
 Create Resolver 
-
 ```java
 public class MultipleCacheResolver implements CacheResolver {
     
@@ -80,12 +117,14 @@ public class MultipleCacheResolver implements CacheResolver {
 }
 ```
 
-Add Bean of `CacheResolver` in `CachingConfigurerSupport` to apply multiple cache applications
+Add Bean of `CacheResolver` in implementations of `CachingConfigurerSupport` then we can apply multiple caches managers for our application
 ```java
 @Configuration
 @EnableCaching
 public class MultipleCacheManagerConfig extends CachingConfigurerSupport {
 
+
+    // Managers
     @Bean
     public CacheManager cacheManager() {
 

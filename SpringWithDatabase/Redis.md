@@ -6,6 +6,10 @@ Redis Stands For Remote Dictionary Serve
 [Ref2](https://www.netsurfingzone.com/spring-boot/spring-boot-redis-cache-example/)  
 [Ref3](https://kumarshivam-66534.medium.com/implementation-of-spring-boot-data-redis-for-caching-in-my-application-218d02c31191)   
 
+
+[Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)
+[install wsl window 10 and redis](https://redis.com/blog/redis-on-windows-10/)
+[disable wsl 10](https://www.windowscentral.com/install-windows-subsystem-linux-windows-10)
 ## Jedis
 
 To define connections settings from application client to Redis server, we need `Jedis` as API to help us
@@ -231,6 +235,7 @@ public class RedisConfig extends CachingConfigurerSupport {
 		return redisTemplate;
 	}
 
+    // Assigning 
 	@Bean
 	public CacheManager cacheManager(RedisConnectionFactory factory) {
 
@@ -282,18 +287,15 @@ for `List` : `opsForList`
 for `Set` :  `opsForSet`
 for `Hash` : `opsForHash`
 for `Zset` (sorted set) : `opsForZSet`
-[Examples](https://zhuanlan.zhihu.com/p/139528556)
-[Example for custom operation](https://zhuanlan.zhihu.com/p/336033293)  
-[](https://blog.csdn.net/yu102655/article/details/112217778)
-[](https://blog.csdn.net/qq_36781505/article/details/86612988)
+
+- [Example redisTemplate operations](https://zhuanlan.zhihu.com/p/139528556)
+- [Example for custom operations](https://zhuanlan.zhihu.com/p/336033293)  
+- [Example 2](https://blog.csdn.net/qq_36781505/article/details/86612988)
 
 ```java
-
 @Autowired
 RedisTemplate<String,Object> redisTemplate;
 ​
-
-
 /**
   * redisTemplate for key
   */
@@ -352,6 +354,23 @@ String key = "map_forCache";
 String item = "map_key_1";
 Boolean exist = redisTemplate.opsForHash().hasKey(key, item);
 
-// false
-System.out.println(exist);
+/**
+  * <p> Set </p>
+  */
+
+​// add values in the set whose name is cacheName
+String key = "cacheName";
+String value1 = "2";
+String value2 = "1";
+redisTemplate.opsForSet().add(key, value1, value2);
+
+
+// get values of set
+// [1,2]
+Set<Object> members = redisTemplate.opsForSet().members(key);
+
+
+// is value exists in set
+String value = "2";
+Boolean member = redisTemplate.opsForSet().isMember(key, value);
 ```
