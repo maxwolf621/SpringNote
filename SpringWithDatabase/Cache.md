@@ -8,11 +8,162 @@
 [Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)   
 [Annotations](https://howtodoinjava.com/spring-boot2/spring-boot-cache-example/)   
 
+[](https://juejin.cn/post/6882196005731696654)
+
+
+## Annotations
+
+`EnableCaching` : Apply the application for caching
+
+
+### Method Annotation
+
+[Ref](https://juejin.cn/post/6882196005731696654)   
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7dee92b136f04551b3e0061c3c36c056~tplv-k3u1fbpfcp-watermark.awebp) 
+- different `cacheNames` map to specific Cache Objects
+- use `cacheNames` instead of `value` is recommended
+
+
+
+`@Cacheable` 
+1. Save the returned value from Database if the value doesn't exist
+2. often use for querying data
+
+```java
+@Override
+@Cacheable(cacheNames = "books", condition = "#id > 1", sync = true)
+public Book getById(Long id) {
+    return new Book(String.valueOf(id), "some book");
+}
+```
+
+`@CachePut`
+1. update the cache 
+2. often use for updating data method
+
+`@CacheEvict`
+1. deleting the data from cache
+2. often use for deleting data method
+
+`@Caching`
+
+```java
+public @interface Caching {
+	Cacheable[] cacheable() default {};
+	CachePut[] put() default {};
+	CacheEvict[] evict() default {};
+}
+```
+It contains `@Cheable` , `@CachePut` and `@CacheEvict`
+
+### Class Annotation
+
+`@CacheConfig`
+
+
+### cache's key problem
+
+Cache Key Generator uses `SimpleKeyGenerator` by default.
+```java
+@Override
+public Object generate(Object target, 
+                       Method method, 
+                       Object... params) {
+    return generateKey(params);
+}
+
+/**
+ * Default Key Generator
+ * Generate a key based on the specified parameters.
+ */
+public static Object generateKey(Object... params) {
+    if (params.length == 0) {
+        return SimpleKey.EMPTY;
+    }
+    if (params.length == 1) {
+        Object param = params[0];
+        if (param != null && !param.getClass().isArray()) {
+            return param;
+        }
+    }
+    return new SimpleKey(params);
+}
+```
+
+When to use custom key generator ?
+
+For example two key but returned different type of value
+```java
+@Override
+@Cacheable(cacheNames = "books", sync = true)
+public Book getByIsbn(String isbn) {
+    simulateSlowService();
+    return new Book(isbn, "Some book");
+}
+
+@Override
+@Cacheable(cacheNames = "books", sync = true)
+public String test(String test) {
+    return test;
+}
+
+
+
+logger.info("test getByIsbn -->" + bookRepository.getByIsbn("test")); // key : test , return Book object
+logger.info("test test -->" + bookRepository.test("test")); // key : test , but return String
+```
+
+
+Both methods are looking for key `test` and returning the different object type, it causes `ClassCastException`
+```vim
+Caused by: java.lang.ClassCastException: class com.example.caching.Book cannot be cast to class java.lang.String (com.example.caching.Book is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+	at com.sun.proxy.$Proxy33.test(Unknown Source) ~[na:na]
+	at com.example.caching.AppRunner.run(AppRunner.java:23) ~[main/:na]
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:795) ~[spring-boot-2.3.2.RELEASE.jar:2.3.2.RELEASE]
+	... 5 common frames omitted
+```
+
+to handle the exception we must define implementation of `KeyGenerator`
+```java
+@Component
+public class MyKeyGenerator implements KeyGenerator {
+    @Override
+    public Object generate(Object target, Method method, Object... params) {
+        return target.getClass().getName() + method.getName() + 
+                Stream.of(params).map(Object::toString).collect(Collectors.joining(","));
+    }
+}
+```
+
+```java
+/**
+  * add keyGenerator attribute to specify desirable Key 
+  */
+
+@Override
+@Cacheable(cacheNames = "books", sync = true, keyGenerator = "myKeyGenerator")
+public Book getByIsbn(String isbn) {
+    simulateSlowService();
+    return new Book(isbn, "Some book");
+}
+
+@Override
+@Cacheable(cacheNames = "books", sync = true, keyGenerator = "myKeyGenerator")
+public String test(String test) {
+    return test;
+}
+```
+
+
 
 ## CacheManager
 
-CacheManager configures Cache Providers (e.g `Caffeine`, `Reddis` , ... etc) 
+CacheManager configures Cache Providers (e.g `Caffeine`, `Redis` , ... etc) 
+
 ## Cache Configuration via `CachingConfigurerSupport`
+
+https://www.javadevjournal.com/spring-boot/3-ways-to-configure-multiple-cache-managers-in-spring-boot/
 
 We can override these methods to configure our custom cache configuration
 `CacheManager cacheManager()` : Return the cache manager bean to use for annotation-driven cache management.
@@ -81,7 +232,7 @@ Using `CacheResolver`
 - You need to pick the cache manager **at runtime based on type of request**.
 
 
-Create Resolver 
+Need to override `public Collection<? extends Cache> resolveCaches(CacheOperationInvocationContext<?> context)`
 ```java
 public class MultipleCacheResolver implements CacheResolver {
     
@@ -100,6 +251,11 @@ public class MultipleCacheResolver implements CacheResolver {
         
     }
 
+    /**
+      * Specify Each Cache Name that responses to certain Cache Provides
+      * @return the cache(s) to use for the specified invocation. 
+      * (execution of a program or methods)
+      */
     @Override
     public Collection<? extends Cache> resolveCaches(CacheOperationInvocationContext<?> context) {
 
@@ -116,6 +272,8 @@ public class MultipleCacheResolver implements CacheResolver {
     }
 }
 ```
+
+
 
 Add Bean of `CacheResolver` in implementations of `CachingConfigurerSupport` then we can apply multiple caches managers for our application
 ```java
@@ -148,12 +306,14 @@ public class MultipleCacheManagerConfig extends CachingConfigurerSupport {
 
     // Bean of Resolver
     @Bean
+    @Override
     public CacheResolver cacheResolver() {
         return new MultipleCacheResolver(alternateCacheManager(), cacheManager());
     }
 }
 ```
 
+add `cacheResolver` property for cache annotation
 ```java
 @Component
 public class OrderDetailBO {

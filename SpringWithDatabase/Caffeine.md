@@ -7,6 +7,8 @@ There are two methods to use Caffeine
 
 ## Configuration for Caffeine in Spring Boot
 
+[CaffeineManager](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/cache/caffeine/CaffeineCacheManager.html)   
+
 ```java
 /**
   * To configure Cache in Spring Boot
@@ -23,6 +25,12 @@ public class CaffeineCacheConfig {
     public CacheManager cacheManager(){
         // create manager
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+
+        // setCacheNames(Collection<String> cacheNames)
+        cacheManager.setCacheNames(Arrays.asList(
+            "cacheName_1",
+            "cacheName_2"
+        ));
 
         // create caffeine object
         Caffeine<Object, Object> caffeine = Caffeine.newBuilder()

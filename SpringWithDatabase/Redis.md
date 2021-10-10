@@ -28,28 +28,37 @@ it's something similar to `JdbcTemplate` to connect with `MySql` Server.
 
 ## application.properties
 
-```xml
-# REDIS (RedisProperties)
-# Redis資料庫索引（預設為0）
-spring.redis.database=0
-# Redis伺服器地址
-spring.redis.host=localhost
-# Redis伺服器連接端口
-spring.redis.port=6379
-# Redis伺服器連接密碼（預設為空）
-spring.redis.password=
-# 連接池最大連接數（使用負值表示沒有限制）
-spring.redis.pool.max-active=8
-# 連接池最大阻塞等待時間（使用負值表示沒有限制）
-spring.redis.pool.max-wait=-1
-# 連接池中的最大空閒連接
-spring.redis.pool.max-idle=8
-# 連接池中的最小空閒連接
-spring.redis.pool.min-idle=0
-# 連接超時時間（毫秒）
-spring.redis.timeout=1000
-```
+```vim
+# **** REDIS (RedisProperties) ****
+# **** spring.redis.XXXX       **** 
 
+# Redis資料庫索引（預設為0）
+spring.redis.database= 0
+
+# Redis伺服器地址
+spring.redis.host = localhost
+
+# Redis伺服器連接端口
+spring.redis.port = 6379
+
+# Redis伺服器連接密碼（預設為空）
+spring.redis.password =
+
+# 連接池最大連接數（使用負值表示沒有限制）
+spring.redis.pool.max-active = 8
+
+# 連接池最大阻塞等待時間（使用負值表示沒有限制）
+spring.redis.pool.max-wait = -1
+
+# 連接池中的最大空閒連接
+spring.redis.pool.max-idle = 8
+
+# 連接池中的最小空閒連接
+spring.redis.pool.min-idle = 0
+
+# 連接超時時間（毫秒）
+spring.redis.timeout = 1000
+```
 
 ## Configuration 
 
