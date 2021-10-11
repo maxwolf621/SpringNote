@@ -24,8 +24,6 @@
 - different `cacheNames` map to specific Cache Objects
 - use `cacheNames` instead of `value` is recommended
 
-
-
 `@Cacheable` 
 1. Save the returned value from Database if the value doesn't exist
 2. often use for querying data
@@ -284,6 +282,7 @@ public class MultipleCacheManagerConfig extends CachingConfigurerSupport {
 
     // Managers
     @Bean
+    @Override
     public CacheManager cacheManager() {
 
         // CaffeineCacheManager(String... cacheNames)
@@ -300,6 +299,7 @@ public class MultipleCacheManagerConfig extends CachingConfigurerSupport {
     }
 
     @Bean
+    @Override
     public CacheManager alternateCacheManager() {
         return new ConcurrentMapCacheManager("customerOrders", "orderprice");
     }

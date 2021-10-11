@@ -10,11 +10,84 @@ Redis Stands For Remote Dictionary Serve
 [Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)
 [install wsl window 10 and redis](https://redis.com/blog/redis-on-windows-10/)
 [disable wsl 10](https://www.windowscentral.com/install-windows-subsystem-linux-windows-10)
-## Jedis
 
-To define connections settings from application client to Redis server, we need `Jedis` as API to help us
+Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package
 
-it's something similar to `JdbcTemplate` to connect with `MySql` Server.
+```java 
+@Bean
+public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+	return RedisCacheManager.create(connectionFactory);
+}
+```
+
+### Configuration via `CacheManager`
+
+```java
+@Configuration
+@EnableCaching
+public class CacheConfig {
+
+    // ... 
+
+    @Bean(REDIS_CACHE_MANAGER)
+    public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
+        RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(30));
+        return RedisCacheManager
+                .builder(RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory))
+                .cacheDefaults(redisCacheConfiguration).build();
+    }
+}
+```
+`RedisCacheManager` behavior can be configured with `RedisCacheManagerBuilder`
+```java
+RedisCacheManager cm = RedisCacheManager.builder(connectionFactory)
+	.cacheDefaults(defaultCacheConfig())
+	.withInitialCacheConfigurations(singletonMap("predefined", defaultCacheConfig().disableCachingNullValues()))
+	.transactionAware()
+	.build();
+```
+
+The behavior of `RedisCache` created with `RedisCacheManager` is defined with `RedisCacheConfiguration`. 
+
+- The configuration lets you set `key` expiration `times`, `prefixes`, and `RedisSerializer` implementations for converting to and from the binary storage format
+
+```java
+RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+    .entryTtl(Duration.ofSeconds(1))
+	.disableCachingNullValues();        
+```
+
+`RedisCacheManager` defaults to a lock-free RedisCacheWriter for reading and writing binary values. 
+- Lock-free caching improves throughput. The lack of entry locking can lead to overlapping, non-atomic commands for the putIfAbsent and clean methods, as those require multiple commands to be sent to Redis. 
+- the locking counterpart prevents command overlap by setting an explicit lock key and checking against presence of this key, which leads to additional requests and potential command wait times.
+```java
+RedisCacheManager cm = RedisCacheManager.build(RedisCacheWriter.lockingRedisCacheWriter())
+	.cacheDefaults(defaultCacheConfig())
+	...
+```
+- By default, any key for a cache entry gets prefixed with the actual cache name followed by two colons. This behavior can be changed to a `static` as well as a computed prefix.
+
+```java
+// static key prefix
+RedisCacheConfiguration.defaultCacheConfig().prefixKeysWith("( ͡° ᴥ ͡°)");
+
+//The following example shows how to set a computed prefix:
+
+// computed key prefix
+RedisCacheConfiguration.defaultCacheConfig().computePrefixWith(cacheName -> "¯\_(ツ)_/¯" + cacheName);
+```
+
+#### `RedisCacheManager`  Defaults
+![圖 2](../images/9bee8da418519b37952a044fad50265bfb38a241a4ce86331568832ed0d5daa3.png)  
+
+#### `RedisCacheConfiguration` Defaults
+
+![圖 3](../images/5a5e3f4b1e429ba8e17b952e92236bc2f1c29fa792ea2dcdf4ae3f2d57acf5e6.png)  
+
+
+
+[TOC]
 
 ## dependency
 
@@ -82,6 +155,8 @@ They are implementation of `RedisSerializer<T>`
 ```java
 @Configuration
 public class RedisConfig {
+
+    // ... factory ...
 ​
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -98,6 +173,7 @@ public class RedisConfig {
 ​
         jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
 ​
+
         redisTemplate.setConnectionFactory(connectionFactory);
 
         // Serializer for Key-Value Pair
@@ -288,18 +364,28 @@ public class Student implements Serializable{
 - Use `Lettuce`, If you need something highly scalable: `Lettuce` is a scalable thread-safe, non-blocking Redis client based on netty and Reactor. `Jedis` is easy to use and supports a vast number of Redis features, however, it is not thread-safe and needs connection pooling to work in a multi-threaded environment.
 
 
-## RedisTemplate methods for querying data 
+##  Querying with Objects through `RedisTemplate`
 
+RedisTemplate uses a Java-based serializer for most of its operations. 
+- Any object written or read by the template is `serialized` and `deserialized` through Java
 
-for `String` : `opsForValue`
-for `List` : `opsForList`
-for `Set` :  `opsForSet`
-for `Hash` : `opsForHash`
-for `Zset` (sorted set) : `opsForZSet`
+![圖 1](../images/4d977474d0350aed41916aba72c9ab7a94e16df3c7d5278667a438e9a8279cfc.png)  
+- `String` : `opsForValue`
+- `List` : `opsForList`
+- `Set` :  `opsForSet`
+- `Hash` : `opsForHash`
+- `Sorted set` : `opsForZSet`
 
 - [Example redisTemplate operations](https://zhuanlan.zhihu.com/p/139528556)
 - [Example for custom operations](https://zhuanlan.zhihu.com/p/336033293)  
 - [Example 2](https://blog.csdn.net/qq_36781505/article/details/86612988)
+
+
+The Redis modules provides two extensions to `RedisConnection` and `RedisTemplate`, respectively the `StringRedisConnection` (and its `DefaultStringRedisConnection` implementation) and `StringRedisTemplate` as a convenient one-stop solution for intensive String operations. 
+
+**In addition to being bound to String keys, the template and the connection use the `StringRedisSerializer` underneath, which means the stored keys and values are human-readable**
+
+
 
 ```java
 @Autowired
@@ -383,3 +469,148 @@ Set<Object> members = redisTemplate.opsForSet().members(key);
 String value = "2";
 Boolean member = redisTemplate.opsForSet().isMember(key, value);
 ```
+ 
+
+
+## Jedis Connector 
+
+To define connections settings from application client to Redis server, we need `Jedis` as API to help us
+
+it's something similar to `JdbcTemplate` to connect with `MySql` Server.
+
+### Jedis Dependency
+
+```xml
+<dependencies>
+  
+  <dependency>
+    <groupId>redis.clients</groupId>
+    <artifactId>jedis</artifactId>
+    <version>3.6.3</version>
+  </dependency>
+
+</dependencies>
+```
+### Configure Jedis Configuration
+
+Create `JedisConnectionFactory` object for redis
+
+```java
+@Configuration
+class AppConfig {
+
+  @Bean
+  public JedisConnectionFactory redisConnectionFactory() {
+    return new JedisConnectionFactory();
+  }
+}
+```
+### `JedisConnectionFactory` for Redis Configuration
+
+```java
+@Configuration
+class RedisConfiguration {
+
+  @Bean
+  public JedisConnectionFactory redisConnectionFactory() {
+
+    RedisStandaloneConfiguration config = new RedisStandaloneConfiguration("server", 6379);
+    return new JedisConnectionFactory(config);
+  }
+}
+```
+
+- [Redis:Sentinel](https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#redis:sentinel)
+
+
+
+## Hash Mapping 
+
+We can achieve a more sophisticated mapping of structured objects by using Redis hashes. 
+
+Use Cases
+- Direct mapping, by using `HashOperations` and a serialize
+- Using Redis Repositories
+- Using `HashMapper` and `HashOperations`
+
+> Hash mappers are converters of map objects to a `Map<K, V>`
+
+```java
+public class Person {
+  String firstname;
+  String lastname;
+
+  // …
+}
+
+public class HashMapping {
+
+  // query the data (Person)
+  @Autowired
+  HashOperations<String, byte[], byte[]> hashOperations;
+
+  // mapping the data (Person)
+  HashMapper<Object, byte[], byte[]> mapper = new ObjectHashMapper();
+
+  // save
+  public void writeHash(String key, Person person) {
+
+    Map<byte[], byte[]> mappedHash = mapper.toHash(person);
+
+    hashOperations.putAll(key, mappedHash);
+  }
+
+  // get 
+  public Person loadHash(String key) {
+
+    Map<byte[], byte[]> loadedHash = hashOperations.entries("key");
+    
+    return (Person) mapper.fromHash(loadedHash);
+  }
+}
+```
+
+
+#### `Jackson2HashMapper`
+
+`Jackson2HashMapper` can map top-level properties as Hash field names and, optionally, flatten the structure.
+
+For example nested data structure
+```java
+public class Person {
+  String firstname;
+  String lastname;
+  Address address;  // nested <------------------------
+  Date date;
+  LocalDateTime localDateTime;
+}
+
+public class Address {
+  String city;
+  String country;
+}
+```
+
+```vim
+address : { "city" : "Castle Black", "country" : "The North" }
+
+flatten the structure
+
+address.city : Castle Black  
+address.country : The North  
+```
+
+## `@Transactional` Support
+
+For use this annotations by enabling explicitly transaction support for each `RedisTemplate` by setting `setEnableTransactionSupport(true)`
+
+Enabling transaction support binds RedisConnection to the current transaction backed by a ThreadLocal. 
+
+- If the transaction finishes without errors, the Redis transaction gets committed with `EXEC`, otherwise rolled back with `DISCARD`. 
+
+Redis transactions are batch-oriented. Commands issued during an ongoing transaction are queued and only applied when committing the transaction.
+
+Spring Data Redis distinguishes between read-only and write commands in an ongoing transaction.  
+- Read-only commands, such as `KEYS`, are **PIPED** to a fresh (non-thread-bound) `RedisConnection` to allow reads. 
+- Write commands are **QUEUED** by `RedisTemplate` and applied upon commit.
+
