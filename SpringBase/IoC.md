@@ -1,9 +1,9 @@
 # Spring Bean and Ioc
-###### tags: `Spring`
-
 [TOC]
 
 [REFERENCE_1](https://www.journaldev.com/2461/spring-ioc-bean-example-tutorial)
+[No Class Found Error](https://stackoverflow.com/questions/34413/why-am-i-getting-a-noclassdeffounderror-in-java)
+
 
 Before introducing IoC first we have to know function of Spring bean
 
@@ -19,9 +19,9 @@ This Note
 
 1. `AnnotationConfigApplicationContext(Configuration.Class)` 
     > For the Web Applications using Annotation Based Configuration
-2. ClassPathXmlApplicationContext(.xml) 
+2. `ClassPathXmlApplicationContext`(.xml) 
     > Using XML based Configuration
-3. FileSystemXmlApplicationContext : 
+3. `FileSystemXmlApplicationContext` : 
     > XML file can be loaded anywhere in the file system
 4. `AnnotationConfigWebApplicationContext(Configuration.class) `
     > for web applications using Annotation Based Configuration
@@ -36,10 +36,10 @@ Singleton
 Prototype 
 > A new instance will be created **every time the bean is requested**
 
-==Request (HTTP)==
+Request (HTTP)
 > Same as prototype but for HTTP application 
 
-==Session (HTTP)==
+Session (HTTP)
 > A new bean will be created for each HTTP session by the container
 
 Global-session
@@ -66,10 +66,10 @@ Scope details can be provided with `@Scope` annotation.
 >A principle in software engineering which transfers the control of objects or portions of a program to a **container or framework**.
 
 ## Example of Spring IoC
-HomeController class (Controller Class) will handle the HTTP requests for the home.html of the application. 
 
-*Inject Spring beans (modalities) to this controller class through WebApplicationContext container.*
+HomeController class (`@Controller`) will handle the HTTP requests for the home.html of the application. 
 
+Inject Spring beans to Controller through `WebApplicationContext` container.
 ### Configuration of Bean and Web Application
 
 There are 3 methods
@@ -87,7 +87,7 @@ public class myBean{
 }
 ```
 
-Create spring-mvc.xml to set our bean properties
+Via `spring-mvc.xml` to set our bean properties
 ```xml
 <beans ...>
     <beans: ... >
@@ -96,14 +96,14 @@ Create spring-mvc.xml to set our bean properties
 </beans>
 ```
 
-Set up Deployment Descriptor and Other Spring XML files  
 Create A controller class  
 
 Invoke Web Application
 ```java
-ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(
-                "spring-mvc.xml");
-        MyService app = context.getBean(MyService.class);
+
+ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring-mvc.xml");
+
+MyService app = context.getBean(MyService.class);
 ```
 
 #### Annotation Based Configuration

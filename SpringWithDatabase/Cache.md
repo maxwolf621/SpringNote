@@ -1,14 +1,8 @@
-[Implementing a Cache with Spring Boot](https://reflectoring.io/spring-boot-cache/)
-[A Guide To Caching in Spring](https://www.baeldung.com/spring-cache-tutorial)
-
-
-[Getting Started With Spring Data Redis](https://frontbackend.com/spring-boot/getting-started-with-spring-data-redis)
-[](https://medium.com/@MatthewFTech/spring-boot-cache-with-redis-56026f7da83a)
-
+[Implementing a Cache with Spring Boot](https://reflectoring.io/spring-boot-cache/)   
+[Getting Started With Spring Data Redis](https://frontbackend.com/spring-boot/getting-started-with-spring-data-redis)   
 [Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)   
-[Annotations](https://howtodoinjava.com/spring-boot2/spring-boot-cache-example/)   
-
-[](https://juejin.cn/post/6882196005731696654)
+[Annotations](https://howtodoinjava.com/spring-boot2/spring-boot-cache-example/)        
+[Annotations and Flow diagram](https://sunitc.dev/2020/08/27/springboot-implement-caffeine-cache/)
 
 
 ## Annotations
@@ -35,14 +29,36 @@ public Book getById(Long id) {
     return new Book(String.valueOf(id), "some book");
 }
 ```
+- parameter `id` : is default-Key name for `@Cacheable`'s attribute `Key`
 
 `@CachePut`
 1. update the cache 
 2. often use for updating data method
 
+difference btw `@CachePut` and `@Cacheable`
+- `@Cacheable` : If an item is found in the cache , Method code is not executed .
+- `@CachePut` : **Always execute method code , And update the cache after the method is executed**.
+
 `@CacheEvict`
 1. deleting the data from cache
 2. often use for deleting data method
+
+```java
+@CacheEvict(
+   value = "persons", 
+   key = "#person.emailAddress")
+public void deletePerson(Person person)
+```
+- By default `@CacheEvict`, runs after method invocation.
+
+```java
+@CacheEvict(
+   value = "persons", 
+   allEntries = true, 
+   beforeInvocation = true)
+public void importPersons()
+```
+- `allEntries` will be cleared `beforeInvocation` method `importPersons()`
 
 `@Caching`
 
@@ -53,16 +69,21 @@ public @interface Caching {
 	CacheEvict[] evict() default {};
 }
 ```
-It contains `@Cheable` , `@CachePut` and `@CacheEvict`
+It contains `@Cacheable` , `@CachePut` and `@CacheEvict`
 
 ### Class Annotation
 
 `@CacheConfig`
 
-
-### cache's key problem
+### Cache Key
 
 Cache Key Generator uses `SimpleKeyGenerator` by default.
+
+The caching abstraction uses a `simpleKeyGenerator` based on the following algorithm  
+1. If no params are given, return `SimpleKey.EMPTY`.
+2. If only one param is given, return that instance.
+3. If more the one param is given, return a `SimpleKey` containing all parameters.
+
 ```java
 @Override
 public Object generate(Object target, 
@@ -70,7 +91,6 @@ public Object generate(Object target,
                        Object... params) {
     return generateKey(params);
 }
-
 /**
  * Default Key Generator
  * Generate a key based on the specified parameters.
@@ -152,8 +172,6 @@ public String test(String test) {
     return test;
 }
 ```
-
-
 
 ## CacheManager
 
