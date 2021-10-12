@@ -5,6 +5,7 @@
 [Annotations and Flow diagram](https://sunitc.dev/2020/08/27/springboot-implement-caffeine-cache/)
 
 
+[TOC]
 ## Annotations
 
 `EnableCaching` : Apply the application for caching
@@ -13,6 +14,7 @@
 ### Method Annotation
 
 [Ref](https://juejin.cn/post/6882196005731696654)   
+[Ref](https://blog.csdn.net/qq_21508727/article/details/81908258)
 
 ![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7dee92b136f04551b3e0061c3c36c056~tplv-k3u1fbpfcp-watermark.awebp) 
 - different `cacheNames` map to specific Cache Objects
@@ -74,6 +76,7 @@ It contains `@Cacheable` , `@CachePut` and `@CacheEvict`
 ### Class Annotation
 
 `@CacheConfig`
+- it allows to share the cache names (`KeyGenerator`、`CacheManager` and `CacheResolver`)
 
 ### Cache Key
 
@@ -179,13 +182,13 @@ CacheManager configures Cache Providers (e.g `Caffeine`, `Redis` , ... etc)
 
 ## Cache Configuration via `CachingConfigurerSupport`
 
-https://www.javadevjournal.com/spring-boot/3-ways-to-configure-multiple-cache-managers-in-spring-boot/
+[](https://www.javadevjournal.com/spring-boot/3-ways-to-configure-multiple-cache-managers-in-spring-boot/)  
 
-We can override these methods to configure our custom cache configuration
-`CacheManager cacheManager()` : Return the cache manager bean to use for annotation-driven cache management.
-`CacheResolver cacheResolver()` : Return the CacheResolver bean to use to resolve regular caches for annotation-driven cache management.
-`CacheErrorHandler errorHandler()` : Return the CacheErrorHandler to use to handle cache-related errors.
-`KeyGenerator keyGenerator()` : Return the key generator bean to use for annotation-driven cache management.
+Cverride these methods to configure our custom cache configuration
+1. `CacheManager cacheManager()` : Return the cache manager bean to use for annotation-driven cache management.
+2. `CacheResolver cacheResolver()` : Return the CacheResolver bean to use to resolve regular caches for annotation-driven cache management.
+3. `CacheErrorHandler errorHandler()` : Return the CacheErrorHandler to use to handle cache-related errors.
+4. `KeyGenerator keyGenerator()` : Return the key generator bean to use for annotation-driven cache management.
 
 
 ### [Create Custom `CacheErrorHandler`](https://hellokoding.com/spring-caching-custom-error-handler/)
@@ -221,12 +224,11 @@ public class CustomCacheErrorHandler implements CacheErrorHandler {
     }
 }
 ```
-### Register the CacheErrorHandler in `CachingConfigurerSupport`
-
-It overrides `CacheErrorHandler`
+### Register `CacheErrorHandler` in `CachingConfigurerSupport`
 
 ```java
-import xxx.yyy.CustomCacheErrorHandler
+import xxx.yyy.CustomCacheErrorHandler;
+
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.interceptor.CacheErrorHandler;   
 import org.springframework.context.annotation.Configuration;
@@ -234,18 +236,22 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class CachingConfiguration extends CachingConfigurerSupport {  
     
+    //...
+
     @Override
     public CacheErrorHandler errorHandler() {
         return new CustomCacheErrorHandler();
     }
+
+    //...
 }
 ```
 
 ### CacheResolver 
 
-Using `CacheResolver` 
-- If you need to pick the cache manager on case by case.
-- You need to pick the cache manager **at runtime based on type of request**.
+Use it when 
+1. Pick the cache manager on **case by case.**
+2. Pick the cache manager **at runtime based on type of request**.
 
 
 Need to override `public Collection<? extends Cache> resolveCaches(CacheOperationInvocationContext<?> context)`

@@ -61,14 +61,7 @@ spring.redis.pool.min-idle = 0
 spring.redis.timeout = 1000
 ```
 
-## Configuration
-
-#### `RedisCacheManager`  Defaults
-![圖 2](../images/9bee8da418519b37952a044fad50265bfb38a241a4ce86331568832ed0d5daa3.png)  
-
-#### `RedisCacheConfiguration` Defaults
-
-![圖 3](../images/5a5e3f4b1e429ba8e17b952e92236bc2f1c29fa792ea2dcdf4ae3f2d57acf5e6.png)  
+## Configuration for Behavior of `RedisManager` and `RedisCache`
 
 
 Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package
@@ -79,6 +72,13 @@ public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) 
 	return RedisCacheManager.create(connectionFactory);
 }
 ```
+#### `RedisCacheManager`  Defaults
+![圖 2](../images/9bee8da418519b37952a044fad50265bfb38a241a4ce86331568832ed0d5daa3.png)  
+
+#### `RedisCacheConfiguration` Defaults
+
+![圖 3](../images/5a5e3f4b1e429ba8e17b952e92236bc2f1c29fa792ea2dcdf4ae3f2d57acf5e6.png)  
+
 
 To have Custom Configuration for Redis (e.g. Redis Cache and Redis Manager) we can do as the following 
 ```java
@@ -102,27 +102,27 @@ public class CacheConfig {
 }
 ```
 
-### Cache Manager Behavior for Redis
+### Configure Cache Manager Behavior for Redis via Build Pattern
 
 `RedisCacheManager` behavior can be configured with `RedisCacheManagerBuilder`
 ```java
 RedisCacheManager cm = RedisCacheManager.builder(connectionFactory)
-	.cacheDefaults(defaultCacheConfig())
-	.withInitialCacheConfigurations(singletonMap("predefined", defaultCacheConfig().disableCachingNullValues()))
-	.transactionAware()
-	.build();
+                                        .cacheDefaults(defaultCacheConfig())
+                                        .withInitialCacheConfigurations(singletonMap("predefined", defaultCacheConfig().disableCachingNullValues()))
+                                        .transactionAware()
+                                        .build();
 ```
 
 
-### Redis Cache behavior 
+### Redis Cache behavior (`RedisCacheConfiguration`)
 
-The behavior of `RedisCache` created with `RedisCacheManager` is defined with `RedisCacheConfiguration`. 
+The behavior of RedisCache created with `RedisCacheManager` is defined with `RedisCacheConfiguration`. 
 - The configuration lets you set `key` expiration `times`, `prefixes`, and `RedisSerializer` implementations for converting to and from the binary storage format
 
 ```java
 var config = RedisCacheConfiguration.defaultCacheConfig()
                                     .entryTtl(Duration.ofSeconds(1))
-	                                  .disableCachingNullValues();        
+                                    .disableCachingNullValues();        
 ```
 
 `RedisCacheManager` defaults to a lock-free `RedisCacheWriter` for reading and writing binary values. 
@@ -165,10 +165,10 @@ They are implementation of `RedisSerializer<T>`
 - JSON   
 - XML     
 
-[Other built-in Serializer](https://stackoverflow.com/questions/31608394/get-set-value-from-redis-using-redistemplate)
+[Other built-in Serializer](https://stackoverflow.com/questions/31608394/get-set-value-from-redis-using-redistemplate)   
+[Representation for each serializer](https://blog.csdn.net/weixin_44167627/article/details/108516013)   
 
-
-### Configuration Examples
+#### Configuration with `ObjectMapper`
 
 ```java
 @Configuration
@@ -179,20 +179,20 @@ public class RedisConfig {
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
 
-        // Create RedisTemplate Object
+        // RedisTemplate Object Configuration
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         ​
-        // Using Jackson2JsonRedisSerialize 
-        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
+        // Jackson2JsonRedisSerializer
+        var jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
 ​
+        // It helps us convert serialize / deserialize data 
+        // e.g. java object to json or json to java object ... etc 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
 ​
         jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
 ​
-
-        redisTemplate.setConnectionFactory(connectionFactory);
 
         // Serializer for Key-Value Pair
         redisTemplate.setKeySerializer(new StringRedisSerializer());
@@ -202,30 +202,34 @@ public class RedisConfig {
         redisTemplate.setHashKeySerializer(new StringRedisSerializer()); 
         redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
         
+        redisTemplate.setConnectionFactory(connectionFactory);
+
         redisTemplate.afterPropertiesSet();
+
         return redisTemplate;
     }
 }
 ```
 - [`ObjectMapper`](https://www.baeldung.com/jackson-object-mapper-tutorial)
 
-Configuration with `LettuceConnectionFactory`
+#### Configuration with `LettuceConnectionFactory` with multiple Redis
 ```java
 @Configuration
 public class RedisConfig {
 
+    // Lettuce Configuration
     @Bean
     @Primary
     public LettuceConnectionFactory redis1LettuceConnectionFactory(RedisStandaloneConfiguration redis1RedisConfig,
                                                                    GenericObjectPoolConfig redis1PoolConfig) {
-        LettuceClientConfiguration clientConfig =
-                LettucePoolingClientConfiguration.builder()
-                        .commandTimeout(Duration.ofMillis(100))
-                        .poolConfig(redis1PoolConfig).build();
+        var clientConfig = LettucePoolingClientConfiguration.builder()
+                           .commandTimeout(Duration.ofMillis(100))
+                           .poolConfig(redis1PoolConfig).build();
 
         return new LettuceConnectionFactory(redis1RedisConfig, clientConfig);
     }
 
+    // RedisTemplate
     @Bean
     public RedisTemplate<String, String> redis1Template(
             @Qualifier("redis1LettuceConnectionFactory") LettuceConnectionFactory redis1LettuceConnectionFactory) {
@@ -235,6 +239,7 @@ public class RedisConfig {
         // Key-Value
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+
         // Hash Key-Value
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
@@ -248,6 +253,48 @@ public class RedisConfig {
         redisTemplate.afterPropertiesSet();
 
         return redisTemplate;
+    }
+
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate1(RedisConnectionFactory factory) throws UnknownHostException {
+        
+        // define <String , Object> as Key Pair
+        RedisTemplate<String, Object> template = new RedisTemplate<String, Object>();
+        template.setConnectionFactory(factory);
+     
+        // Create Json Serializer
+        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
+        
+        var objectMapper = new ObjectMapper();
+        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+
+        jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
+
+        // Create String Serializer
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+
+        /**
+          * <p> Configure Template via String and Json Serializer 
+          *     for Redis Template<.. , ..> to handle different Data Type</p>
+          */
+
+        // Keys whose data Type is String will serialize as String
+        template.setKeySerializer(stringRedisSerializer);
+        // Keys whose Data Type is hash will serialize as String 
+        template.setHashKeySerializer(stringRedisSerializer);
+
+        // Values ill serialize as jackson2Json
+        template.setValueSerializer(jackson2JsonRedisSerializer);
+        // Values of Hash will serialize as jackson2Json
+        template.setHashValueSerializer(jackson2JsonRedisSerializer);
+
+        //Commit The Above Properties 
+        template.afterPropertiesSet();
+
+        return template;
+
     }
 
     @Configuration
@@ -330,6 +377,7 @@ public class RedisConfig extends CachingConfigurerSupport {
 		};
 	}
 
+  // Redis Template Configuration ( Using Redis to query the data )
 	@Bean
 	public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory factory) {
 
@@ -339,7 +387,7 @@ public class RedisConfig extends CachingConfigurerSupport {
 		return redisTemplate;
 	}
 
-    // Assigning 
+    // Redis Cache Configuration ( Use Redis As Cache Provider ) 
 	@Bean
 	public CacheManager cacheManager(RedisConnectionFactory factory) {
 
@@ -383,10 +431,14 @@ public class Student implements Serializable{
 - Use `Lettuce`, If you need something highly scalable: `Lettuce` is a scalable thread-safe, non-blocking Redis client based on netty and Reactor. `Jedis` is easy to use and supports a vast number of Redis features, however, it is not thread-safe and needs connection pooling to work in a multi-threaded environment.
 
 
-##  Querying with Objects through `RedisTemplate`
+##  Querying Data through `RedisTemplate` Methods
 
-RedisTemplate uses a Java-based serializer for most of its operations. 
+`RedisTemplate` uses a Java-based serializer for most of its operations. 
 - Any object written or read by the template is `serialized` and `deserialized` through Java
+
+- The Redis modules provides two extensions to `RedisConnection` and `RedisTemplate`, respectively the `StringRedisConnection` (and its `DefaultStringRedisConnection` implementation) and `StringRedisTemplate` as a convenient one-stop solution for intensive String operations. 
+- **In addition to being bound to String keys, the template and the connection use the `StringRedisSerializer` underneath, which means the stored keys and values are human-readable**
+
 
 ![圖 1](../images/4d977474d0350aed41916aba72c9ab7a94e16df3c7d5278667a438e9a8279cfc.png)  
 - `String` : `opsForValue`
@@ -395,15 +447,9 @@ RedisTemplate uses a Java-based serializer for most of its operations.
 - `Hash` : `opsForHash`
 - `Sorted set` : `opsForZSet`
 
-- [Example redisTemplate operations](https://zhuanlan.zhihu.com/p/139528556)
-- [Example for custom operations](https://zhuanlan.zhihu.com/p/336033293)  
-- [Example 2](https://blog.csdn.net/qq_36781505/article/details/86612988)
-
-
-The Redis modules provides two extensions to `RedisConnection` and `RedisTemplate`, respectively the `StringRedisConnection` (and its `DefaultStringRedisConnection` implementation) and `StringRedisTemplate` as a convenient one-stop solution for intensive String operations. 
-
-**In addition to being bound to String keys, the template and the connection use the `StringRedisSerializer` underneath, which means the stored keys and values are human-readable**
-
+[Code Example :: redisTemplate Methods](https://zhuanlan.zhihu.com/p/139528556)   
+[Code Example :: Custom redisTemplate Utils](https://zhuanlan.zhihu.com/p/336033293)    
+[Other Code Example](https://blog.csdn.net/qq_36781505/article/details/86612988)
 
 
 ```java
@@ -411,16 +457,16 @@ The Redis modules provides two extensions to `RedisConnection` and `RedisTemplat
 RedisTemplate<String,Object> redisTemplate;
 ​
 /**
-  * redisTemplate for key
+  * <p> redisTemplate for key </p>
   */
-String key = "example";
 
+// Check if exist
+String key = "example";
 Boolean exist = redisTemplate.hasKey(key);
 
 // set expired time for this key 
 long time = 60;
-// (key , time , unit)
-redisTemplate.expire(key, time, TimeUnit.SECONDS);
+redisTemplate.expire(key, time, TimeUnit.SECONDS); // (key , time , unit)
 
 // get expired time for this key
 Long expire = redisTemplate.getExpire(key, TimeUnit.SECONDS);
@@ -428,10 +474,9 @@ Long expire = redisTemplate.getExpire(key, TimeUnit.SECONDS);
 // delete via key
 redisTemplate.delete(key);
 
-/**
+/*************************
   * <p> optForHash </p>
   */
-
 // save a hash key value pair
 // via put(key, map_key, map_value) 
 String key = "key_forCache";
@@ -439,11 +484,7 @@ String item = "map_key";
 String value = "map_value";
 redisTemplate.opsForHash().put(key, item, value);
 
-// save a MAP
-// via putAll(Key, Value)
-@Autowired
-RedisTemplate<String,Object> redisTemplate;
-
+// save a MAP object
 String key = "key_forCache";
 Map<String, String> maps = new Map<String, String>();
 maps.put("map_key_1", "map_value_1");
@@ -468,7 +509,7 @@ String key = "map_forCache";
 String item = "map_key_1";
 Boolean exist = redisTemplate.opsForHash().hasKey(key, item);
 
-/**
+/****************
   * <p> Set </p>
   */
 
@@ -488,7 +529,483 @@ Set<Object> members = redisTemplate.opsForSet().members(key);
 String value = "2";
 Boolean member = redisTemplate.opsForSet().isMember(key, value);
 ```
- 
+
+
+We can create RedisUtil to operate `RedisTemplate`
+```java
+/**
+ * Custom RedisTemplate Methods 
+ */
+@Component
+public final class RedisUtil {
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    /**
+     * Cache Expired Time
+     */
+    public boolean expire(String key, long time) {
+        try {
+            if (time > 0) {
+                redisTemplate.expire(key, time, TimeUnit.SECONDS);
+            }
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            return false;
+        }
+    }
+
+    /**
+     * get expired time corresponding the key
+     * @param key can't be null
+     * @return seconds (0 means live forever)
+     */
+    public long getExpire(String key) {
+        return redisTemplate.getExpire(key, TimeUnit.SECONDS);
+    }
+
+
+    /**
+     * Check key if exists
+     */
+    public boolean hasKey(String key) {
+        try {
+            return redisTemplate.hasKey(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+     * Delete the caches
+     */
+    @SuppressWarnings("unchecked")
+    public void del(String... key) {
+        if (key != null && key.length > 0) {
+            if (key.length == 1) {
+                redisTemplate.delete(key[0]);
+            } else {
+                redisTemplate.delete(CollectionUtils.arrayToList(key));
+            }
+        }
+    }
+```
+
+
+#### Override `opsForValue`
+```java
+    /**
+     * get cache via {@code key}
+     */
+    public Object get(String key) {
+        return key == null ? null : redisTemplate.opsForValue().get(key);
+    }
+
+    /**
+     * save the data in the cache
+     * @return true if successes
+     */
+    public boolean set(String key, Object value) {
+        try {
+            redisTemplate.opsForValue().set(key, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+     * Set cache with TTL
+     * @param time  seconds if 0 or <0 then this cache live forever
+     * @return true成功 false 失败
+     */
+
+    public boolean set(String key, Object value, long time) {
+        try {
+            if (time > 0) {
+                redisTemplate.opsForValue().set(key, value, time, TimeUnit.SECONDS);
+            } else {
+                set(key, value);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+     * Increment the certain cache correspond to key
+     * @param delta bigger than 0
+     */
+    public long incr(String key, long delta) {
+        if (delta < 0) {
+            throw new RuntimeException("delta can not be less then or equal to 0");
+        }
+        return redisTemplate.opsForValue().increment(key, delta);
+    }
+
+
+    /**
+     * decrement
+     * @param delta
+     */
+    public long decr(String key, long delta) {
+        if (delta < 0) {
+            throw new RuntimeException("delta must be bigger than 0");
+        }
+        return redisTemplate.opsForValue().increment(key, -delta);
+    }
+```
+
+### Override `opsForHash`
+
+```java
+    /**
+     * Override opsForHash().get(key, item)
+     */
+    public Object hget(String key, String item) {
+        return redisTemplate.opsForHash().get(key, item);
+    }
+
+    /**
+     * Get Entries for certain bucket
+     */
+    public Map<Object, Object> hmget(String key) {
+        return redisTemplate.opsForHash().entries(key);
+    }
+
+    /**
+     * (hset) Insert new entries
+     */
+    public boolean hmset(String key, Map<String, Object> map) {
+        try {
+            redisTemplate.opsForHash().putAll(key, map);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+     * HashSet with TTL
+     */
+    public boolean hmset(String key, Map<String, Object> map, long time) {
+        try {
+            redisTemplate.opsForHash().putAll(key, map);
+            if (time > 0) {
+                expire(key, time);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+     * hset : key -> [item , value] -> [item , value] -> ....
+     */
+    public boolean hset(String key, String item, Object value) {
+        try {
+            redisTemplate.opsForHash().put(key, item, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * hset with TTL
+     */
+    public boolean hset(String key, String item, Object value, long time) {
+        try {
+            redisTemplate.opsForHash().put(key, item, value);
+            if (time > 0) {
+                expire(key, time);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+     * delete entries via items corresponding to specific key
+     *
+     * @param key  Can Not Be NULL
+     * @param item Can Not Be NULL
+     */
+    public void hdel(String key, Object... item) {
+        redisTemplate.opsForHash().delete(key, item);
+    }
+
+
+    /**
+     * Search specific item via key
+     */
+    public boolean hHasKey(String key, String item) {
+        return redisTemplate.opsForHash().hasKey(key, item);
+    }
+
+
+    /**
+     * increment 
+     * @param by > 0
+     */
+    public double hincr(String key, String item, double by) {
+        return redisTemplate.opsForHash().increment(key, item, by);
+    }
+
+
+    /**
+     * decrement
+     * @param by > 0
+     */
+    public double hdecr(String key, String item, double by) {
+        return redisTemplate.opsForHash().increment(key, item, -by);
+    }
+```
+
+### Override `opsForSet()`
+```java
+    /**
+     * get all value in Set via key
+     */
+    public Set<Object> sGet(String key) {
+        try {
+            return redisTemplate.opsForSet().members(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    /**
+     * search the value in Set via key
+     */
+    public boolean sHasKey(String key, Object value) {
+        try {
+            return redisTemplate.opsForSet().isMember(key, value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+     * Insert new values
+     */
+    public long sSet(String key, Object... values) {
+        try {
+            return redisTemplate.opsForSet().add(key, values);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+
+    /**
+     * Insert new values with TTL
+     */
+    public long sSetAndTime(String key, long time, Object... values) {
+        try {
+            Long count = redisTemplate.opsForSet().add(key, values);
+            if (time > 0)
+                expire(key, time);
+            return count;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+
+    /**
+     * get Set Size via Key
+     */
+    public long sGetSetSize(String key) {
+        try {
+            return redisTemplate.opsForSet().size(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+
+    /**
+     * Delete values in Set via Key
+     */
+    public long setRemove(String key, Object... values) {
+        try {
+            Long count = redisTemplate.opsForSet().remove(key, values);
+            return count;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+```
+
+### Override `opsForList()`
+```java
+    /**
+     * get List Contents
+     * @param start 
+     * @param end   
+     * <p> start : 0  and end : -1 means fetch all contents of this list </p>
+     */
+    public List<Object> lGet(String key, long start, long end) {
+        try {
+            return redisTemplate.opsForList().range(key, start, end);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    /**
+     * get List.size via Key
+     */
+    public long lGetListSize(String key) {
+        try {
+            return redisTemplate.opsForList().size(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+
+    /**
+     * get content in the list via key and index of this list
+     * @param index -1 : last one , -2 second to last , ...
+     */
+    public Object lGetIndex(String key, long index) {
+        try {
+            return redisTemplate.opsForList().index(key, index);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    /**
+     * add new content in list 
+     */
+    public boolean lSet(String key, Object value) {
+        try {
+            redisTemplate.opsForList().rightPush(key, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+     * add new content in list with TTL
+     */
+    public boolean lSet(String key, Object value, long time) {
+        try {
+            redisTemplate.opsForList().rightPush(key, value);
+            if (time > 0)
+                expire(key, time);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
+
+    /**
+     * add List of values in the list
+     */
+    public boolean lSet(String key, List<Object> value) {
+        try {
+            redisTemplate.opsForList().rightPushAll(key, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
+
+    /**
+     * add value in the list with TTL
+     */
+    public boolean lSet(String key, List<Object> value, long time) {
+        try {
+            redisTemplate.opsForList().rightPushAll(key, value);
+            if (time > 0)
+                expire(key, time);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+     * edit content via index of list and key
+     */
+
+    public boolean lUpdateIndex(String key, long index, Object value) {
+        try {
+            redisTemplate.opsForList().set(key, index, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    /**
+     * delete n values in this list
+     * @param count number of deleted items
+     * @param value 
+     */
+
+    public long lRemove(String key, long count, Object value) {
+        try {
+            Long remove = redisTemplate.opsForList().remove(key, count, value);
+            return remove;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+}
+
+```
 
 
 ## Jedis Connector 
