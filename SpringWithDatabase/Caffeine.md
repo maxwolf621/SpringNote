@@ -5,7 +5,8 @@ There are two methods to use Caffeine
 1. Via Caffeine class methods
 2. Via Spring Cache (e.g. `@Cacheable(...)`)
 
-## Configuration for Caffeine in Spring Boot
+
+## Configuration for Caffeine via JAVA
 
 [CaffeineManager](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/cache/caffeine/CaffeineCacheManager.html)   
 
@@ -21,6 +22,15 @@ There are two methods to use Caffeine
 @EnableCaching
 public class CaffeineCacheConfig {
 
+
+    @Bean
+    Public Caffeine<Object,Object> caffeine(){
+        return  Caffeine.newBuilder()
+                        .expireAfterWrite(10, TimeUnit.SECONDS)
+                        .initialCapacity(100)
+                        .maximumSize(1000);
+    }
+
     @Bean
     public CacheManager cacheManager(){
         // create manager
@@ -32,17 +42,111 @@ public class CaffeineCacheConfig {
             "cacheName_2"
         ));
 
-        // create caffeine object
-        Caffeine<Object, Object> caffeine = Caffeine.newBuilder()
-                                            .expireAfterWrite(10, TimeUnit.SECONDS)
-                                            .initialCapacity(100)
-                                            .maximumSize(1000);
                                             
         cacheManager.setCaffeine(caffeine);
         return cacheManager;
     }
 }
 ```
+
+## Configuration via Application.Properties
+
+
+```java
+@SpringBootApplication
+@EnableCaching
+public class SpringBootApplication {
+    // ...
+}
+```
+
+```vim
+spring.cache.cache-names=people
+spring.cache.caffeine.spec= initialCapacity=50, maximumSize=500, expireAfterWrite=10s, refreshAfterWrite=5s
+```
+
+```java
+@Configuration
+public class CacheConfig {
+
+    /**
+     * <p> For Bean of CacheLoader </p>
+     * <p> We must configuration caffeine with attribute 'refreshAfterWrite' </p>
+     */
+    @Bean
+    public CacheLoader<Object, Object> cacheLoader() {
+
+
+        CacheLoader<Object, Object> cacheLoader = new CacheLoader<Object, Object>() {
+
+            @Override
+            public Object load(Object key) throws Exception {
+                return null;
+            }
+
+            // return value and refresh
+            @Override
+            public Object reload(Object key, Object oldValue) throws Exception {
+                return oldValue;
+            }
+        };
+
+        return cacheLoader;
+    }
+
+}
+```
+
+
+```java
+@Service
+public class PersonServiceImpl implements PersonService {
+private static final Logger logger = LoggerFactory.getLogger(PersonServiceImpl.class);
+@Autowired
+PersonRepository personRepository;
+@Override
+@CachePut(value = "people", key = "#person.id")
+public Person save(Person person) {
+Person p = personRepository.save(person);
+logger.info("為id、key為:"   p.getId()   "資料做了快取");
+return p;
+}
+@Override
+@CacheEvict(value = "people")//2
+public void remove(Long id) {
+logger.info("刪除了id、key為"   id   "的資料快取");
+//這裡不做實際刪除操作
+}
+/**
+* Cacheable
+* value：快取key的字首。
+* key：快取key的字尾。
+* sync：設定如果快取過期是不是隻放一個請求去請求資料庫，其他請求阻塞，預設是false。
+*/
+@Override
+@Cacheable(value = "people", key = "#person.id", sync = true)
+public Person findOne(Person person, String a, String[] b, List<Long> c) {
+Person p = personRepository.findOne(person.getId());
+logger.info("為id、key為:"   p.getId()   "資料做了快取");
+return p;
+}
+@Override
+@Cacheable(value = "people1")//3
+public Person findOne1() {
+Person p = personRepository.findOne(2L);
+logger.info("為id、key為:"   p.getId()   "資料做了快取");
+return p;
+}
+@Override
+@Cacheable(value = "people2")//3
+public Person findOne2(Person person) {
+Person p = personRepository.findOne(person.getId());
+logger.info("為id、key為:"   p.getId()   "資料做了快取");
+return p;
+}
+}
+```
+
 
 #### Configurations of Caffeine
 

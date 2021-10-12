@@ -2,90 +2,18 @@
 
 Redis Stands For Remote Dictionary Serve 
 
-[Ref](https://www.mindbowser.com/spring-boot-with-redis-cache-using-annotation/)
-[Ref2](https://www.netsurfingzone.com/spring-boot/spring-boot-redis-cache-example/)  
-[Ref3](https://kumarshivam-66534.medium.com/implementation-of-spring-boot-data-redis-for-caching-in-my-application-218d02c31191)   
+[Ref](https://www.mindbowser.com/spring-boot-with-redis-cache-using-annotation/)     
+[Ref2](https://www.netsurfingzone.com/spring-boot/spring-boot-redis-cache-example/)     
+[Ref3](https://kumarshivam-66534.medium.com/implementation-of-spring-boot-data-redis-for-caching-in-my-application-218d02c31191)       
+[Ref4](https://medium.com/brucehsu-backend-dev/%E5%88%A9%E7%94%A8spring-cache%E5%84%AA%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8caches-5aad2630eb0a)  
+
+[Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)   
+[Install wsl window 10 and redis](https://redis.com/blog/redis-on-windows-10/)   
+[Disable wsl window 10](https://www.windowscentral.com/install-windows-subsystem-linux-windows-10)   
+[MatthewFTech spring-boot-cache-with-redis](https://medium.com/@MatthewFTech/spring-boot-cache-with-redis-56026f7da83a)   
 
 
-[Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)
-[install wsl window 10 and redis](https://redis.com/blog/redis-on-windows-10/)
-[disable wsl 10](https://www.windowscentral.com/install-windows-subsystem-linux-windows-10)
-
-Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package
-
-```java 
-@Bean
-public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-	return RedisCacheManager.create(connectionFactory);
-}
-```
-
-### Configuration via `CacheManager`
-
-```java
-@Configuration
-@EnableCaching
-public class CacheConfig {
-
-    // ... 
-
-    @Bean(REDIS_CACHE_MANAGER)
-    public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
-        RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(30));
-        return RedisCacheManager
-                .builder(RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory))
-                .cacheDefaults(redisCacheConfiguration).build();
-    }
-}
-```
-`RedisCacheManager` behavior can be configured with `RedisCacheManagerBuilder`
-```java
-RedisCacheManager cm = RedisCacheManager.builder(connectionFactory)
-	.cacheDefaults(defaultCacheConfig())
-	.withInitialCacheConfigurations(singletonMap("predefined", defaultCacheConfig().disableCachingNullValues()))
-	.transactionAware()
-	.build();
-```
-
-The behavior of `RedisCache` created with `RedisCacheManager` is defined with `RedisCacheConfiguration`. 
-
-- The configuration lets you set `key` expiration `times`, `prefixes`, and `RedisSerializer` implementations for converting to and from the binary storage format
-
-```java
-RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-    .entryTtl(Duration.ofSeconds(1))
-	.disableCachingNullValues();        
-```
-
-`RedisCacheManager` defaults to a lock-free RedisCacheWriter for reading and writing binary values. 
-- Lock-free caching improves throughput. The lack of entry locking can lead to overlapping, non-atomic commands for the putIfAbsent and clean methods, as those require multiple commands to be sent to Redis. 
-- the locking counterpart prevents command overlap by setting an explicit lock key and checking against presence of this key, which leads to additional requests and potential command wait times.
-```java
-RedisCacheManager cm = RedisCacheManager.build(RedisCacheWriter.lockingRedisCacheWriter())
-	.cacheDefaults(defaultCacheConfig())
-	...
-```
-- By default, any key for a cache entry gets prefixed with the actual cache name followed by two colons. This behavior can be changed to a `static` as well as a computed prefix.
-
-```java
-// static key prefix
-RedisCacheConfiguration.defaultCacheConfig().prefixKeysWith("( ͡° ᴥ ͡°)");
-
-//The following example shows how to set a computed prefix:
-
-// computed key prefix
-RedisCacheConfiguration.defaultCacheConfig().computePrefixWith(cacheName -> "¯\_(ツ)_/¯" + cacheName);
-```
-
-#### `RedisCacheManager`  Defaults
-![圖 2](../images/9bee8da418519b37952a044fad50265bfb38a241a4ce86331568832ed0d5daa3.png)  
-
-#### `RedisCacheConfiguration` Defaults
-
-![圖 3](../images/5a5e3f4b1e429ba8e17b952e92236bc2f1c29fa792ea2dcdf4ae3f2d57acf5e6.png)  
-
-
+[Difference btw Lettuce and Jedis](https://github.com/spring-projects/spring-session/issues/789)  
 
 [TOC]
 
@@ -133,7 +61,97 @@ spring.redis.pool.min-idle = 0
 spring.redis.timeout = 1000
 ```
 
-## Configuration 
+## Configuration
+
+#### `RedisCacheManager`  Defaults
+![圖 2](../images/9bee8da418519b37952a044fad50265bfb38a241a4ce86331568832ed0d5daa3.png)  
+
+#### `RedisCacheConfiguration` Defaults
+
+![圖 3](../images/5a5e3f4b1e429ba8e17b952e92236bc2f1c29fa792ea2dcdf4ae3f2d57acf5e6.png)  
+
+
+Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package
+
+```java 
+@Bean
+public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+	return RedisCacheManager.create(connectionFactory);
+}
+```
+
+To have Custom Configuration for Redis (e.g. Redis Cache and Redis Manager) we can do as the following 
+```java
+@Configuration
+@EnableCaching
+public class CacheConfig {
+
+    /**
+      * <p> To create RedisCacheManager as An Cache Provider </p>
+      * <p> RedisCacheManager must build with Redis Connection Factory and 
+      *     RedisCacheConfiguration </p>
+      */
+    @Bean
+    public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
+        var redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                                                             .entryTtl(Duration.ofMinutes(30));
+        return RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory))
+                                .cacheDefaults(redisCacheConfiguration)
+                                .build();
+    }
+}
+```
+
+### Cache Manager Behavior for Redis
+
+`RedisCacheManager` behavior can be configured with `RedisCacheManagerBuilder`
+```java
+RedisCacheManager cm = RedisCacheManager.builder(connectionFactory)
+	.cacheDefaults(defaultCacheConfig())
+	.withInitialCacheConfigurations(singletonMap("predefined", defaultCacheConfig().disableCachingNullValues()))
+	.transactionAware()
+	.build();
+```
+
+
+### Redis Cache behavior 
+
+The behavior of `RedisCache` created with `RedisCacheManager` is defined with `RedisCacheConfiguration`. 
+- The configuration lets you set `key` expiration `times`, `prefixes`, and `RedisSerializer` implementations for converting to and from the binary storage format
+
+```java
+var config = RedisCacheConfiguration.defaultCacheConfig()
+                                    .entryTtl(Duration.ofSeconds(1))
+	                                  .disableCachingNullValues();        
+```
+
+`RedisCacheManager` defaults to a lock-free `RedisCacheWriter` for reading and writing binary values. 
+- **Lock-free caching improves throughput**. The lack of entry locking can lead to overlapping, non-atomic commands for the `putIfAbsent` and `clean` methods, as those require multiple commands to be sent to Redis. 
+- the locking counterpart prevents command overlap by setting an explicit lock key and checking against presence of this key, which leads to additional requests and potential command wait times.
+
+```java
+RedisCacheManager cm = RedisCacheManager.build(RedisCacheWriter.lockingRedisCacheWriter())
+	.cacheDefaults(defaultCacheConfig())
+	...
+```
+
+
+### Prefix for `Key`
+
+By default, **any key for a cache entry gets prefixed** with the actual cache name followed by two colons. This behavior can be changed to a `static` as well as a computed prefix.
+
+```java
+// static key prefix
+RedisCacheConfiguration.defaultCacheConfig().prefixKeysWith("( ͡° ᴥ ͡°)");
+
+//The following example shows how to set a computed prefix:
+
+// computed key prefix
+RedisCacheConfiguration.defaultCacheConfig().computePrefixWith(cacheName -> "¯\_(ツ)_/¯" + cacheName);
+```
+
+
+## `RedisTemplate` Configuration
 
 Configure `RedisTemplate` objects
 - `RedisTemplate` objects can be used for querying data (get data, delete data , ... etc)
@@ -142,15 +160,15 @@ Configure `RedisTemplate` objects
 ### RedisTemplate's Serializer Types
 They are implementation of `RedisSerializer<T>`    
 
-- JDK  (DEFAULT)  (e.g.  key : `\xac\xed\x00\x05t\x00\x05KeyName`, value : `\xac\xed\x00\x05t\x00\x05Value` )
+- JDK  (**DEFAULT**)  (e.g.  key : `\xac\xed\x00\x05t\x00\x05KeyName`, value : `\xac\xed\x00\x05t\x00\x05Value` )
 - String (MOST USED)
 - JSON   
 - XML     
 
-[Other built-in Serializers](https://stackoverflow.com/questions/31608394/get-set-value-from-redis-using-redistemplate)
+[Other built-in Serializer](https://stackoverflow.com/questions/31608394/get-set-value-from-redis-using-redistemplate)
 
 
-### Configuration Example 
+### Configuration Examples
 
 ```java
 @Configuration
@@ -189,6 +207,7 @@ public class RedisConfig {
     }
 }
 ```
+- [`ObjectMapper`](https://www.baeldung.com/jackson-object-mapper-tutorial)
 
 Configuration with `LettuceConnectionFactory`
 ```java
