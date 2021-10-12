@@ -168,50 +168,6 @@ They are implementation of `RedisSerializer<T>`
 [Other built-in Serializer](https://stackoverflow.com/questions/31608394/get-set-value-from-redis-using-redistemplate)   
 [Representation for each serializer](https://blog.csdn.net/weixin_44167627/article/details/108516013)   
 
-#### Configuration with `ObjectMapper`
-
-```java
-@Configuration
-public class RedisConfig {
-
-    // ... factory ...
-​
-    @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-
-        // RedisTemplate Object Configuration
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        ​
-        // Jackson2JsonRedisSerializer
-        var jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
-​
-        // It helps us convert serialize / deserialize data 
-        // e.g. java object to json or json to java object ... etc 
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-​
-        jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
-​
-
-        // Serializer for Key-Value Pair
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);
-
-        // Serializer for Hash Key-Value Pair
-        redisTemplate.setHashKeySerializer(new StringRedisSerializer()); 
-        redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
-        
-        redisTemplate.setConnectionFactory(connectionFactory);
-
-        redisTemplate.afterPropertiesSet();
-
-        return redisTemplate;
-    }
-}
-```
-- [`ObjectMapper`](https://www.baeldung.com/jackson-object-mapper-tutorial)
-
 #### Configuration with `LettuceConnectionFactory` with multiple Redis
 ```java
 @Configuration
@@ -339,6 +295,7 @@ public class RedisConfig {
     }
 }
 ```
+- [`ObjectMapper`](https://www.baeldung.com/jackson-object-mapper-tutorial)
 
 
 [Configuration Example with `CachingConfigurerSupport`](https://www.tpisoftware.com/tpu/articleDetails/1525)   
