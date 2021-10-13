@@ -363,6 +363,199 @@ public class RedisConfig extends CachingConfigurerSupport {
 }
 ```
 
+
+## Multiple Redis Configuration
+
+[Ref](https://www.bswen.com/2021/03/springboot-how-to-connect-multiple-redis-server.html)  
+
+
+### Application Properties or YML
+
+```yml
+spring:
+  redis:
+    user:
+      host: 127.0.0.1
+      port: ${redis.port:6379}
+      database: 10
+      password: 
+    role:
+      host: 127.0.0.1
+      port: ${redis.port:26379}
+      database: 12
+      password: 
+```
+
+```xml
+spring.redis.host=localhost
+spring.redis.port=6379
+spring.redis.database=10
+
+spring.redis2.host=localhost
+spring.redis2.port=26379
+spring.redis2.database=12
+```
+
+### Property Class
+
+```java
+@Data
+public class RedisCommonProperty {
+    private String host;
+    private int port;
+    private int database;
+}
+```
+
+#### Properties for each redis
+
+```java
+@Configuration
+@ConfigurationProperties(prefix = "spring.redis")
+public class Redis1Property extends RedisCommonProperty {
+}
+```
+
+```java
+@Configuration
+@ConfigurationProperties(prefix = "spring.redis2")
+public class Redis2Property extends RedisCommonProperty {
+}
+```
+
+## Redis Connection Configuration  
+
+
+```java
+@Configuration
+public class Redis1Configuration {
+
+    @Autowired
+    private Redis1Property redis1Property;
+
+    @Primary
+    @Bean(name = "redis1ConnectionFactory")
+    public RedisConnectionFactory userRedisConnectionFactory() {
+        JedisConnectionFactory redisConnectionFactory = new JedisConnectionFactory();
+        redisConnectionFactory.setHostName(redis1Property.getHost());
+        redisConnectionFactory.setPort(redis1Property.getPort());
+        redisConnectionFactory.setDatabase(redis1Property.getDatabase());
+        redisConnectionFactory.setPoolConfig(getPoolConfig());
+        return redisConnectionFactory;
+    }
+
+    private JedisPoolConfig getPoolConfig() {
+        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+        jedisPoolConfig.setMaxIdle(8);
+        jedisPoolConfig.setMinIdle(1);
+        jedisPoolConfig.setMaxTotal(8);
+        return jedisPoolConfig;
+    }
+
+    @Bean(name = "redis1StringRedisTemplate")
+    public StringRedisTemplate userStringRedisTemplate(@Qualifier("redis1ConnectionFactory") RedisConnectionFactory cf) {
+        StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
+        stringRedisTemplate.setConnectionFactory(cf);
+        return stringRedisTemplate;
+    }
+
+    @Bean(name = "redis1RedisTemplate")
+    public RedisTemplate userRedisTemplate(@Qualifier("redis1ConnectionFactory") RedisConnectionFactory cf) {
+        StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
+        stringRedisTemplate.setConnectionFactory(cf);
+        //setSerializer(stringRedisTemplate);
+        return stringRedisTemplate;
+    }
+
+}
+```
+
+```java
+@Configuration
+public class Redis2Configuration {
+    @Autowired
+    private Redis2Property redis2Property;
+
+    private JedisPoolConfig getPoolConfig() {
+        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+        jedisPoolConfig.setMaxIdle(8);
+        jedisPoolConfig.setMinIdle(1);
+        jedisPoolConfig.setMaxTotal(8);
+        return jedisPoolConfig;
+    }
+
+
+    @Bean(name = "redis2ConnectionFactory")
+    public RedisConnectionFactory roleRedisConnectionFactory() {
+        JedisConnectionFactory redisConnectionFactory = new JedisConnectionFactory();
+        redisConnectionFactory.setHostName(redis2Property.getHost());
+        redisConnectionFactory.setPort(redis2Property.getPort());
+        redisConnectionFactory.setDatabase(redis2Property.getDatabase());
+        redisConnectionFactory.setPoolConfig(getPoolConfig());
+        return redisConnectionFactory;
+    }
+
+    @Bean(name = "redis2StringRedisTemplate")
+    public StringRedisTemplate roleStringRedisTemplate(@Qualifier("redis2ConnectionFactory") RedisConnectionFactory cf) {
+        StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
+        stringRedisTemplate.setConnectionFactory(cf);
+        return stringRedisTemplate;
+    }
+
+    @Bean(name = "redis2RedisTemplate")
+    public RedisTemplate roleRedisTemplate(@Qualifier("redis2ConnectionFactory") RedisConnectionFactory cf) {
+        StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
+        stringRedisTemplate.setConnectionFactory(cf);
+        //setSerializer(stringRedisTemplate);
+        return stringRedisTemplate;
+    }
+
+}
+```
+### Newer Connection Configuration with `RedisStandaloneConfiguration`
+
+```java
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+
+@Configuration
+@RequiredArgsConstructor
+public class MyRedisConnectionConfiguration {
+
+    // import our Properties for redis 
+    private final UserRedisProperty userRedisProperty;
+    private final RoleRedisProperty roleRedisProperty;
+
+    @Primary
+    @Bean(name = "userRedisConnectionFactory")
+    public RedisConnectionFactory userRedisConnectionFactory() {
+        RedisStandaloneConfiguration redisConfiguration = new RedisStandaloneConfiguration();
+        redisConfiguration.setHostName(userRedisProperty.getHost());
+        redisConfiguration.setPort(userRedisProperty.getPort());
+        redisConfiguration.setDatabase(userRedisProperty.getDatabase());
+        redisConfiguration.setPassword(userRedisProperty.getPassword());
+        return new JedisConnectionFactory(redisConfiguration);
+    }
+
+    @Bean(name = "roleRedisConnectionFactory")
+    public RedisConnectionFactory roleRedisConnectionFactory() {
+        RedisStandaloneConfiguration redisConfiguration = new RedisStandaloneConfiguration();
+        redisConfiguration.setHostName(roleRedisProperty.getHost());
+        redisConfiguration.setPort(roleRedisProperty.getPort());
+        redisConfiguration.setDatabase(roleRedisProperty.getDatabase());
+        redisConfiguration.setPassword(roleRedisProperty.getPassword());
+        return new JedisConnectionFactory(redisConfiguration);
+    }
+
+}
+```
+
 ## Model
 
 Each model must implement `Serializable`
