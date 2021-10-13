@@ -168,10 +168,6 @@ public String viewPage(Model model,
         return "index";
 }
 ```
-> @PathVariable
-> : Variable in URL
->
-> @Param
 
 
 ## web page

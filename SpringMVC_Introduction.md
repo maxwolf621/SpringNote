@@ -8,47 +8,47 @@
 
 The MVC framework is based on the **Model - View - Controller (MVC)** design pattern which separates the application’s logic into the three layers Mode, View and Controller
 
-![](https://i.imgur.com/amuWjEq.png)
+![](https://i.imgur.com/amuWjEq.png)   
 
->Spring’s dispatcher Servlet ==(Waiter)==
+>Spring’s dispatcher Servlet **(Waiter)**
 > : Acts as a ==front controller== between the Spring application and its clients. 
 > : **The dispatcher Servlet intercepts all requests coming to the application and consults the Handler Mapping for which controller to be invoked** to handle the requests.
->> Handler Mapping ==(Meal)==
->> : It is responsible to find appropriate controllers that handle specific requests. 
+>> Handler Mapping **(ORDER)**
+>> : **It is responsible to find appropriate controllers** that handle specific requests. 
 >> The mapping between request URLs and controller classes is done via XML configuration or annotations.
 >> 
->> Controller ==(Cook)==
+>> Controller **(Cook)**
 >> : It is responsible **to process the requests by calling other business/service classes.** 
 >> The output can be attached to model objects which will be sent (**respond**) to the view (displayed attributes by `Model` class). 
 >> : To know which view(web pages) will be rendered, the controller consults the View Resolver.
 >> 
->> View Resolver ==(Where to get Guest Order)==
+>> View Resolver **(RECIPE OF THE MEAL)**
 >> : **Finds the physical(in the directory) view files** .
 >> 
->> View ==(Guest Order)==
+>> View **(MEAL)**
 >> : The physical view files (.jsp, .html, ,xml, Velocity template, etc...)  
 
+```vim
+Guest ((PASS ORDER)) 
+-> Waiter fetches the ORDER 
+-> ORDER (e.g. DESSERT, XXX COMBO) 
+-> cook handles the ORDER 
+-> cook the meal according to RECIPE OF SPECIFIC MEAL 
+-> MEAL for CLIENT
+```
 
-![](https://i.imgur.com/aoh0v6b.png)![Uploading file..._mzwpdiogu]()
-
-
-### [Note Dispatcher Servlet](/3Mhn1IeiT8uFrsZU0Ln0bg)
-
+![](https://i.imgur.com/aoh0v6b.png)!
 
 # A basic MVC project 
 
-Would need 
-1. Maven Depedencies Configuration (poem.xml)
-2. Web depolyment descriptor (web.xml)
+1. Maven Dependencies Configuration (poem.xml)
+2. Web deployment descriptor (web.xml)
 3. Controller classes
 4. views (web pages)
 
-
-## Maven Dependencies Configuration XML file 
-```xml=
+## 1. Maven Dependencies Configuration XML file 
+```xml
 <!-- Context path of the web application-->
-<groupId>net.codejava</groupId>
-<artifactId>springmvc</artifactId>
 ...
 <groupId>org.springframework</groupId>
 <artifactId>spring-context</artifactId>
@@ -58,8 +58,7 @@ Would need
 <artifactId>spring-webmvc</artifactId>
 <version>${org.springframework-version}</version>
 ```
-> value of <artifactId> element </artifactId> 
-> : is used as **context path of web application** deploying the project on a server running within the IDE
+- value of `<artifactId> element </artifactId>` is used as **context path of web application** deploying the project on a server running within the IDE
 
 ## 2. Web deployment descriptor File (Handle Mapping)
 
@@ -74,7 +73,7 @@ For Configuring resolver we need these classes
 - `org.springframework.web.WebApplicationInitializer`
 ### XML based Configuration (web.xml)
 `org.springframework.web.servlet.DispatcherServlet`
-```xml=
+```xml
  <servlet>
    <servlet-name>dispatcher</servlet-name>
    <servlet-class>
@@ -89,7 +88,7 @@ For Configuring resolver we need these classes
 
  <servlet-mapping>
     <!-- Your servlet name --->
-   <servlet-name>YOYOman</servlet-name>
+   <servlet-name>MY SERVER NAME</servlet-name>
    <!--Your URL-->
    <url-pattern>/</url-pattern>
  </servlet-mapping>
@@ -97,7 +96,7 @@ For Configuring resolver we need these classes
 
 ### For JAVA based (Spring 3.0) Configuration
 `org.springframework.web.WebApplicationInitializer`
-```java=
+```java
  public class MyWebAppInitializer implements WebApplicationInitializer {
     @Override
     public void onStartup(ServletContext container) {
@@ -111,41 +110,36 @@ For Configuring resolver we need these classes
     }
  }
 ```
-
-
-
-[Usage](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/WebApplicationInitializer.html)
+- [Usage](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/WebApplicationInitializer.html)
 
 ## 3. Spring MVC Controller Class
 
 
 You can often see some functions as the following
-```java=
+```java
 @Controller
 public class controllerEX{
+    
     private static final Logger logger = LoggerFactory.getLogger(controllerEX.class)
     
     @RequestMapping(value="/", method = RequestMethod.GET)
     public string homePage(Locale locale, Model model){
         logger.info("Hey it's home Page, The client locale is {}", locale)
     }
+    
     //..
     
     model.addAttribute("serverTime", ... );
+
     return "home"
 }
 ```
-> `@RequestMapping` 
-> : indicates homePage would handle a GET request with URL `/`
-> 
-> `model.addAttribute("parameter", Dispay_method)`
-> : Display_method will correspond to  ${parameter} in .jsp by using model.addAttribute(...)
->
-> return "home"
-> : it will be **resolved** by the *view resolver* specified in the `servlet-context.xml` file, <font color=red>to find the actual view file</font>
-## 5. Views 
+- `@RequestMapping` : indicates homePage would handle a GET request with URL `/`
+- `model.addAttribute( "parameter_name_in_JSP", DisplayMethod )` : `DisplayMethod` will map to `${parameter}` in `.jsp` by using `model.addAttribute(...)`
+- `return "home"` : it will be **resolved** by the *view resolver* specified in the `servlet-context.xml`.
+## 4. Views (`.jsp` files) 
 
-views are stored in /WEB-INF/views
+views are stored in `/WEB-INF/views`
 
 ```html
 <html>
@@ -156,8 +150,11 @@ views are stored in /WEB-INF/views
     This is index `/`
 </h1>
 <p>
-  <!-- ${serverTime} <-- will be used object of Model class in controller class-->
-    The time on the server is ${serverTime}
+  <!-- 
+    ${serverTime}
+    will be used object of Model class in controller class
+  -->
+  The time on the server is ${serverTime}
 </p>
 </html>
 ```
