@@ -1,23 +1,29 @@
 # Redis
 
-Redis Stands For Remote Dictionary Serve 
+**Redis Stands For Remote Dictionary Serve**
 
-[Ref](https://www.mindbowser.com/spring-boot-with-redis-cache-using-annotation/)     
-[Ref2](https://www.netsurfingzone.com/spring-boot/spring-boot-redis-cache-example/)     
-[Ref3](https://kumarshivam-66534.medium.com/implementation-of-spring-boot-data-redis-for-caching-in-my-application-218d02c31191)       
-[Ref4](https://medium.com/brucehsu-backend-dev/%E5%88%A9%E7%94%A8spring-cache%E5%84%AA%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8caches-5aad2630eb0a)  
+[TOC]
+---
+## References
 
-[Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)   
+[Code Example Ref](https://www.mindbowser.com/spring-boot-with-redis-cache-using-annotation/)     
+[Code Example Ref 2](https://www.netsurfingzone.com/spring-boot/spring-boot-redis-cache-example/)     
+[Code Example Ref 3](https://kumarshivam-66534.medium.com/implementation-of-spring-boot-data-redis-for-caching-in-my-application-218d02c31191)       
+[Code Example Ref 4](https://medium.com/brucehsu-backend-dev/%E5%88%A9%E7%94%A8spring-cache%E5%84%AA%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8caches-5aad2630eb0a)  
+[Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)    
 [Install wsl window 10 and redis](https://redis.com/blog/redis-on-windows-10/)   
 [Disable wsl window 10](https://www.windowscentral.com/install-windows-subsystem-linux-windows-10)   
 [MatthewFTech spring-boot-cache-with-redis](https://medium.com/@MatthewFTech/spring-boot-cache-with-redis-56026f7da83a)   
+**[Difference btw Lettuce and Jedis](https://github.com/spring-projects/spring-session/issues/789)**
 
 
-[Difference btw Lettuce and Jedis](https://github.com/spring-projects/spring-session/issues/789)  
 
-[TOC]
+---
 
-## dependency
+
+
+
+## Dependency
 
 ```xml
 <dependency>
@@ -61,9 +67,15 @@ spring.redis.pool.min-idle = 0
 spring.redis.timeout = 1000
 ```
 
-## Configuration for Behavior of `RedisManager` and `RedisCache`
 
+## Configuration
 
+Redis Configuration in Java
+1. Connection Configuration
+2. Cache Configuration
+3. redis template Configuration
+
+### Connection Configuration 
 Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package
 
 ```java 
@@ -72,6 +84,10 @@ public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) 
 	return RedisCacheManager.create(connectionFactory);
 }
 ```
+
+### Cache Configuration 
+
+Cache Configuration = Behavior of `RedisManager` and `RedisCache`
 #### `RedisCacheManager`  Defaults
 ![圖 2](../images/9bee8da418519b37952a044fad50265bfb38a241a4ce86331568832ed0d5daa3.png)  
 
@@ -102,7 +118,7 @@ public class CacheConfig {
 }
 ```
 
-### Configure Cache Manager Behavior for Redis via Build Pattern
+#### Configure Cache Manager Behavior for Redis via Build Pattern
 
 `RedisCacheManager` behavior can be configured with `RedisCacheManagerBuilder`
 ```java
@@ -114,7 +130,7 @@ RedisCacheManager cm = RedisCacheManager.builder(connectionFactory)
 ```
 
 
-### Redis Cache behavior (`RedisCacheConfiguration`)
+#### Redis Cache behavior (`RedisCacheConfiguration`)
 
 The behavior of RedisCache created with `RedisCacheManager` is defined with `RedisCacheConfiguration`. 
 - The configuration lets you set `key` expiration `times`, `prefixes`, and `RedisSerializer` implementations for converting to and from the binary storage format
@@ -151,7 +167,7 @@ RedisCacheConfiguration.defaultCacheConfig().computePrefixWith(cacheName -> "¯\
 ```
 
 
-## `RedisTemplate` Configuration
+### `RedisTemplate` Configuration
 
 Configure `RedisTemplate` objects
 - `RedisTemplate` objects can be used for querying data (get data, delete data , ... etc)
@@ -366,8 +382,9 @@ public class RedisConfig extends CachingConfigurerSupport {
 
 ## Multiple Redis Configuration
 
-[Ref](https://www.bswen.com/2021/03/springboot-how-to-connect-multiple-redis-server.html)  
+[Code Reference (OLDER)](https://www.bswen.com/2021/03/springboot-how-to-connect-multiple-redis-server.html)  
 
+[Code Reference (NEWER)](https://www.liujiajia.me/2021/5/25/spring-boot-multi-redis)
 
 ### Application Properties or YML
 
@@ -386,7 +403,7 @@ spring:
       password: 
 ```
 
-```xml
+```vim
 spring.redis.host=localhost
 spring.redis.port=6379
 spring.redis.database=10
@@ -396,7 +413,7 @@ spring.redis2.port=26379
 spring.redis2.database=12
 ```
 
-### Property Class
+### Property Class for Each Redis Server
 
 ```java
 @Data
@@ -406,8 +423,6 @@ public class RedisCommonProperty {
     private int database;
 }
 ```
-
-#### Properties for each redis
 
 ```java
 @Configuration
@@ -423,7 +438,7 @@ public class Redis2Property extends RedisCommonProperty {
 }
 ```
 
-## Redis Connection Configuration  
+### Connection/RedisTemplate Configuration and  
 
 
 ```java
@@ -556,18 +571,138 @@ public class MyRedisConnectionConfiguration {
 }
 ```
 
-## Model
-
-Each model must implement `Serializable`
+## Cache Configuration
 
 ```java
-@Entity
-public class Student implements Serializable{
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-    //...
+import java.time.Duration;
+
+@Configuration
+@EnableCaching
+public class MyRedisCacheConfiguration extends CachingConfigurerSupport {
+
+    @Primary
+    @Bean(name = "userCacheManager")
+    public CacheManager userCacheManager(@Qualifier("userRedisConnectionFactory") RedisConnectionFactory cf) {
+        RedisCacheWriter redisCacheWriter = RedisCacheWriter.nonLockingRedisCacheWriter(cf);
+
+        RedisCacheConfiguration cacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                .serializeKeysWith(RedisSerializationContext
+                        .SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext
+                        .SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                .entryTtl(Duration.ofMinutes(30));
+
+        return new RedisCacheManager(redisCacheWriter, cacheConfiguration);
+    }
+
+    @Bean(name = "roleCacheManager")
+    public CacheManager roleCacheManager(@Qualifier("roleRedisConnectionFactory") RedisConnectionFactory cf) {
+        RedisCacheWriter redisCacheWriter = RedisCacheWriter.nonLockingRedisCacheWriter(cf);
+
+        RedisCacheConfiguration cacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                .serializeKeysWith(RedisSerializationContext
+                        .SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext
+                        .SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                .entryTtl(Duration.ofMinutes(30));
+
+        return new RedisCacheManager(redisCacheWriter, cacheConfiguration);
+    }
+
 }
 ```
 
+
+### RedisTemplate Configuration
+
+```java
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+@Configuration
+@RequiredArgsConstructor
+public class MyRedisTemplateConfiguration {
+
+    @Primary
+    @Bean(name = "userStringRedisTemplate")
+    public StringRedisTemplate userStringRedisTemplate(@Qualifier("userRedisConnectionFactory") RedisConnectionFactory cf) {
+        return new StringRedisTemplate(cf);
+    }
+
+    @Primary
+    @Bean(name = "userRedisTemplate")
+    public RedisTemplate userRedisTemplate(@Qualifier("userRedisConnectionFactory") RedisConnectionFactory cf) {
+        StringRedisTemplate stringRedisTemplate = new StringRedisTemplate(cf);
+        setSerializer(stringRedisTemplate);
+        return stringRedisTemplate;
+    }
+
+    @Bean(name = "roleStringRedisTemplate")
+    public StringRedisTemplate roleStringRedisTemplate(@Qualifier("roleRedisConnectionFactory") RedisConnectionFactory cf) {
+        return new StringRedisTemplate(cf);
+    }
+
+    @Bean(name = "roleRedisTemplate")
+    public RedisTemplate roleRedisTemplate(@Qualifier("roleRedisConnectionFactory") RedisConnectionFactory cf) {
+        StringRedisTemplate stringRedisTemplate = new StringRedisTemplate(cf);
+        setSerializer(stringRedisTemplate);
+        return stringRedisTemplate;
+    }
+
+    private void setSerializer(RedisTemplate<String, String> template) {
+        template.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new GenericJackson2JsonRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+    }
+}
+```
+
+To use RedisTemplate 
+```java
+@RequiredArgsConstructor
+@Service
+@Slf4j
+public class UserServiceImpl{
+    @Override
+    @Cacheable(cacheNames = "user", cacheManager = "userCacheManager")
+    public int getUser(int id) {
+        log.info("return user id = {}", id);
+        return id;
+    }
+
+    @Override
+    @Cacheable(cacheNames = "role", cacheManager = "roleCacheManager")
+    public int getRole(int id) {
+        log.info("return role id = {}", id);
+        return id;
+    }
+}
+
+```
 ## Tips
 
 - Define `TTLs` : Time-to-live (TTL), is the time span after which your Cache will be deleting an entry. If you want to fetch data only once a minute, just guard it with a` @Cacheable` Annotation and set the TTL to `1` minute.
