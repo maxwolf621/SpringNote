@@ -67,6 +67,11 @@ spring.redis.timeout = 1000
 ## Configuration
 
 Redis Configuration in Java
+
+```java
+Cache(Factory(RedisServer))
+```
+
 1. Redis Server Configuration
 2. Redis Connection Configuration
 3. Redis As Cache Configuration
@@ -77,24 +82,9 @@ Redis Configuration in Java
 
 ### 1. Redis Server Configuration behavior (`RedisCacheConfiguration`)
 
-Configurations for Redis Database Cache
-
-1. [`RedisStandaloneConfiguration`](https://docs.spring.io/spring-data/redis/docs/2.3.0.RELEASE/api/index.html?org/springframework/data/redis/connection/RedisStandaloneConfiguration.html) 
-    > **Configuration class used for setting up `RedisConnection` via `RedisConnectionFactory` using connecting to a single node Redis DataBase Cache installation.**
-2. [`RedisCacheConfiguration`](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/RedisCacheConfiguration.html)
-    > ![圖 3](../images/5a5e3f4b1e429ba8e17b952e92236bc2f1c29fa792ea2dcdf4ae3f2d57acf5e6.png)  
-    - The behavior of `RedisCache` created with `RedisCacheManager` is defined with `RedisCacheConfiguration`.    
-
-
-
-The `RedisCacheConfiguration` lets you set `Key` expiration `TTL`, `Prefixes`, and `Serializer` implementations for converting to and from the binary storage format
-```java
-var config = RedisCacheConfiguration.defaultCacheConfig() // <--- default cache config
-                                    .entryTtl(Duration.ofSeconds(1))
-                                    .disableCachingNullValues();        
-```
-- Spring Boot will auto-configure a `RedisCacheManager` with default cache configuration. 
-
+Configuration for Redis Database Cache (MOST USED)
+[`RedisStandaloneConfiguration`](https://docs.spring.io/spring-data/redis/docs/2.3.0.RELEASE/api/index.html?org/springframework/data/redis/connection/RedisStandaloneConfiguration.html) 
+- **this class used for setting up `RedisConnection` via `RedisConnectionFactory` using connecting to a single node Redis DataBase Cache installation.**
 #### Prefix for `Key`
 
 By default, **any key for a cache entry gets prefixed** with the actual cache name followed by two colons. This behavior can be changed to a `static` as well as a computed prefix.
@@ -115,13 +105,22 @@ RedisCacheConfiguration.defaultCacheConfig().computePrefixWith(cacheName -> "¯\
 
 - It's something similar to `JdbcTemplate` to connect with `MySql` Server.
 
+
+
 ##### Redis connectors
+
+Two features are supported 
+1. Lettuce
+2. Jedis
+    > Both are the implementation of `RedisConnectionFactory`
+
 ![圖 1](../images/48ad96b9e05ef9e74407470776155856a51d9be18f826376b626a55c06d1afad.png)  
 
 
-The easiest way to work with a `RedisConnectionFactory` is to configure the appropriate connector through the IoC container and inject it into the using class.
-- Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package
+The easiest way to work with a `RedisConnectionFactory` is to configure the appropriate connector through the IoC container (`@Configuration` , `＠bean`) and inject it (`@Autrowried`) into the using class.
 
+
+Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package
 ```java 
 @Bean
 public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -131,15 +130,19 @@ public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) 
 
 #### Lettuce Connector
 
+
 ```xml
 <dependency>
+    <!-- ... -->
+
     <groupId>io.lettuce</groupId>
     <artifactId>lettuce-core</artifactId>
     <version>6.1.5.RELEASE</version>
+
 </dependency>
 ```
 
-To tweak settings such as the host or password via `RedisStandaloneConfiguration`
+A object of Connector 
 ```java
 @Bean
   public LettuceConnectionFactory redisConnectionFactory() {
@@ -147,7 +150,11 @@ To tweak settings such as the host or password via `RedisStandaloneConfiguration
     return new LettuceConnectionFactory(new RedisStandaloneConfiguration("server", 6379));
   }
 ```
+- To tweak settings such as the host or password via `RedisStandaloneConfiguration`
 - By default, all LettuceConnection instances created by the `LettuceConnectionFactory` share the same thread-safe native connection for all non-blocking and non-transactional operations
+
+![圖 1](../images/8ff0ee9dcf7f46be16192c6dc1682e29ade5d6504b0aafc8bb9c75438427eb59.png)  
+
 
 ##### Unix domain sockets
 
@@ -168,9 +175,10 @@ class AppConfig {
 ```xml
 <dependency>
 
-  <groupId>redis.clients</groupId>
-  <artifactId>jedis</artifactId>
-  <version> ..... </version>
+    <!-- ... -->    
+    <groupId>redis.clients</groupId>
+    <artifactId>jedis</artifactId>
+    <version> ..... </version>  
 
 </dependency>
 ```
@@ -197,15 +205,29 @@ class RedisConfiguration {
 ```
 - [Redis:Sentinel](https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#redis:sentinel)
 
-### 3. Cache Configuration 
+### 3. Cache Configuration for Redis 
 
-**Cache Configuration = Behavior of `RedisManager` and `RedisCache`**
+**Cache Configuration = Behavior of Cache Provider in Cache Manager**
+- **A `CacheManger` contains configuration of cache providers ( redis , caffeine ... ) for configuring each cache provider's Key, TTL, ... etc**
 
 #### `RedisCacheManager`  Defaults
 ![圖 2](../images/9bee8da418519b37952a044fad50265bfb38a241a4ce86331568832ed0d5daa3.png)  
 
 
-To configure redis cache we need to build up our cache manager
+
+**The behavior of Redis Cache created with `RedisCacheManager` is defined with** [`RedisCacheConfiguration`](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/RedisCacheConfiguration.html)
+![圖 3](../images/5a5e3f4b1e429ba8e17b952e92236bc2f1c29fa792ea2dcdf4ae3f2d57acf5e6.png)  
+
+The `RedisCacheConfiguration` lets you set `Key` expiration `TTL`, `Prefixes`, and `Serializer` implementations for converting to and from the binary storage format
+```java
+var config = RedisCacheConfiguration.defaultCacheConfig() // <--- redisCacheConfiguration defaults
+                                    .entryTtl(Duration.ofSeconds(1))
+                                    .disableCachingNullValues();        
+```
+- Spring Boot will auto-configure a `RedisCacheManager` with default cache configuration. 
+
+#### Configure Cache Manager Behavior for Redis
+
 ```java
 @Configuration
 @EnableCaching
@@ -233,8 +255,6 @@ public class CacheConfig {
 - [`serializeValuesWith`](https://stackoverflow.com/questions/48991608/how-to-use-spring-cache-redis-with-a-custom-resttemplate)
 - [`RedisCacheConfiguration` Methods ](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/RedisCacheConfiguration.html)
 
-#### Configure Cache Manager Behavior for Redis
-
 `RedisCacheManager` behavior can be configured with `RedisCacheManagerBuilder` 
 ```java
 var cm = RedisCacheManager.builder(connectionFactory)
@@ -246,13 +266,14 @@ var cm = RedisCacheManager.builder(connectionFactory)
 ```
 
 `RedisCacheManager` defaults to a lock-free `RedisCacheWriter` for reading and writing binary values. 
-- **Lock-free caching improves throughput**. The lack of entry locking can lead to overlapping, non-atomic commands for the `putIfAbsent` and `clean` methods, as those require multiple commands to be sent to Redis. 
+- **Lock-free caching improves throughput**. 
+    - The lack of entry locking can lead to overlapping, non-atomic commands for the `putIfAbsent` and `clean` methods, as those require multiple commands to be sent to Redis. 
 - the locking counterpart prevents command overlap by setting an explicit lock key and checking against presence of this key, which leads to additional requests and potential command wait times.
 
 ```java
 RedisCacheManager cm = RedisCacheManager.build(RedisCacheWriter.lockingRedisCacheWriter())
-	.cacheDefaults(defaultCacheConfig())
-	...
+	                                    .cacheDefaults(defaultCacheConfig())
+	                                    ...
 ```
 
 ### 4. `RedisTemplate` Configuration
@@ -263,15 +284,14 @@ Configure `RedisTemplate` objects
 #### RedisTemplate's Serializer Types
 They are implementation of `RedisSerializer<T>`    
 
-- JDK  (**DEFAULT**)  (e.g.  key : `\xac\xed\x00\x05t\x00\x05KeyName`, value : `\xac\xed\x00\x05t\x00\x05Value` )
-- String (MOST USED)
-- JSON   
+- (DEFAULT) JDK (e.g.  key : `\xac\xed\x00\x05t\x00\x05KeyName`, value : `\xac\xed\x00\x05t\x00\x05Value` )
+- **String (MOST USED)** ( e.g. `1 -> 1 `, `test -> test`)
+- **JACKSON2JSON**  ( e.g. `2016 -> "2016"` )
 - XML     
 
 [Other built-in Serializer](https://stackoverflow.com/questions/31608394/get-set-value-from-redis-using-redistemplate)   
 [Representation for each serializer](https://blog.csdn.net/weixin_44167627/article/details/108516013)   
 
-#### Configuration with `LettuceConnectionFactory` with multiple Redis
 ```java
 @Configuration
 public class RedisConfig {
@@ -410,6 +430,7 @@ public class RedisConfig {
 @EnableCaching
 public class RedisConfig extends CachingConfigurerSupport {
 
+    // Connection Configuration
 	@Bean
 	public JedisConnectionFactory redisConnectionFactory() {
 
@@ -417,7 +438,7 @@ public class RedisConfig extends CachingConfigurerSupport {
 	}
 
 
-    // custom keyGenerator
+    // Custom keyGenerator
 	@Bean
 	public KeyGenerator wiselyKeyGenerator() {
 		return new KeyGenerator() {
@@ -439,8 +460,9 @@ public class RedisConfig extends CachingConfigurerSupport {
 			}
 		};
 	}
-
-  // Redis Template Configuration ( Using Redis to query the data )
+    
+    
+    // Redis Template Configuration ( Using Redis to query the data )
 	@Bean
 	public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory factory) {
 
@@ -457,9 +479,9 @@ public class RedisConfig extends CachingConfigurerSupport {
 		RedisSerializationContext.SerializationPair<Object> pair = RedisSerializationContext.SerializationPair
 				.fromSerializer(new GenericJackson2JsonRedisSerializer());
                 
-		RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-				.serializeValuesWith(pair) // serializer 
-				.entryTtl(Duration.ofHours(1)); //  expired time
+		var defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+				                 .serializeValuesWith(pair) 
+				                 .entryTtl(Duration.ofHours(1)); 
 
 		return RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(factory))
 				.cacheDefaults(defaultCacheConfig).build();
@@ -475,6 +497,7 @@ public class RedisConfig extends CachingConfigurerSupport {
 [Code Reference 1](https://www.bswen.com/2021/03/springboot-how-to-connect-multiple-redis-server.html)    
 **[Code Reference 2](https://www.liujiajia.me/2021/5/25/spring-boot-multi-redis)**
 [Code Reference 3 ](https://hsiehjenhsuan.medium.com/spring-boot-%E4%BD%BF%E7%94%A8-lettuce-%E8%A8%AD%E5%AE%9A%E5%A4%9A%E5%80%8B-redis-%E9%80%A3%E7%B7%9A-55307dc6a480)   
+[Code Reference 4](https://programmer.help/blogs/spring-boot-configures-multiple-instances-of-redis-data-source-operation.html)
 ### Application Properties or YML
 
 ```yml
@@ -502,7 +525,7 @@ spring.redis2.port=26379
 spring.redis2.database=12
 ```
 
-### Property Class for Each Redis Server
+### Property Class for Different Redis Servers
 
 ```java
 @Data
@@ -530,7 +553,6 @@ public class Redis2Property extends RedisCommonProperty {
 ### Connection and `RedisTemplate` Configuration
 
 
-Redis1
 ```java
 @Configuration
 public class Redis1Configuration {
@@ -579,10 +601,7 @@ public class Redis1Configuration {
     }
 
 }
-```
 
-Redis2 
-```java
 @Configuration
 public class Redis2Configuration {
     @Autowired
@@ -624,7 +643,10 @@ public class Redis2Configuration {
 
 }
 ```
-### Newer Connection Configuration with `RedisStandaloneConfiguration`
+---
+
+We can also divide each configuration a part 
+### 1. Connection Configuration with `RedisStandaloneConfiguration`
 
 ```java
 import lombok.RequiredArgsConstructor;
@@ -668,7 +690,7 @@ public class MyRedisConnectionConfiguration {
 }
 ```
 
-## Cache Configuration
+### 2. Cache Configuration with `CachingConfigurerSupport `
 
 ```java
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -725,7 +747,7 @@ public class MyRedisCacheConfiguration extends CachingConfigurerSupport {
 ```
 
 
-### RedisTemplate Configuration
+### 3. RedisTemplate Configuration
 
 ```java
 import lombok.RequiredArgsConstructor;
@@ -741,7 +763,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 @RequiredArgsConstructor
-public class MyRedisTemplateConfiguration {
+public class RedisTemplateConfiguration {
 
     @Primary
     @Bean(name = "userStringRedisTemplate")
@@ -771,14 +793,17 @@ public class MyRedisTemplateConfiguration {
 
     private void setSerializer(RedisTemplate<String, String> template) {
         template.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+        
         template.setKeySerializer(new StringRedisSerializer());
+        
         template.setHashKeySerializer(new GenericJackson2JsonRedisSerializer());
+        
         template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
     }
 }
 ```
 
-To use RedisTemplate 
+### To use RedisTemplate in Service Layer 
 ```java
 @RequiredArgsConstructor
 @Service
