@@ -71,12 +71,22 @@ spring.redis.timeout = 1000
 ## Configuration
 
 Redis Configuration in Java
-1. Connection Configuration
-2. Cache Configuration
-3. redis template Configuration
+1. Redis Connection Configuration
+2. Redis As Cache Configuration
+3. Redis template Configuration
 
 ### Connection Configuration 
-Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package
+
+`RedisConnection` provides the core building block for Redis communication, as it handles the communication with the Redis back end.
+
+It's something similar to `JdbcTemplate` to connect with `MySql` Server.
+
+##### Redis connectors
+![圖 1](../images/48ad96b9e05ef9e74407470776155856a51d9be18f826376b626a55c06d1afad.png)  
+
+
+The easiest way to work with a `RedisConnectionFactory` is to configure the appropriate connector through the IoC container and inject it into the using class.
+- Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package
 
 ```java 
 @Bean
@@ -85,9 +95,77 @@ public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) 
 }
 ```
 
+#### Lettuce Connector
+
+```xml
+<dependency>
+    <groupId>io.lettuce</groupId>
+    <artifactId>lettuce-core</artifactId>
+    <version>6.1.5.RELEASE</version>
+</dependency>
+```
+
+To tweak settings such as the host or password    
+```java
+@Bean
+  public LettuceConnectionFactory redisConnectionFactory() {
+
+    return new LettuceConnectionFactory(new RedisStandaloneConfiguration("server", 6379));
+  }
+```
+- By default, all LettuceConnection instances created by the `LettuceConnectionFactory` share the same thread-safe native connection for all non-blocking and non-transactional operations
+
+Lettuce integrates with Netty’s native transports, letting you use Unix domain sockets to communicate with Redis.   
+For Example ::
+```java
+@Configuration
+class AppConfig {
+
+  @Bean
+  public LettuceConnectionFactory redisConnectionFactory() {
+
+    return new LettuceConnectionFactory(new RedisSocketConfiguration("/var/run/redis.sock"));
+  }
+}
+```
+#### Jedis Connector 
+
+```xml
+<dependency>
+
+  <groupId>redis.clients</groupId>
+  <artifactId>jedis</artifactId>
+  <version> ..... </version>
+
+</dependency>
+```
+
+```java
+@Bean
+public JedisConnectionFactory redisConnectionFactory() {
+  return new JedisConnectionFactory();
+}
+```
+
+To tweak settings 
+```java
+@Configuration
+class RedisConfiguration {
+
+  @Bean
+  public JedisConnectionFactory redisConnectionFactory() {
+
+    RedisStandaloneConfiguration config = new RedisStandaloneConfiguration("server", 6379);
+    return new JedisConnectionFactory(config);
+  }
+}
+```
+- [Redis:Sentinel](https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#redis:sentinel)
+
 ### Cache Configuration 
 
-Cache Configuration = Behavior of `RedisManager` and `RedisCache`
+**Cache Configuration = Behavior of `RedisManager` and `RedisCache`**
+
 #### `RedisCacheManager`  Defaults
 ![圖 2](../images/9bee8da418519b37952a044fad50265bfb38a241a4ce86331568832ed0d5daa3.png)  
 
@@ -95,8 +173,7 @@ Cache Configuration = Behavior of `RedisManager` and `RedisCache`
 
 ![圖 3](../images/5a5e3f4b1e429ba8e17b952e92236bc2f1c29fa792ea2dcdf4ae3f2d57acf5e6.png)  
 
-
-To have Custom Configuration for Redis (e.g. Redis Cache and Redis Manager) we can do as the following 
+To configure redis cache we need to build up our cache manager
 ```java
 @Configuration
 @EnableCaching
@@ -104,29 +181,35 @@ public class CacheConfig {
 
     /**
       * <p> To create RedisCacheManager as An Cache Provider </p>
-      * <p> RedisCacheManager must build with Redis Connection Factory and 
+      * <p> RedisCacheManager must build 
+            with Redis Connection Factory and 
       *     RedisCacheConfiguration </p>
       */
     @Bean
     public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
         var redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
                                                              .entryTtl(Duration.ofMinutes(30));
-        return RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory))
+        
+        return RedisCacheManager.builder(RedisCacheWriter
+                                    .nonLockingRedisCacheWriter(redisConnectionFactory))
                                 .cacheDefaults(redisCacheConfiguration)
                                 .build();
     }
 }
 ```
+- [`serializeValuesWith`](https://stackoverflow.com/questions/48991608/how-to-use-spring-cache-redis-with-a-custom-resttemplate)
+- [`RedisCacheConfiguration` Methods ](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/RedisCacheConfiguration.html)
 
-#### Configure Cache Manager Behavior for Redis via Build Pattern
+#### Configure Cache Manager Behavior for Redis
 
 `RedisCacheManager` behavior can be configured with `RedisCacheManagerBuilder`
 ```java
-RedisCacheManager cm = RedisCacheManager.builder(connectionFactory)
-                                        .cacheDefaults(defaultCacheConfig())
-                                        .withInitialCacheConfigurations(singletonMap("predefined", defaultCacheConfig().disableCachingNullValues()))
-                                        .transactionAware()
-                                        .build();
+var cm = RedisCacheManager.builder(connectionFactory)
+                          .cacheDefaults(defaultCacheConfig())
+                          .withInitialCacheConfigurations(singletonMa(
+                              "predefined", defaultCacheConfig().disableCachingNullValues()))
+                          .transactionAware()
+                          .build();
 ```
 
 
@@ -172,8 +255,7 @@ RedisCacheConfiguration.defaultCacheConfig().computePrefixWith(cacheName -> "¯\
 Configure `RedisTemplate` objects
 - `RedisTemplate` objects can be used for querying data (get data, delete data , ... etc)
 
-
-### RedisTemplate's Serializer Types
+#### RedisTemplate's Serializer Types
 They are implementation of `RedisSerializer<T>`    
 
 - JDK  (**DEFAULT**)  (e.g.  key : `\xac\xed\x00\x05t\x00\x05KeyName`, value : `\xac\xed\x00\x05t\x00\x05Value` )
@@ -382,10 +464,9 @@ public class RedisConfig extends CachingConfigurerSupport {
 
 ## Multiple Redis Configuration
 
-[Code Reference (OLDER)](https://www.bswen.com/2021/03/springboot-how-to-connect-multiple-redis-server.html)  
-
-[Code Reference (NEWER)](https://www.liujiajia.me/2021/5/25/spring-boot-multi-redis)
-
+[Code Reference 1](https://www.bswen.com/2021/03/springboot-how-to-connect-multiple-redis-server.html)    
+**[Code Reference 2](https://www.liujiajia.me/2021/5/25/spring-boot-multi-redis)**
+[Code Reference 3 ](https://hsiehjenhsuan.medium.com/spring-boot-%E4%BD%BF%E7%94%A8-lettuce-%E8%A8%AD%E5%AE%9A%E5%A4%9A%E5%80%8B-redis-%E9%80%A3%E7%B7%9A-55307dc6a480)   
 ### Application Properties or YML
 
 ```yml
@@ -438,9 +519,10 @@ public class Redis2Property extends RedisCommonProperty {
 }
 ```
 
-### Connection/RedisTemplate Configuration and  
+### Connection and `RedisTemplate` Configuration
 
 
+Redis1
 ```java
 @Configuration
 public class Redis1Configuration {
@@ -467,15 +549,21 @@ public class Redis1Configuration {
         return jedisPoolConfig;
     }
 
+    // ----------------------------------------------------------------------------//
+
     @Bean(name = "redis1StringRedisTemplate")
-    public StringRedisTemplate userStringRedisTemplate(@Qualifier("redis1ConnectionFactory") RedisConnectionFactory cf) {
+    public StringRedisTemplate userStringRedisTemplate(
+        @Qualifier("redis1ConnectionFactory") RedisConnectionFactory cf)
+    {    
         StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
         stringRedisTemplate.setConnectionFactory(cf);
         return stringRedisTemplate;
     }
 
     @Bean(name = "redis1RedisTemplate")
-    public RedisTemplate userRedisTemplate(@Qualifier("redis1ConnectionFactory") RedisConnectionFactory cf) {
+    public RedisTemplate userRedisTemplate(
+        @Qualifier("redis1ConnectionFactory") RedisConnectionFactory cf) 
+    {
         StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
         stringRedisTemplate.setConnectionFactory(cf);
         //setSerializer(stringRedisTemplate);
@@ -485,6 +573,7 @@ public class Redis1Configuration {
 }
 ```
 
+Redis2 
 ```java
 @Configuration
 public class Redis2Configuration {
@@ -600,7 +689,7 @@ public class MyRedisCacheConfiguration extends CachingConfigurerSupport {
     public CacheManager userCacheManager(@Qualifier("userRedisConnectionFactory") RedisConnectionFactory cf) {
         RedisCacheWriter redisCacheWriter = RedisCacheWriter.nonLockingRedisCacheWriter(cf);
 
-        RedisCacheConfiguration cacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+        var cacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext
                         .SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext
@@ -686,7 +775,7 @@ To use RedisTemplate
 @RequiredArgsConstructor
 @Service
 @Slf4j
-public class UserServiceImpl{
+public class UserService{
     @Override
     @Cacheable(cacheNames = "user", cacheManager = "userCacheManager")
     public int getUser(int id) {
@@ -1291,59 +1380,6 @@ public final class RedisUtil {
 }
 
 ```
-
-
-## Jedis Connector 
-
-To define connections settings from application client to Redis server, we need `Jedis` as API to help us
-
-it's something similar to `JdbcTemplate` to connect with `MySql` Server.
-
-### Jedis Dependency
-
-```xml
-<dependencies>
-  
-  <dependency>
-    <groupId>redis.clients</groupId>
-    <artifactId>jedis</artifactId>
-    <version>3.6.3</version>
-  </dependency>
-
-</dependencies>
-```
-### Configure Jedis Configuration
-
-Create `JedisConnectionFactory` object for redis
-
-```java
-@Configuration
-class AppConfig {
-
-  @Bean
-  public JedisConnectionFactory redisConnectionFactory() {
-    return new JedisConnectionFactory();
-  }
-}
-```
-### `JedisConnectionFactory` for Redis Configuration
-
-```java
-@Configuration
-class RedisConfiguration {
-
-  @Bean
-  public JedisConnectionFactory redisConnectionFactory() {
-
-    RedisStandaloneConfiguration config = new RedisStandaloneConfiguration("server", 6379);
-    return new JedisConnectionFactory(config);
-  }
-}
-```
-
-- [Redis:Sentinel](https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#redis:sentinel)
-
-
 
 ## Hash Mapping 
 

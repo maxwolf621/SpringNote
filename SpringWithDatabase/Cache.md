@@ -4,12 +4,32 @@
 [Annotations](https://howtodoinjava.com/spring-boot2/spring-boot-cache-example/)        
 [Annotations and Flow diagram](https://sunitc.dev/2020/08/27/springboot-implement-caffeine-cache/)
 
-
 [TOC]
+
+
+## Caches And Database
+
+[Note Taking From](https://medium.com/fcamels-notes/%E7%94%A8-caffeine-%E5%92%8C-redis-%E7%AE%A1%E7%90%86-cache-%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90-23e88291b289)
+
+### RELATIONSHIP
+
+- server：web server 或 API server。
+- local cache：server 的 in-memory cache。 (`Caffeine`)
+- external cache：多台 servers 共用的 cache server (`Redis`)
+- database：儲存原始資料的 database server (`MySQL`)
+### SENIOR
+
+當重開 server 後需要一些時間才能填回 local cache，這段時間會增加 database 的負載
+
+**我們可以將 local cache 的資料寫入 external cache，重開後從 external cache 讀回來以此增加效率。**
+
+- 為降低 external cache 的負載，可以在 local cache 發出請求時多過一層 Caffeine 的 async load，用來統合同一個 key 多筆查詢成一筆對 external cache/database 的查詢。
+
+- 若有作 partition，等於來自同時間全部 servers 收到同一個 key 的查詢，總共只會發一次查詢到 external cache/database。 e.g. **假設一次重開十台機器，十台機器每秒收到 100 筆同樣的查詢，等於將 1000 筆對 database 的查詢降為對 external cache 的 1 筆查詢。**
+
 ## Annotations
 
 `EnableCaching` : Apply the application for caching
-
 
 ### Method Annotation
 
@@ -78,11 +98,12 @@ It contains `@Cacheable` , `@CachePut` and `@CacheEvict`
 `@CacheConfig`
 - it allows to share the cache names (`KeyGenerator`、`CacheManager` and `CacheResolver`)
 
-### Cache Key
+### Cache Key with `KeyGenerator`
 
-Cache Key Generator uses `SimpleKeyGenerator` by default.
+This is responsible for generating every key for each data item in the cache, which would be used to lookup the data item on retrieval.   
 
-The caching abstraction uses a `simpleKeyGenerator` based on the following algorithm  
+The default implementation here is the `SimpleKeyGenerator`   
+The caching abstraction uses a `simpleKeyGenerator` based on the following algorithm     
 1. If no params are given, return `SimpleKey.EMPTY`.
 2. If only one param is given, return that instance.
 3. If more the one param is given, return a `SimpleKey` containing all parameters.
@@ -113,8 +134,9 @@ public static Object generateKey(Object... params) {
 ```
 
 When to use custom key generator ?
+Default `SimpleKeyGenerator` implementation (**uses the method parameters provided to generate a key.)** This means that if we have two methods that use the same cache name and set of parameter types, then there's a high probability that it will result in a collision.
 
-For example two key but returned different type of value
+For example :: two different methods with same method parameters
 ```java
 @Override
 @Cacheable(cacheNames = "books", sync = true)
@@ -128,7 +150,6 @@ public Book getByIsbn(String isbn) {
 public String test(String test) {
     return test;
 }
-
 
 
 logger.info("test getByIsbn -->" + bookRepository.getByIsbn("test")); // key : test , return Book object
@@ -145,7 +166,7 @@ Caused by: java.lang.ClassCastException: class com.example.caching.Book cannot b
 	... 5 common frames omitted
 ```
 
-to handle the exception we must define implementation of `KeyGenerator`
+To handle the exception we must define custom implementation of `KeyGenerator`
 ```java
 @Component
 public class MyKeyGenerator implements KeyGenerator {
@@ -159,9 +180,8 @@ public class MyKeyGenerator implements KeyGenerator {
 
 ```java
 /**
-  * add keyGenerator attribute to specify desirable Key 
+  * <p> Add keyGenerator attribute to specify Cache Key </p>
   */
-
 @Override
 @Cacheable(cacheNames = "books", sync = true, keyGenerator = "myKeyGenerator")
 public Book getByIsbn(String isbn) {
@@ -178,7 +198,7 @@ public String test(String test) {
 
 ## CacheManager
 
-CacheManager configures Cache Providers (e.g `Caffeine`, `Redis` , ... etc) 
+CacheManager configures Cache Providers to be used in Spring Boot (e.g `Caffeine`, `Redis` , ... etc) 
 
 ## Cache Configuration via `CachingConfigurerSupport`
 
@@ -337,7 +357,7 @@ public class MultipleCacheManagerConfig extends CachingConfigurerSupport {
 }
 ```
 
-add `cacheResolver` property for cache annotation
+Add `cacheResolver` property for cache annotation
 ```java
 @Component
 public class OrderDetailBO {
