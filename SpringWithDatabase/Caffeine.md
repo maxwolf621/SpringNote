@@ -123,27 +123,24 @@ logger.info("刪除了id、key為"   id   "的資料快取");
 * Cacheable
 * value：快取key的字首。
 * key：快取key的字尾。
-* sync：設定如果快取過期是不是隻放一個請求去請求資料庫，其他請求阻塞，預設是false。
+* sync：設定如果快取過期是不是只放一個請求去請求資料庫，其他請求阻塞，預設是false。
 */
 @Override
 @Cacheable(value = "people", key = "#person.id", sync = true)
 public Person findOne(Person person, String a, String[] b, List<Long> c) {
 Person p = personRepository.findOne(person.getId());
-logger.info("為id、key為:"   p.getId()   "資料做了快取");
 return p;
 }
 @Override
 @Cacheable(value = "people1")//3
 public Person findOne1() {
 Person p = personRepository.findOne(2L);
-logger.info("為id、key為:"   p.getId()   "資料做了快取");
 return p;
 }
 @Override
 @Cacheable(value = "people2")//3
 public Person findOne2(Person person) {
 Person p = personRepository.findOne(person.getId());
-logger.info("為id、key為:"   p.getId()   "資料做了快取");
 return p;
 }
 }
@@ -351,3 +348,88 @@ public class UserInfoServiceImpl implements UserInfoService {
 ```
 
 
+
+```java
+@ConfigurationProperties(prefix \= "caching")  
+@Configuration  
+@Slf4j  
+@Data  
+public class CacheConfig {
+
+@Data  
+public static class LocalCacheSpec {  
+    private Integer timeout;  
+    private Integer max = 500;  
+}  
+
+// fields will map with application.properties "caching"
+private Map<String, LocalCacheSpec> localCacheSpecs;
+private Map<String,Integer> redisCacheSpecs;
+
+@Bean
+public CacheManager caffeineCacheManager(Ticker ticker) {  
+    SimpleCacheManager manager = new SimpleCacheManager();  
+ 
+    if (localCacheSpecs != null) {  
+        List<CaffeineCache> caches = localCacheSpecs
+                                        .entrySet().stream()  
+                                        .map(entry -> 
+                                            buildCache(entry.getKey(), entry.getValue(), ticker)
+                                        )  
+                                        .collect(Collectors.toList());  
+        manager.setCaches(caches);  
+    
+     }
+     return manager;  
+}
+
+private CaffeineCache buildCache(String name, LocalCacheSpec cacheSpec, Ticker ticker) {
+
+    log.info("Cache {} specified timeout of {} min, max of {}", name, cacheSpec.getTimeout(), cacheSpec.getMax());  
+    final Caffeine<Object, Object> caffeineBuilder  = Caffeine.newBuilder()  
+                                                              .expireAfterWrite(cacheSpec.getTimeout(), TimeUnit.SECONDS)  
+                                                              .maximumSize(cacheSpec.getMax())  
+                                                              .ticker(ticker);  
+    return new CaffeineCache(name, caffeineBuilder.build());  
+}
+
+// REDIS
+
+@Bean  
+public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
+
+    // cacheDefaults
+    var redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()  
+                                    .entryTtl(Duration.ofHours(4))  
+                                    .prefixKeysWith("test:")　
+                                    .serializeValuesWith(
+                                        RedisSerializationContext
+                                            .SerializationPair
+                                                .fromSerializer(
+                                                    new GenericJackson2JsonRedisSerializer()
+                                            )
+                                    );  
+
+  // Configurations of Redis From Application.Properties
+  Map<String, RedisCacheConfiguration> redisCacheConfigMap = new HashMap<>(redisCacheSpecs.size());
+  
+  for (Map.Entry<String, Integer> entry : redisCacheSpecs.entrySet()) {  
+        redisCacheConfigMap.put(entry.getKey(), redisCacheConfiguration.entryTtl(Duration.ofSeconds(entry.getValue())));  
+  }
+  
+  return RedisCacheManager.builder(RedisCacheWriter
+                .nonLockingRedisCacheWriter(redisConnectionFactory))
+                .initialCacheNames(redisCacheSpecs.keySet()) // <-- cache names 
+                .withInitialCacheConfigurations(redisCacheConfigMap)  // <-- configuration
+                .cacheDefaults(redisCacheConfiguration)
+                .build();  
+}
+
+@Bean  
+public Ticker ticker() {  
+    return Ticker.systemTicker();  
+}
+
+
+}
+```

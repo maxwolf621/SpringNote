@@ -11,21 +11,24 @@
 
 [Note Taking From](https://medium.com/fcamels-notes/%E7%94%A8-caffeine-%E5%92%8C-redis-%E7%AE%A1%E7%90%86-cache-%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90-23e88291b289)
 
+[Properties of Annotations](https://juejin.cn/post/6844903966615011335)   
+
 ### RELATIONSHIP
 
 - server：web server 或 API server。
 - local cache：server 的 in-memory cache。 (`Caffeine`)
 - external cache：多台 servers 共用的 cache server (`Redis`)
 - database：儲存原始資料的 database server (`MySQL`)
-### SENIOR
 
-當重開 server 後需要一些時間才能填回 local cache，這段時間會增加 database 的負載
+### SCENARIO
 
-**我們可以將 local cache 的資料寫入 external cache，重開後從 external cache 讀回來以此增加效率。**
+當重開Server後需要一些時間才能填回local cache，這段時間會增加 database 的負載   
+**我們可以將`local cache`的資料寫入`external cache`，重開後從`external cache`讀回來以此增加效率。**   
 
-- 為降低 external cache 的負載，可以在 local cache 發出請求時多過一層 Caffeine 的 async load，用來統合同一個 key 多筆查詢成一筆對 external cache/database 的查詢。
+- 為降低 external cache 的負載，可以在 local cache 發出請求時多過一層 `Caffeine` 的 async load，用來統合同一個 key 多筆查詢成一筆對 external cache (`Redis`) and database (`MySQL`) 的查詢。
 
-- 若有作 partition，等於來自同時間全部 servers 收到同一個 key 的查詢，總共只會發一次查詢到 external cache/database。 e.g. **假設一次重開十台機器，十台機器每秒收到 100 筆同樣的查詢，等於將 1000 筆對 database 的查詢降為對 external cache 的 1 筆查詢。**
+- 若有作 partition，等於來自同時間全部 servers 收到同一個 key 的查詢，總共只會發一次查詢到 external cache/database。 
+    - e.g. **假設一次重開十台機器，十台機器每秒收到 100 筆同樣的查詢，等於將 1000 筆對 database 的查詢降為對 external cache 的 1 筆查詢。**
 
 ## Annotations
 
@@ -40,9 +43,8 @@
 - different `cacheNames` map to specific Cache Objects
 - use `cacheNames` instead of `value` is recommended
 
-`@Cacheable` 
-1. Save the returned value from Database if the value doesn't exist
-2. often use for querying data
+#### `@Cacheable(value , cacheNames, key, keyGenerator, cacheManager, cacheResolver, condition, unless, sync)` 
+1. Cache the returned value from Database if the value doesn't exist
 
 ```java
 @Override
@@ -53,17 +55,21 @@ public Book getById(Long id) {
 ```
 - parameter `id` : is default-Key name for `@Cacheable`'s attribute `Key`
 
-`@CachePut`
+#### `@CachePut(value, cacheNames, key, keyGenerator, cacheManager, cacheResolver, condition, unless)`
 1. update the cache 
 2. often use for updating data method
 
 difference btw `@CachePut` and `@Cacheable`
 - `@Cacheable` : If an item is found in the cache , Method code is not executed .
 - `@CachePut` : **Always execute method code , And update the cache after the method is executed**.
+- `unless = expression` : expression is true then don't cache
+- `condition = expression` : expression is true then cache 
 
-`@CacheEvict`
+#### `@CacheEvict(value, cacheNames, key, keyGenerator, cacheManager, cacheResolver, condition, allEntries, beforeInvocation`
 1. deleting the data from cache
 2. often use for deleting data method
+3. `condition` only
+
 
 ```java
 @CacheEvict(
@@ -80,9 +86,10 @@ public void deletePerson(Person person)
    beforeInvocation = true)
 public void importPersons()
 ```
-- `allEntries` will be cleared `beforeInvocation` method `importPersons()`
+- `allEntries` : `true` then caches will be deleted once method invocation
+- `beforeInvocation` : `true` then caches will be deleted before method invocation  
 
-`@Caching`
+#### `@Caching`
 
 ```java
 public @interface Caching {
@@ -97,6 +104,7 @@ It contains `@Cacheable` , `@CachePut` and `@CacheEvict`
 
 `@CacheConfig`
 - it allows to share the cache names (`KeyGenerator`、`CacheManager` and `CacheResolver`)
+- Priority of CacheConfig's `cacheNames` is lower than method cache annotations' `cacheNames` or `value`
 
 ### Cache Key with `KeyGenerator`
 
@@ -109,14 +117,16 @@ The caching abstraction uses a `simpleKeyGenerator` based on the following algor
 3. If more the one param is given, return a `SimpleKey` containing all parameters.
 
 ```java
+
 @Override
 public Object generate(Object target, 
                        Method method, 
                        Object... params) {
     return generateKey(params);
 }
+
 /**
- * Default Key Generator
+ * Default Key Generator Implementation 
  * Generate a key based on the specified parameters.
  */
 public static Object generateKey(Object... params) {
@@ -136,7 +146,7 @@ public static Object generateKey(Object... params) {
 When to use custom key generator ?
 Default `SimpleKeyGenerator` implementation (**uses the method parameters provided to generate a key.)** This means that if we have two methods that use the same cache name and set of parameter types, then there's a high probability that it will result in a collision.
 
-For example :: two different methods with same method parameters
+For example :: Two Different methods with same method parameters
 ```java
 @Override
 @Cacheable(cacheNames = "books", sync = true)
@@ -204,7 +214,7 @@ CacheManager configures Cache Providers to be used in Spring Boot (e.g `Caffeine
 
 [](https://www.javadevjournal.com/spring-boot/3-ways-to-configure-multiple-cache-managers-in-spring-boot/)  
 
-Cverride these methods to configure our custom cache configuration
+Override these methods to configure our custom cache configuration
 1. `CacheManager cacheManager()` : Return the cache manager bean to use for annotation-driven cache management.
 2. `CacheResolver cacheResolver()` : Return the CacheResolver bean to use to resolve regular caches for annotation-driven cache management.
 3. `CacheErrorHandler errorHandler()` : Return the CacheErrorHandler to use to handle cache-related errors.
@@ -284,7 +294,7 @@ public class MultipleCacheResolver implements CacheResolver {
 
     // CACHE NAMES
     private static final String ORDER_CACHE = "orders";    
-    private static final String ORDER_PRICE_CACHE = "orderprice";
+    private static final String ORDER_PRICE_CACHE = "orderPrice";
     
     // (SETTER) Assign Managers 
     public MultipleCacheResolver(CacheManager simpleCacheManager,CacheManager caffeineCacheManager) {
@@ -345,7 +355,7 @@ public class MultipleCacheManagerConfig extends CachingConfigurerSupport {
     @Bean
     @Override
     public CacheManager alternateCacheManager() {
-        return new ConcurrentMapCacheManager("customerOrders", "orderprice");
+        return new ConcurrentMapCacheManager("customerOrders", "orderPrice");
     }
 
     // Bean of Resolver
@@ -370,7 +380,7 @@ public class OrderDetailBO {
         return orderDetailRepository.getOrderDetail(orderId);
     }
 
-    @Cacheable(cacheNames = "orderprice", cacheResolver = "cacheResolver")
+    @Cacheable(cacheNames = "orderPrice", cacheResolver = "cacheResolver")
     public double getOrderPrice(Integer orderId) {
         return orderDetailRepository.getOrderPrice(orderId);
     }

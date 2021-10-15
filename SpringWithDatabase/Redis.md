@@ -31,7 +31,7 @@
 
 ## application.properties
 
-```vim
+```yaml
 # **** REDIS (RedisProperties) ****
 # **** spring.redis.XXXX       **** 
 
@@ -77,7 +77,6 @@ Cache(Factory(RedisServer))
 3. Redis As Cache Configuration
     > Cache Manager = Connection Factory Configuration + DataBase Server Configuration
 4. Redis template Configuration
-
 
 
 ### 1. Redis Server Configuration behavior (`RedisCacheConfiguration`)
@@ -743,6 +742,20 @@ public class MyRedisCacheConfiguration extends CachingConfigurerSupport {
         return new RedisCacheManager(redisCacheWriter, cacheConfiguration);
     }
 
+    @Bean
+    @Override
+    public KeyGenerator keyGenerator() {
+        return (target, method, params) -> {
+            StringBuilder sb = new StringBuilder();
+            sb.append(target.getClass().getName());
+            sb.append(method.getName());
+            for (Object obj : params) {
+                sb.append(obj.toString());
+            }
+            return sb.toString();
+        };
+    }
+
 }
 ```
 
@@ -848,24 +861,38 @@ public class UserService{
 
 
 ![圖 1](../images/4d977474d0350aed41916aba72c9ab7a94e16df3c7d5278667a438e9a8279cfc.png)  
-- `String` : `opsForValue`
-- `List` : `opsForList`
-- `Set` :  `opsForSet`
-- `Hash` : `opsForHash`
-- `Sorted set` : `opsForZSet`
+
 
 [Code Example :: redisTemplate Methods](https://zhuanlan.zhihu.com/p/139528556)   
 [Code Example :: Custom redisTemplate Utils](https://zhuanlan.zhihu.com/p/336033293)    
 [Other Code Example](https://blog.csdn.net/qq_36781505/article/details/86612988)
 
-
 ```java
+
 @Autowired
 RedisTemplate<String,Object> redisTemplate;
 ​
-/**
-  * <p> redisTemplate for key </p>
-  */
+
+/*************************************
+ * <p> </p>Key Bound Operations </p> *
+ *************************************/
+
+// this is via redisTemplate<?,?>
+template.boundValueOps(String key).set(String value);
+template.boundValueOps(String key).set(String value , time, TimeUnit.SECONDS);
+
+// or we can
+BoundValueOperations key = template.boundValueOps(String key);
+// use instance of BoundValueOperations instead of redisTemplate
+key.set(String value); 
+
+ValueOperations ops = redisTemplate.opsForValue();
+ops.set(String value); 
+
+
+/***********************************
+  * <p> redisTemplate for key </p> *
+  **********************************/
 
 // Check if exist
 String key = "example";
@@ -874,6 +901,8 @@ Boolean exist = redisTemplate.hasKey(key);
 // set expired time for this key 
 long time = 60;
 redisTemplate.expire(key, time, TimeUnit.SECONDS); // (key , time , unit)
+redisTemplate.boundValueOps(key).epxire(1, TimeUnit.SECONDS);
+
 
 // get expired time for this key
 Long expire = redisTemplate.getExpire(key, TimeUnit.SECONDS);
@@ -883,7 +912,8 @@ redisTemplate.delete(key);
 
 /*************************
   * <p> optForHash </p>
-  */
+  ************************/
+
 // save a hash key value pair
 // via put(key, map_key, map_value) 
 String key = "key_forCache";
@@ -916,9 +946,9 @@ String key = "map_forCache";
 String item = "map_key_1";
 Boolean exist = redisTemplate.opsForHash().hasKey(key, item);
 
-/****************
-  * <p> Set </p>
-  */
+/*************************
+  *     <p> SET </p>     *
+  ************************/
 
 ​// add values in the set whose name is cacheName
 String key = "cacheName";
@@ -938,7 +968,7 @@ Boolean member = redisTemplate.opsForSet().isMember(key, value);
 ```
 
 
-We can create RedisUtil to operate `RedisTemplate`
+We can create `RedisUtil` to operate `RedisTemplate`
 ```java
 /**
  * Custom RedisTemplate Methods 
