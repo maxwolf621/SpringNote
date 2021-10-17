@@ -4,6 +4,8 @@
 [Annotations](https://howtodoinjava.com/spring-boot2/spring-boot-cache-example/)        
 [Annotations and Flow diagram](https://sunitc.dev/2020/08/27/springboot-implement-caffeine-cache/)
 
+[CACHE PROVIDERS](https://www.cnblogs.com/ejiyuan/p/11014765.html)   
+
 [TOC]
 
 
@@ -32,12 +34,14 @@
 
 ## Annotations
 
-`EnableCaching` : Apply the application for caching
+[Good Reference 1](https://morosedog.gitlab.io/springboot-20190411-springboot24/)   
+[Good Reference 2](https://juejin.cn/post/6882196005731696654)    
 
+### Spring Application Annotation 
+
+`@EnableCaching` : Apply the application for caching
 ### Method Annotation
 
-[Ref](https://juejin.cn/post/6882196005731696654)   
-[Ref](https://blog.csdn.net/qq_21508727/article/details/81908258)
 
 ![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7dee92b136f04551b3e0061c3c36c056~tplv-k3u1fbpfcp-watermark.awebp) 
 - different `cacheNames` map to specific Cache Objects

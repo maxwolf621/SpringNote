@@ -63,6 +63,26 @@ spring.redis.pool.min-idle = 0
 spring.redis.timeout = 1000
 ```
 
+For Spring 2.x
+```yml
+spring.cache.cache-names= cacheName1 , cacheName2 , ...
+
+# {redis, generic, simple, ... }
+spring.cache.type= 
+
+# caching null value (default : false)
+spring.cache.redis.cache-null-values=
+
+# caches ttl (default : 60000ms)
+spring.cache.redis.time-to-live=
+
+# Allow using key prefix (default : true)
+spring.cache.redis.use-key-prefix=
+
+# Create key-prefix
+# We can also set key-prefix in RedisCacheConfiguration
+spring.cache.redis.key-prefix=
+```
 
 ## Configuration
 
@@ -73,10 +93,55 @@ Cache(Factory(RedisServer))
 ```
 
 1. Redis Server Configuration
-2. Redis Connection Configuration
+    > dataBase port , hostname , ... etc 
+2. Redis Connection Configuration 
+    > Connection Configuration = RedisServerConfiguration + Factory ( e.g. Lettuce or jedis)
 3. Redis As Cache Configuration
-    > Cache Manager = Connection Factory Configuration + DataBase Server Configuration
+    > Cache Manager = Multiple RedisCacheConfigurations (defaultCacheConfiguration + others) + Connection Factory Configuration
 4. Redis template Configuration
+    > For querying Redis Caches Data via Java 
+
+
+```java
+@Bean
+CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+
+    /**
+      * Cache Names Space Configuration
+      */
+    var userCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                                    .entryTtl(Duration.ofMinutes(30))
+                                    .disableCachingNullValues()
+                                    .prefixKeysWith("user");
+    var productCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                                    .entryTtl(Duration.ofMinutes(10))
+                                    .disableCachingNullValues()
+                                    .prefixKeysWith("product");
+
+    Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = new HashMap<>();
+    redisCacheConfigurationMap.put("user", userCacheConfiguration);
+    redisCacheConfigurationMap.put("product", productCacheConfiguration);
+
+    // RedisCacheWriter
+    RedisCacheWriter redisCacheWriter = RedisCacheWriter.nonLockingRedisCacheWriter(connectionFactory);
+    
+    
+    //ClassLoader loader = this.getClass().getClassLoader();
+    //JdkSerializationRedisSerializer jdkSerializer = new JdkSerializationRedisSerializer(loader);
+    //RedisSerializationContext.SerializationPair<Object> pair = RedisSerializationContext.SerializationPair.fromSerializer(jdkSerializer);
+    //RedisCacheConfiguration defaultCacheConfig=RedisCacheConfiguration.defaultCacheConfig().serializeValuesWith(pair);
+    
+    
+    var defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig();
+
+    defaultCacheConfig.entryTtl(Duration.ofSeconds(30));
+    
+    var cacheManager = new RedisCacheManager(redisCacheWriter, defaultCacheConfig, redisCacheConfigurationMap);
+    return cacheManager;
+```
+
+- `@cacheable( .... , unless = "#result==null") ` : Pass the value to `CacheManger`
+- `RedisCacheConfiguration.disableCachingNullValues()` : Called before storing
 
 
 ### 1. Redis Server Configuration behavior (`RedisCacheConfiguration`)
@@ -289,7 +354,7 @@ They are implementation of `RedisSerializer<T>`
 - XML     
 
 [Other built-in Serializer](https://stackoverflow.com/questions/31608394/get-set-value-from-redis-using-redistemplate)   
-[Representation for each serializer](https://blog.csdn.net/weixin_44167627/article/details/108516013)   
+[Representation for Each serializer](https://blog.csdn.net/weixin_44167627/article/details/108516013)   
 
 ```java
 @Configuration
@@ -421,7 +486,7 @@ public class RedisConfig {
 }
 ```
 - [`ObjectMapper`](https://www.baeldung.com/jackson-object-mapper-tutorial)
-
+- [`Redis Via ObjectMapper Code Example`](https://www.jianshu.com/p/5b7296445a0e)
 
 [Configuration Example with `CachingConfigurerSupport`](https://www.tpisoftware.com/tpu/articleDetails/1525)   
 ```java
@@ -838,6 +903,137 @@ public class UserService{
 }
 
 ```
+
+## [Multiple Templates Configuration](https://zhuanlan.zhihu.com/p/254638881)
+
+```java
+
+import xxx.yyy.RedisProperties;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.data.redis.connection.RedisPassword;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericToStringSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import redis.clients.jedis.JedisPoolConfig;
+
+
+@Configuration
+@EnableCaching
+public class RedisConfig extends CachingConfigurerSupport {
+
+    @Autowired
+    private RedisProperties redisProperties;
+
+    @Bean
+    public JedisConnectionFactory jedisConnectionFactory() {
+        
+        // .. connection configuration ...
+
+        return jedisConnectionFactory;
+    }
+
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
+    }
+
+    @Bean
+    RedisTemplate<Object, Object> redisTemplate() {
+        RedisTemplate<Object, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(jedisConnectionFactory());
+        return redisTemplate;
+    }
+
+    @Bean
+    RedisTemplate<String, String> strRedisTemplate() {
+        final RedisTemplate<String, String> template = new RedisTemplate<>();
+        template.setConnectionFactory(jedisConnectionFactory());
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericToStringSerializer<>(String.class));
+        template.setValueSerializer(new GenericToStringSerializer<>(String.class));
+        return template;
+    }
+
+    @Bean
+    RedisTemplate<String, Long> longRedisTemplate() {
+        final RedisTemplate<String, Long> template = new RedisTemplate<>();
+        template.setConnectionFactory(jedisConnectionFactory());
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericToStringSerializer<>(Long.class));
+        template.setValueSerializer(new GenericToStringSerializer<>(Long.class));
+        return template;
+    }
+
+    @Bean
+    RedisTemplate<String, Boolean> booleanRedisTemplate() {
+        final RedisTemplate<String, Boolean> template = new RedisTemplate<>();
+        template.setConnectionFactory(jedisConnectionFactory());
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericToStringSerializer<>(Boolean.class));
+        template.setValueSerializer(new GenericToStringSerializer<>(Boolean.class));
+        return template;
+    }
+}
+
+@RestController
+public class RedisController {
+
+    @Autowired
+    private RedisTemplate<String, String> strRedisTemplate;
+    @Autowired
+    private RedisTemplate<String, Long> longRedisTemplate;
+    @Autowired
+    private RedisTemplate<String, Boolean> booleanRedisTemplate;
+
+    @RequestMapping(value = "/get/redis", method = RequestMethod.GET)
+    public Map xmlAnalysis() {
+
+        String strRedisKey = "zh:boot:String";
+        String longRedisKey = "zh:boot:long";
+        String booleanRedisKey = "zh:boot:bollean";
+
+
+        String strRedisValue = strRedisTemplate.opsForValue().get(strRedisKey);
+        if (StringUtils.isNullOrEmpty(strRedisValue)) {
+            strRedisTemplate.opsForValue().set(strRedisKey, "JOHNMAYER");
+        }
+
+        Long longRedisValue = longRedisTemplate.opsForValue().get(longRedisKey);
+        if (ObjectUtils.isEmpty(longRedisValue)) {
+            longRedisTemplate.opsForValue().set(longRedisKey, 1L);
+        }
+
+        Boolean booleanRedisValue = booleanRedisTemplate.opsForValue().get(booleanRedisKey);
+        if (ObjectUtils.isEmpty(booleanRedisValue)) {
+            booleanRedisTemplate.opsForValue().set(booleanRedisKey, true);
+        }
+
+        strRedisValue = strRedisTemplate.opsForValue().get(strRedisKey);
+        longRedisValue = longRedisTemplate.opsForValue().get(longRedisKey);
+        booleanRedisValue = booleanRedisTemplate.opsForValue().get(booleanRedisKey);
+
+        
+        Map result = new HashMap();
+        result.put(strRedisKey, strRedisValue);
+        result.put(longRedisKey, longRedisValue);
+        result.put(booleanRedisKey, booleanRedisValue);
+
+        return result;
+    }
+
+}
+```
+
 ## Tips
 
 - Define `TTLs` : Time-to-live (TTL), is the time span after which your Cache will be deleting an entry. If you want to fetch data only once a minute, just guard it with a` @Cacheable` Annotation and set the TTL to `1` minute.
@@ -861,6 +1057,7 @@ public class UserService{
 
 
 ![圖 1](../images/4d977474d0350aed41916aba72c9ab7a94e16df3c7d5278667a438e9a8279cfc.png)  
+- [Methods](https://blog.csdn.net/lydms/article/details/105224210)
 
 
 [Code Example :: redisTemplate Methods](https://zhuanlan.zhihu.com/p/139528556)   

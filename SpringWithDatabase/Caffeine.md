@@ -1,13 +1,15 @@
 # Caffeine
 
 
+
 There are two methods to use Caffeine 
 1. Via Caffeine class methods
 2. Via Spring Cache (e.g. `@Cacheable(...)`)
 
 
-[Code Example](http://www.mydlq.club/article/56/)
-[guava Cache Classes](https://skyao.gitbooks.io/learning-guava/content/cache/code/interface_Cache.html)
+[Code Example](http://www.mydlq.club/article/56/)   
+[guava Cache Classes](https://skyao.gitbooks.io/learning-guava/content/cache/code/interface_Cache.html)   
+[Manually Cache Configuration](https://programmer.help/blogs/sprboot-spring-cache-implements-two-level-caching-redis-caffeine.html)   
 ## Configuration for Caffeine via JAVA
 
 [CaffeineManager](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/cache/caffeine/CaffeineCacheManager.html)   
