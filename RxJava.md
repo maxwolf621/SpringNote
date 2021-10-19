@@ -3,7 +3,6 @@
 [Note](https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux)
 
 
-
 The reactive-stack web framework, Spring WebFlux, was added later in version 5.0  
 - It is fully non-blocking, supports Reactive Streams back pressure, and runs on such servers as Netty, Undertow, and Servlet 3.1+ containers.
 
@@ -120,7 +119,10 @@ It provides means to compose asynchronous logic through the Reactive Streams API
 As a result, the reactive approach can process more logic while using fewer threads and system resources, compared to the synchronous/blocking method.
 
 
+[WebClient](https://zhuanlan.zhihu.com/p/394438006)    
+**[Sending HTTP requests with Spring WebClient](https://reflectoring.io/spring-webclient/)**   
 
 [Spring WebFlux](https://iter01.com/576659.html)   
 [Spring RestFul WebFlux](https://dassum.medium.com/building-a-reactive-restful-web-service-using-spring-boot-and-postgres-c8e157dbc81d)   
+[Spring WebFlux 2](https://www.section.io/engineering-education/spring-webflux/)
 
