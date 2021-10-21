@@ -8,6 +8,20 @@ The reactive-stack web framework, Spring WebFlux, was added later in version 5.0
 
 The original web framework included in the Spring Framework, **Spring Web MVC, was purpose-built for the Servlet API and Servlet containers.**
 
+## Spring MVC 
+
+**Spring MVC是透過thread-per-request model，也就是一個request會對應一條thread**，但是request很有可會會因為call 其他服務的api、讀取或寫入DB等等的事情導致thread等待，也就是所謂的blocking。
+
+在傳統的javascript網頁開發沒有非同步的概念，讀取資料時整個畫面會loading無法控制，造成使用者體驗很差，效率相對不好。
+
+為減少thread等待時間，Spring MCX利用Event Loop，專門處理thread，當request進來把要處理的task放入queue中，就釋放request對應的thread，Event Loop內有worker thread來處理queue的tasks，worker threads會從queue內把task處理完畢後再回傳，藉此省去thread的等待時間，可以更有效的利用CPU，提高處理效能，從javascript來思考，當AJAX出現後，開發者將需要等待的任務交由AJAX完成，透過`callback`來取回結果，避免view處於一直Loading畫面。
+
+![圖 1](images/01d641eff91b593928bafa2eafbd3402d3c3d260203b378cc647130363427e8f.png)  
+
+## Spring WebFlux
+
+Spring WebFlux，核心是建立於Reactor之上，有別於以往使用Tomcat，改為非阻斷的Netty，Netty改用了Event Loop的方式來處理Request，對應的DB也需要有支援 Reactive，呼應到之前所說，進入到Reactive的世界後，所有相關的都需要改為Reactive。
+
 ## (Applicability) Spring MVC or WebFlux?
 
 1. If you have a Spring MVC application that works fine, there is no need to change.   
@@ -82,47 +96,4 @@ public void whenRequestingChunks10_thenMessagesAreReceived() {
       .expectNext(41, 42, 43, 44, 45, 46, 47 , 48, 49 ,50)
       .verifyComplete();
 ```
-
-
-[RxJava Blocking and Non Blocking](https://www.baeldung.com/spring-webclient-resttemplate)
-
-## `RestTemplate` Blocking Client
-
-[Example](https://www.tpisoftware.com/tpu/articleDetails/2383)  
-
-Under the hood, `RestTemplate` uses the Java Servlet API, which is based on the thread-per-request model.
-
-
-Once the requests are getting bigger , their waiting for the results will pile up.  
-Consequently, the application will create many threads, which will exhaust the thread pool or occupy all the available memory. We can also experience performance degradation because of the frequent CPU context (thread) switching.
-
-- Each thread will block until the web client receives the response.    
-- Each thread consuming some amount of memory and CPU cycles.
-
-
-## `WebClient` Non-Blocking Client
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-webflux</artifactId>
-</dependency>
-```
-
-On the other side, `WebClient` uses an asynchronous, non-blocking solution provided by the Spring Reactive framework.
-
-While `RestTemplate` uses the caller thread for each event (HTTP call), `WebClient` will create something like a **task** for each event.   
-Behind the scenes, the Reactive framework will **queue** those **tasks** and execute them only when the appropriate **response** is available.
-
-> The Reactive framework uses an **event-driven (tasks)** architecture.  
-
-It provides means to compose asynchronous logic through the Reactive Streams API.   
-As a result, the reactive approach can process more logic while using fewer threads and system resources, compared to the synchronous/blocking method.
-
-
-[WebClient](https://zhuanlan.zhihu.com/p/394438006)    
-**[Sending HTTP requests with Spring WebClient](https://reflectoring.io/spring-webclient/)**   
-
-[Spring WebFlux](https://iter01.com/576659.html)   
-[Spring RestFul WebFlux](https://dassum.medium.com/building-a-reactive-restful-web-service-using-spring-boot-and-postgres-c8e157dbc81d)   
-[Spring WebFlux 2](https://www.section.io/engineering-education/spring-webflux/)
 
