@@ -112,24 +112,16 @@ Mono<Person> response = client.post()
 ```
 
 Which classes can be converted depends on the HttpMessageReaders that are available. By default, the supported formats include:
-
 - Conversion of any response to `String`, `byte[]`, `ByteBuffer`, `DataBuffer` or `Resource`
 - Conversion of `application/x-www-form-urlencoded` responses into `MultiValueMap<String,String>>`
 - Conversion of `multipart/form-data` responses into `MultiValueMap<String, Part>`
-
-- Deserialization of JSON data using Jackson, if available
-- Deserialization of XML data using Jackson’s XML extension or JAXB, if available
-
-This can also use the standard HttpMessageConverter configuration registered in your Spring application, so message converters can be shared between your WebMVC or WebFlux server code and your WebClient instances. If you’re using Spring Boot, you can use the pre-configured WebClient.Builder instance to get this set up automatically.
-
-For more details, take a look at the Spring WebFlux codecs documentation.
-
+- Deserialization of `JSON` data using `Jackson`, if available
+- Deserialization of `XML` data using `Jackson`'s `XML` extension or `JAXB`, if available
 
 ## Manually Handling Response Statuses
 By default `.retrieve()` will check for error statuses for you. That’s fine for simple cases, 
 
 To add more detail information for specific status by using `.onStatus(status -> .. , res -> ...)`
-
 
 For Example :: 
 ```java
@@ -189,9 +181,10 @@ private Mono<User> getUserById(@PathVariable String id) {
 
 It provides an interface extremely similar to WebClient, but designed for convenient testing of server endpoints.
 
-We can set this up either by creating a WebTestClient that’s bound to a server and sending real requests over HTTP, or one that’s bound to a single Controller, RouterFunction or WebHandler, to run integration tests using mock request & response objects.
+We can set this up either by creating a `WebTestClient` that’s bound to a server and sending real requests over HTTP, or one that’s bound to a single `Controller`, `RouterFunction` or `WebHandler`, to run integration tests using mock request & response objects.
 
-That looks like this:
+
+Build `WebHandler`
 ```java
 // Connect to a real server over HTTP:
 WebTestClient client = WebTestClient
@@ -213,13 +206,36 @@ client.get()
     .expectStatus().isNotFound(); // Assert that this is a 404 response
 ```
 
+Build `RouterFunction`
+```java
+@Test
+public void givenEmployeeId_whenGetEmployeeById_thenCorrectEmployee() {
+    
+
+    WebTestClient client = WebTestClient
+      .bindToRouterFunction(config.getEmployeeByIdRoute())
+      .build();
+
+    Employee employee = new Employee("1", "Employee 1");
+
+    given(employeeRepository.findEmployeeById("1")).willReturn(Mono.just(employee));
+
+    client.get()
+      .uri("/employees/1")
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody(Employee.class)
+      .isEqualTo(employee);
+}
+```
 ## Service Layer in WebClient
 
-Spring WebClient uses Handler & Router instead of Spring MVC's controller
+Spring WebClient uses Handler instead of Spring Service Layer
 
 Get Data from database
 ```java
-// Spring MVC controller
+// Spring MVC Service
 @GetMapping 
 public Flux<Greeting> allPeople() { 
 	return this.repository.allGreeting(); 
@@ -280,7 +296,7 @@ public Mono<ServerResponse> getGreeting(ServerRequest request) {
 
 ## Controller layer In Spring webClient
 
-Spring webClient uses `router` instead of annotations to handle http
+Spring webClient uses `router` instead of controller layer
 
 - [example](https://www.amitph.com/spring-webflux-with-router-functions/)
 - [example2](https://www.baeldung.com/spring-5-functional-web)
@@ -317,8 +333,7 @@ RouterFunction<ServerResponse> updateEmployeeRoute() {
 ```
 
 
-combine multiple routes 
-
+Combine multiple routes 
 ```java
 @Bean
 RouterFunction<ServerResponse> composedRoutes() {
@@ -335,5 +350,23 @@ RouterFunction<ServerResponse> composedRoutes() {
       req -> req.body(toMono(Employee.class))
         .doOnNext(employeeRepository()::updateEmployee)
         .then(ok().build())));
+}
+```
+
+Spring controller's functional equivalent
+```java
+@RestController
+public class ProductController {
+
+    @RequestMapping("/product")
+    public List<Product> productListing() {
+        return ps.findAll();
+    }
+}
+
+@Bean
+public RouterFunction<ServerResponse> productListing(ProductService ps) {
+    return route().GET("/product", req -> ok().body(ps.findAll()))
+      .build();
 }
 ```
