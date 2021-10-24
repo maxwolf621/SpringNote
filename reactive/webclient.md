@@ -229,7 +229,7 @@ public void givenEmployeeId_whenGetEmployeeById_thenCorrectEmployee() {
       .isEqualTo(employee);
 }
 ```
-## Service Layer in WebClient
+## Handler as (Service + Controller) in WebClient
 
 Spring WebClient uses Handler instead of Spring Service Layer
 
@@ -244,39 +244,41 @@ public Flux<Greeting> allPeople() {
 // Spring webClient Handler
 public Mono<ServerResponse> allGreeting(ServerRequest request) { 
     Flux<Greeting> greetingFlux = this.repository.allGreeting(); 
-    return ServerResponse.ok().contentType(APPLICATION_JSON).body(greetingFlux, Greeting.class);
+    return ServerResponse.ok().contentType(APPLICATION_JSON)
+                              .body(greetingFlux, Greeting.class);
 }
 ```
-- `ServerResponse` 類似`ResponseEntity`，含有status、header、body，提供了更多方法更加的Functional。
-- `ServerRequest` 在原有的Spring MVC當中並沒有這樣的角色，
 
 
 Insert the Data to Database
 ```java
+// Spring MVC Service
 @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE) 
 public Mono<Void> saveGreeting(@RequestBody Mono<Greeting> greetingMono) { 
 	return this.repository.saveGreeting(greetingMono); 
 } 
 
+//Spring webClient Handler
 public Mono<ServerResponse> saveGreeting(ServerRequest request) { 
   Mono<Greeting> greetingMono = request.bodyToMono(Greeting.class); 
   return ServerResponse.ok().build(this.repository.saveGreeting(greetingMono)); 
 }
 ```
-- `bodyToMono` : Convert RequestBody to Class Object
+- `bodyToMono` : Convert Request Body to Class Object
 
 ```java
 /**
   * Spring MVC Controller
   */
-@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE) 
-public Mono<Void> saveGreeting(@RequestBody Mono<Greeting> greetingMono) { 
-	return this.repository.saveGreeting(greetingMono); 
+@GetMapping("/{id}") 
+public Mono<Greeting> getGreeting(@PathVariable int id) { 
+	return this.repository.getGreeting(id); 
 } 
 
 /**
-  * Spring webClient
+  * Spring webClient Handler  
   */
+
 public Mono<ServerResponse> getGreeting(ServerRequest request) { 
     int id = Integer.parseInt(request.pathVariable("id")); 
     Mono<Greeting> greetingMono = this.repository.getGreeting(id);

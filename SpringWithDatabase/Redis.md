@@ -561,7 +561,8 @@ public class RedisConfig extends CachingConfigurerSupport {
 [Code Reference 1](https://www.bswen.com/2021/03/springboot-how-to-connect-multiple-redis-server.html)    
 **[Code Reference 2](https://www.liujiajia.me/2021/5/25/spring-boot-multi-redis)**
 [Code Reference 3 ](https://hsiehjenhsuan.medium.com/spring-boot-%E4%BD%BF%E7%94%A8-lettuce-%E8%A8%AD%E5%AE%9A%E5%A4%9A%E5%80%8B-redis-%E9%80%A3%E7%B7%9A-55307dc6a480)   
-[Code Reference 4](https://programmer.help/blogs/spring-boot-configures-multiple-instances-of-redis-data-source-operation.html)
+[Code Reference 4](https://programmer.help/blogs/spring-boot-configures-multiple-instances-of-redis-data-source-operation.html)  
+**[Code Reference 5](https://github.com/idreamshen/spring-boot-with-multi-redis/blob/master/src/main/java/com/idreamshen/demo/redis/config/RedisCacheConfiguration.java)**
 ### Application Properties or YML
 
 ```yml
@@ -1730,4 +1731,5 @@ Redis transactions are batch-oriented. Commands issued during an ongoing transac
 Spring Data Redis distinguishes between read-only and write commands in an ongoing transaction.  
 - Read-only commands, such as `KEYS`, are **PIPED** to a fresh (non-thread-bound) `RedisConnection` to allow reads. 
 - Write commands are **QUEUED** by `RedisTemplate` and applied upon commit.
+
 

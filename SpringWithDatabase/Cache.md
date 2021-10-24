@@ -229,6 +229,8 @@ Override these methods to configure our custom cache configuration
 
 To customize `ErrorHandling` 
 
+**[Examples](https://github.com/justauth/justauth-spring-boot-security-starter/blob/master/src/main/java/top/dcenter/ums/security/core/oauth/config/RedisCacheAutoConfiguration.java)**
+
 ```java
 import lombok.extern.slf4j.Slf4j;
 
