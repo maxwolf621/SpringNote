@@ -56,15 +56,16 @@ There are a few different ways to unwrap an asynchronous value.
 
 The simplest traditional option is by blocking to wait for the data to arrive
 ```java
-String responseBody = responseSpec.bodyToMono(String.class).block();
+String responseBody = responseSpec.bodyToMono(String.class)
+//.block();
 ```
-- This gives us a string containing the raw body of the response. 
+- This gives us a string containing the **raw** body of the response. 
 
 - Note that we’re not checking the status here ourselves. When we use `.retrieve()`, the client automatically checks the status code for us, providing a sensible default by throwing an error for any 4xx or 5xx responses. 
 
 ## Send a http request
 
-1. WebClient allows us to configure headers by either using dedicated methods for common cases `.contentType(type)` or generic keys and values `.header(key, value)`.
+1. `WebClient` allows us to configure headers by either using dedicated methods for common cases `.contentType(type)` or generic keys and values `.header(key, value)`.
 
 2. `.body()` with a BodyInserter, which will build body content for us from form values, multipart values, data buffers, or other encodeable types.
 
@@ -264,7 +265,8 @@ public Mono<ServerResponse> saveGreeting(ServerRequest request) {
   return ServerResponse.ok().build(this.repository.saveGreeting(greetingMono)); 
 }
 ```
-- `bodyToMono` : Convert Request Body to Class Object
+- `bodyToMono` : Convert Request Body to Class tory
+```javaObject
 
 ```java
 /**
@@ -323,8 +325,7 @@ RouterFunction<ServerResponse> getAllEmployeesRoute() {
 
 ```
 
-using router to update/save data to repository
-```java
+using router to update/save data to reposi
 @Bean
 RouterFunction<ServerResponse> updateEmployeeRoute() {
   return route(POST("/employees/update"), 
