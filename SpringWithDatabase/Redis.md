@@ -6,16 +6,19 @@
 ---
 ## References
 
-[Code Example Ref](https://www.mindbowser.com/spring-boot-with-redis-cache-using-annotation/)     
-[Code Example Ref 2](https://www.netsurfingzone.com/spring-boot/spring-boot-redis-cache-example/)     
-[Code Example Ref 3](https://kumarshivam-66534.medium.com/implementation-of-spring-boot-data-redis-for-caching-in-my-application-218d02c31191)       
-[Code Example Ref 4](https://medium.com/brucehsu-backend-dev/%E5%88%A9%E7%94%A8spring-cache%E5%84%AA%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8caches-5aad2630eb0a)  
-[Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)    
-[Install wsl window 10 and redis](https://redis.com/blog/redis-on-windows-10/)   
-[Disable wsl window 10](https://www.windowscentral.com/install-windows-subsystem-linux-windows-10)   
-[MatthewFTech spring-boot-cache-with-redis](https://medium.com/@MatthewFTech/spring-boot-cache-with-redis-56026f7da83a)   
-**[Difference btw Lettuce and Jedis](https://github.com/spring-projects/spring-session/issues/789)**
+[Spring Boot With Redis Cache Using Annotation](https://www.mindbowser.com/spring-boot-with-redis-cache-using-annotation/)     
+[Spring Boot Redis Cache Example](https://www.netsurfingzone.com/spring-boot/spring-boot-redis-cache-example/)   
+[Spring-Boot Data Redis for caching](https://kumarshivam-66534.medium.com/implementation-of-spring-boot-data-redis-for-caching-in-my-application-218d02c31191)       
+[善用Spring Cache優雅的管理 Caches](https://medium.com/brucehsu-backend-dev/%E5%88%A9%E7%94%A8spring-cache%E5%84%AA%E9%9B%85%E7%9A%84%E4%BD%BF%E7%94%A8caches-5aad2630eb0a)
 
+[Spring Boot Cache with Redis](https://www.baeldung.com/spring-boot-redis-cache)    
+- [Install wsl window 10](https://redis.com/blog/redis-on-windows-10/)   
+- [Disable wsl window 10](https://www.windowscentral.com/install-windows-subsystem-linux-windows-10)   
+
+[`@MatthewFTech` how redis works as cache](https://medium.com/@MatthewFTech/spring-boot-cache-with-redis-56026f7da83a)   
+
+[Connection Factory Configuration](https://blog.csdn.net/qq_36781505/article/details/86612988)
+- **[Difference btw Lettuce and Jedis](https://github.com/spring-projects/spring-session/issues/789)**
 
 ---
 
@@ -95,11 +98,11 @@ Cache(Factory(RedisServer))
 1. Redis Server Configuration
     > dataBase port , hostname , ... etc 
 2. Redis Connection Configuration 
-    > Connection Configuration = RedisServerConfiguration + Factory ( e.g. Lettuce or jedis)
-3. Redis As Cache Configuration
+    > Connection Configuration = RedisServerConfiguration + Factory ( e.g. `Lettuce` or `jedis`)
+3. Redis As Cache Configuration (CacheManager Configuration)
     > Cache Manager = Multiple RedisCacheConfigurations (defaultCacheConfiguration + others) + Connection Factory Configuration
-4. Redis template Configuration
-    > For querying Redis Caches Data via Java 
+4. Redistemplate Configuration
+    > For querying Data from Redis backend via Java 
 
 
 ```java
@@ -146,9 +149,8 @@ CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
 
 ### 1. Redis Server Configuration behavior (`RedisCacheConfiguration`)
 
-Configuration for Redis Database Cache (MOST USED)
-[`RedisStandaloneConfiguration`](https://docs.spring.io/spring-data/redis/docs/2.3.0.RELEASE/api/index.html?org/springframework/data/redis/connection/RedisStandaloneConfiguration.html) 
-- **this class used for setting up `RedisConnection` via `RedisConnectionFactory` using connecting to a single node Redis DataBase Cache installation.**
+[Class `RedisStandaloneConfiguration`](https://docs.spring.io/spring-data/redis/docs/2.3.0.RELEASE/api/index.html?org/springframework/data/redis/connection/RedisStandaloneConfiguration.html) 
+- **This class used for setting up `RedisConnection` via `RedisConnectionFactory` using connecting to a single node Redis DataBase Cache installation.**
 #### Prefix for `Key`
 
 By default, **any key for a cache entry gets prefixed** with the actual cache name followed by two colons. This behavior can be changed to a `static` as well as a computed prefix.
@@ -170,21 +172,18 @@ RedisCacheConfiguration.defaultCacheConfig().computePrefixWith(cacheName -> "¯\
 - It's something similar to `JdbcTemplate` to connect with `MySql` Server.
 
 
-
 ##### Redis connectors
 
 Two features are supported 
-1. Lettuce
-2. Jedis
-    > Both are the implementation of `RedisConnectionFactory`
+- Both are the implementation of `RedisConnectionFactory`
+    1. Lettuce
+    2. Jedis
 
 ![圖 1](../images/48ad96b9e05ef9e74407470776155856a51d9be18f826376b626a55c06d1afad.png)  
+- The easiest way to work with a `RedisConnectionFactory` is to configure the appropriate connector through the IoC container (`@Configuration` , `＠bean`) and inject it (`@Autrowried`) into the using class.
 
 
-The easiest way to work with a `RedisConnectionFactory` is to configure the appropriate connector through the IoC container (`@Configuration` , `＠bean`) and inject it (`@Autrowried`) into the using class.
-
-
-Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package
+Spring Redis provides an implementation for the Spring cache abstraction through the `org.springframework.data.redis.cache` package, for example :: 
 ```java 
 @Bean
 public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -193,7 +192,6 @@ public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) 
 ```
 
 #### Lettuce Connector
-
 
 ```xml
 <dependency>
@@ -206,7 +204,7 @@ public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) 
 </dependency>
 ```
 
-A object of Connector 
+An object of Connector 
 ```java
 @Bean
   public LettuceConnectionFactory redisConnectionFactory() {
@@ -214,8 +212,9 @@ A object of Connector
     return new LettuceConnectionFactory(new RedisStandaloneConfiguration("server", 6379));
   }
 ```
-- To tweak settings such as the host or password via `RedisStandaloneConfiguration`
-- By default, all LettuceConnection instances created by the `LettuceConnectionFactory` share the same thread-safe native connection for all non-blocking and non-transactional operations
+- Via `RedisStandaloneConfiguration` To tweak settings such as the host or password for Connection Configuration  
+
+- By default, all LettuceConnection instances created by the `LettuceConnectionFactory` share the **same thread-safe native connection for all non-blocking and non-transactional operations**
 
 ![圖 1](../images/8ff0ee9dcf7f46be16192c6dc1682e29ade5d6504b0aafc8bb9c75438427eb59.png)  
 
@@ -254,7 +253,6 @@ public JedisConnectionFactory redisConnectionFactory() {
 }
 ```
 
-To tweak settings via `RedisStandaloneConfiguration`
 ```java
 @Configuration
 class RedisConfiguration {
@@ -305,6 +303,7 @@ public class CacheConfig {
       */
     @Bean
     public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
+        
         var redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
                                                              .entryTtl(Duration.ofMinutes(30));
         
@@ -1059,11 +1058,11 @@ public class RedisController {
 
 ![圖 1](../images/4d977474d0350aed41916aba72c9ab7a94e16df3c7d5278667a438e9a8279cfc.png)  
 
-[Code Example](https://blog.csdn.net/qq_36781505/article/details/86612988)
 [Code Example :: Methods](https://blog.csdn.net/lydms/article/details/105224210)
 [Code Example :: redisTemplate Methods](https://zhuanlan.zhihu.com/p/139528556)   
 [Code Example :: Custom redisTemplate Utils](https://zhuanlan.zhihu.com/p/336033293)    
-
+[Code Example :: `opsForHash()` and `opsForList()`](https://medium.com/@hulunhao/how-to-use-redis-template-in-java-spring-boot-647a7eb8f8cc)   
+**[Code Example :: redis Utils](https://github.com/MiracleTanC/springboot-redis-demo)**   
 
 #### operations 
 

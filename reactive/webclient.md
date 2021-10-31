@@ -304,8 +304,10 @@ Spring webClient uses `router` instead of controller layer
 
 - [example](https://www.amitph.com/spring-webflux-with-router-functions/)
 - [example2](https://www.baeldung.com/spring-5-functional-web)
-
-
+- [example3](https://howtodoinjava.com/spring-webflux/spring-webflux-tutorial/)
+- [example4](https://www.baeldung.com/spring-mvc-functional-controllers)  
+- [example5](https://github.com/hantsy/spring-webmvc-functional-sample)  
+- [example6](https://www.callicoder.com/reactive-rest-apis-spring-webflux-reactive-mongo/)  
 using router to get data from repository
 
 ```java
@@ -325,7 +327,8 @@ RouterFunction<ServerResponse> getAllEmployeesRoute() {
 
 ```
 
-using router to update/save data to reposi
+```java
+using router to update/save data to repository
 @Bean
 RouterFunction<ServerResponse> updateEmployeeRoute() {
   return route(POST("/employees/update"), 
@@ -337,6 +340,7 @@ RouterFunction<ServerResponse> updateEmployeeRoute() {
 
 
 Combine multiple routes 
+
 ```java
 @Bean
 RouterFunction<ServerResponse> composedRoutes() {
