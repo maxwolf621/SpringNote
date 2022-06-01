@@ -37,9 +37,9 @@
 
 - **[HQL](SpringWithDatabase/HQL.md)**
 - **[Database Relationship](SpringWithDatabase/TableRelationship.md)**  
-  > - `@JoinTable` , `@JoinColumn` , `bidirectional`
-  > **[GenerationType](SpringWithDatabase/GenerationType.md)**
-  > **[CascadeType](SpringWithDatabase/CascadeType.md)**   
+  - `@JoinTable` , `@JoinColumn` , `bidirectional`   
+  - **[GenerationType](SpringWithDatabase/GenerationType.md)**
+  - **[CascadeType](SpringWithDatabase/CascadeType.md)**   
 - [OneToOne](SpringWithDatabase/HibernateOneToOne.md)  
 - [OneToMany](SpringWithDatabase/HibernateOneToMany.md)   
 - **[MayToMany](SpringWithDatabase/HibernateManyToMany.md)**   
