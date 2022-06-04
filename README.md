@@ -1,7 +1,6 @@
 # Spring Note
 
 [Spring Boot Tutorial](https://morosedog.gitlab.io/categories/Spring-Boot/)
-
 ## Spring Base
 - [Framework MVC, MVP and MVVM](framework.md)
 - [Annotation](Annotations.md)
@@ -18,8 +17,8 @@
 - [Key Store](SpringBoot/Keystore.md)
 - [Authentication](SpringBoot/Authentication.md)
 - [Authorization](SpringBoot/Authorization.md)
-- [UserDetailsAndWebConfigurer](SpringBoot/UserDetailsAndWebConfigurer.md)
-
+- [WebSecurity](SpringBoot/WebSecurity.md)
+- [UserDetailService](UserdetailsService.md)
 ## Hibernate && JPA
 ### Basic
 - [SessionAndHibernate](SpringWithDatabase/HibernateSession.md)
