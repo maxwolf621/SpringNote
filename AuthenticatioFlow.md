@@ -1,3 +1,11 @@
+# Spring Boot Security 
+
+
+## Classes that are used Flow In SpringBoot
+![image](https://user-images.githubusercontent.com/68631186/172057513-293c3b28-5e98-44ad-b83f-84a8c0b21a47.png)
+
+
+
 ## Authentication flow
 ![](https://i.imgur.com/aLKSado.png)  
 1. Server creates an `UsernamePasswordAuthenticationToken` via Filter from (request containing token) the supplied client/actor request(containing username and password).
