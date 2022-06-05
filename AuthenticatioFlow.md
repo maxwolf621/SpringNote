@@ -2,9 +2,7 @@
 
 
 ## Classes that are used Flow In SpringBoot
-![image](https://user-images.githubusercontent.com/68631186/172057513-293c3b28-5e98-44ad-b83f-84a8c0b21a47.png)
-
-
+![image](https://user-images.githubusercontent.com/68631186/172058530-db89f590-f73d-4daa-be57-a97c9f81ef46.png)
 
 ## Authentication flow
 ![](https://i.imgur.com/aLKSado.png)  
