@@ -1,7 +1,7 @@
 # Authentication
 - [Type of Authentication](https://blog.csdn.net/gdp12315_gu/article/details/79905424)   
 - [Definition of User, Principal, Subject](https://matthung0807.blogspot.com/2018/03/spring-security-principal.html)    
-- [Authentication in HTTP format ](https://blog.csdn.net/kiwi_coder/article/details/28677651)   
+- [HTTP Authentication ](https://blog.csdn.net/kiwi_coder/article/details/28677651)   
 - [Spring Security Authentication Providers](https://www.javadevjournal.com/spring-security/spring-security-authentication-providers/)    
 
 ## Definitions of Authentication and Authorization
@@ -14,10 +14,10 @@ Authorization : give a permission (the things you can do, things you cant do). I
   - **In a security context, a subject is any entity that requests access to an object**.
   - (e.g. when you log onto an application you are the subject and the application is the object)
   - (In reality world) when someone knocks on your door the visitor is the subject requesting access and your home is the object access is requested of.
-- Principal
+- Principal (A User who is authenticated)
   - **A subset of subject that is represented by an account, role or other unique identifier.** It may represent human users, automation, applications, connections, etc...
   - **When we get to the level of implementation details(interface `UserDetails`), principals are the unique keys we use in access control lists.**  
-- User 
+- User (
   - **A subset of principal usually referring to a human operator.**  
   - When you need to make the distinction between the broad class of things that are principals and the subset of these that are interactive operators driving transactions in a non-deterministic fashion, "user" is the right word.  
 
@@ -147,7 +147,6 @@ Spring Security provides a variety of options for performing authentication.
 More custom scenarios will still need to access the full Authentication request to be able to perform the authentication process.   
 For example, when authenticating against some external, third party service (such as Crowd) - both the username and the password from the authentication request will be necessary.  
 To deal with such we [customize Authentication Provider](https://www.baeldung.com/spring-security-authentication-provider)
-
 
 ```java
 public interface AuthenticationProvider {
