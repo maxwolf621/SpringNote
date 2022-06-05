@@ -305,7 +305,8 @@ protected Authentication createSuccessAuthentication(Object principal,
 
 ## Customize AuthenticationProvider 
 
-We can define **custom authentication** by exposing a custom `UserDetailsService` as a bean). 
+We can define **custom authentication** by exposing a custom `UserDetailsService` as a bean.
+
 Customized User Service can load principal based on our data model.  
 - For example
 ```java
