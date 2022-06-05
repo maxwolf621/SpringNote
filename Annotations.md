@@ -83,16 +83,18 @@ public class Computer {
     }
 }
 ```
+## Layers in Spring Framework
 
-## @Component
-- Indicates that an annotated class is a **component**.   
-- Such classes are considered as candidates for **auto-detection** when using annotation-based configuration and class path scanning.
+![](https://i.imgur.com/3cmZ6Ro.png)
+
+
+### @Component
+- Indicates that an annotated class is a **component** considered as candidates for **auto-detection** when using annotation-based configuration and class path scanning.
 - Spring only picks up and *registers* beans with `@Component` and doesn't look for `@Service` and `@Repository` in general.  
 - Components are registered in **ApplicationContext** because they themselves are annotated with `@Component`
     > ![](https://i.imgur.com/ULOm9bX.png)
 
-
-### @ComponentScan
+#### @ComponentScan
 - [`@ComponentScan`](https://www.baeldung.com/spring-component-scanning)
 - `@ComponentScan` annotation along with the `@Configuration` annotation to specify the packages that we want to be scanned.(it scan the class with `@configuration` annotations)
 - Without arguments it tells Spring to scan the current package and all of its sub-packages.
@@ -109,7 +111,7 @@ public class SpringComponentScanApp {
 public class Dog {}
 ```
 
-### [`@Import`](https://www.baeldung.com/spring-import-annotation)
+#### [`@Import`](https://www.baeldung.com/spring-import-annotation)
 - Grouping Configurations instead of controlling dozen of configuration classes within different sources
 ```java
 @Configuration
@@ -121,10 +123,6 @@ class MammalConfiguration {
 ```
 
 
-
-## Layers in Spring Framework
-
-![](https://i.imgur.com/3cmZ6Ro.png)
 
 ### `@Controller`
 To handle URL form client (like query parameters in url　...) and passes service layer to actually does task
@@ -161,16 +159,20 @@ public String getFoosBySimplePathWithPathVariable(
 `@RestController`
 - equals `@ResponseBody` + `@Controller`
 
-## @Service
+### @Service
 - Indicates that an annotated class is at **Service Layer**.
 - **This annotation serves as a specialization of `@Component`**, allowing for implementation classes to be auto-detected through class path scanning.  
 
-## @Repository
+### @Repository
 It Indicates that an annotated class is at **Repository Layer**.
 
 This annotation serves as a specialization of `@Component` and advisable to use with DAO classes.  
 
-## @Autowired (IoC)
+---
+
+## Injection Dpendency Annotations
+
+### @Autowired (IoC)
 
 Spring `@Autowired` annotation is used for automatic injection of **beans** in the container.
 - (No need to `new` an object,只需要在宣告的Object中標註`Autowired`) 
@@ -200,25 +202,19 @@ public class UsePerson{
     }
 }
 ```
-### `@Qualifier`
-- 擁有多個同一類型的Bean時，可以用`@Qualifier("name = xxx ")`来指定
-  - 1. 與`@Autowired`配合使用   
-  - 2. `@Qualifier` specifies more details which bean should be injected 
 
+#### `@Qualifier`
+擁有多個同一類型的Bean時，可以用`@Qualifier("name = xxx ")`来指定   
+`@Qualifier` specifies more details which bean should be injected, 與`@Autowired`配合使用   
+
+### `@Resource(name="name",type="type")`
+與`@Autowired`功能雷同, Default by name
 ---
-
-`@Value`
-- Inject the configurations in `application.properties`
-
-`@Resource(name="name",type="type")`
-  > 與`@Autowired`功能雷同
-  > Default by name
 
 [`@JsonManagedReference` and `@JsonBackReference`](https://stackoverflow.com/questions/31319358/jsonmanagedreference-vs-jsonbackreference)
 
 `@RepositoryRestResourcepublic `
 - 配合spring-boot-starter-data-rest使用
-
 
 [`@MappedSuperClass`](https://www.baeldung.com/hibernate-inheritance#mappedsuperclass) 
 - It is allow Model Class to be inherited
@@ -232,6 +228,19 @@ Each field in ORM set default by `@Base`
 
 `@JsonIgnore`
 - 當Json序列化时將Bean中的一些属性忽略掉,序列化和反序列化都受影響
+
+## Application.properties
+### `@PropertySource`
+- Provides a simple declarative mechanism for adding a property source to Spring’s Environment.  
+- There is a similar annotation for adding an array of property source files   
+    > i.e `@PropertySources`
+
+#### `@Value`
+- Inject the configurations in `application.properties`
+
+## Security Annotations
+`@EnableWebSecurity` is used with `@Configuration` class to have the Spring Security configuration defined
+
 
 ## Hibernate and JPA Annotations
 [Hibernate Inheritance[Baeldung]](https://www.baeldung.com/hibernate-inheritance)
@@ -253,13 +262,3 @@ Attribute in `@Column`
     - The `scale` for a decimal(資料顯示到小數點第幾位) column.
       -  `double` in java maps to `double` in database : precision and scale not allow. but If our field that mapped to database's column is `double` but set up `columnDefinition`'s datatype as `decimal`, then the column which will be mapped define a datatype as `decimal` not `double`   
       - `BigDecimal` in java maps to `decimal` in database
-
-
-### @PropertySource
-- Provides a simple declarative mechanism for adding a property source to Spring’s Environment.  
-- There is a similar annotation for adding an array of property source files   
-    > i.e `@PropertySources`
-## Security Annotations
-`@EnableWebSecurity` is used with `@Configuration` class to have the Spring Security configuration defined
-
-
