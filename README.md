@@ -19,11 +19,13 @@
 - [Authentication](SpringBoot/Authentication.md)
 - [Authorization](SpringBoot/Authorization.md)
 - [WebSecurity](SpringBoot/WebSecurity.md)
+ - [CORS setup](SpringBoot/CORS.md)   
 - [UserDetailService](UserdetailsService.md)
 
 #### Token
-- [CORS](SpringBoot/CORS.md)   
-- [Key Store](SpringBoot/Keystore.md)
+- [KeyStore](SpringBoot/Keystore.md)
+- [Java JWT](SpringBoot/JWT.md)
+- [Jwt Bash Comand](SpringBoot/KeystoreInCommand.sh)
 
 ## Hibernate && JPA
 ### Basic
