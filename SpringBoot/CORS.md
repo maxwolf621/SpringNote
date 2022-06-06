@@ -54,9 +54,7 @@ public class AccountController {
 - [Source Code](https://stackoverflow.com/questions/44697883/can-you-completely-disable-cors-support-in-spring)  
 - [[StackOverflow]How to Configure cors in a spring boot](https://stackoverflow.com/questions/36968963/how-to-configure-cors-in-a-spring-boot-spring-security-application)  
 
-
-Configure HttpSecurity with `.cors().disable()` to disable cors configuration in WebSecurity Configuration
-and we can configure CORS settings via `CorsConfigurationSource`+`WebMvcConfigurer` or `WebMvcConfigurer`
+![image](https://user-images.githubusercontent.com/68631186/172243925-38501fb7-ac9b-419f-8cad-6c0680a8ef5b.png)
 ```java
 @Configuration
 @EnableWebSecurity
@@ -105,7 +103,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 ```
 
-If we configure cors with `CorsConfigurationSource` 
+![image](https://user-images.githubusercontent.com/68631186/172244041-5842b6bb-561e-440f-8450-fd33f5357b63.png)
 ```java
 @Configuration
 public class WebConfiguration implements WebMvcConfigurer {
@@ -208,7 +206,9 @@ public class CORSFilter implements Filter {
 
     // Confiture Cors Filter
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    public void doFilter(ServletRequest servletRequest, 
+                         ServletResponse servletResponse, 
+                         FilterChain filterChain) throws IOException, ServletException {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
