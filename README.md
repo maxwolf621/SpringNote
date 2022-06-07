@@ -11,11 +11,12 @@
 
 ## Spring Boot
 - [Spring Boot Application](SpringBoot/SpringBootApplication.md)
+
 ### Spring boot Security
 
 ![image](https://user-images.githubusercontent.com/68631186/172059135-570bfaa7-cc5b-4e95-ba24-eb8955e6545b.png)
 
-- [Filter](SpringBoot/Filter.md)  
+- [Filter](Filter.md)   
   - [ UsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter](SpringBoot/AuthenticationFilter.md)
 - [Authentication](SpringBoot/Authentication.md)
 - [Authorization](SpringBoot/Authorization.md)
@@ -33,7 +34,6 @@
 - [SessionAndHibernate](SpringWithDatabase/HibernateSession.md)
   > How Session works in Hibernate Framework for communicating with database via a web request as per session...    
   > Factory creates a session, a session we can have transactions to commit to database    
-- [Filter](Filter.md) 
 - [HibernateConfiguration](SpringWithDatabase/HibernateConfiguration.md)   
   > How to configure hibernate for spring framework via java class `Configuration` instead of `xml`
   > What is SessionFactory and Session
