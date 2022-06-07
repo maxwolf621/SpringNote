@@ -1,7 +1,6 @@
 # Reactive Programming in Spring Framework
 
-[Note](https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux)
-
+[docs.spring.io web-reactive](https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux)
 
 The reactive-stack web framework, Spring WebFlux, was added later in version 5.0  
 - It is fully non-blocking, supports Reactive Streams back pressure, and runs on such servers as Netty, Undertow, and Servlet 3.1+ containers.
@@ -16,7 +15,7 @@ The original web framework included in the Spring Framework, **Spring Web MVC, w
 
 為減少thread等待時間，Spring MCX利用Event Loop，專門處理thread，當request進來把要處理的task放入queue中，就釋放request對應的thread，Event Loop內有worker thread來處理queue的tasks，worker threads會從queue內把task處理完畢後再回傳，藉此省去thread的等待時間，可以更有效的利用CPU，提高處理效能，從javascript來思考，當AJAX出現後，開發者將需要等待的任務交由AJAX完成，透過`callback`來取回結果，避免view處於一直Loading畫面。
 
-![圖 1](images/01d641eff91b593928bafa2eafbd3402d3c3d260203b378cc647130363427e8f.png)  
+![圖 1](../images/01d641eff91b593928bafa2eafbd3402d3c3d260203b378cc647130363427e8f.png)  
 
 ## Spring WebFlux
 
@@ -51,7 +50,7 @@ Spring WebFlux，核心是建立於Reactor之上，有別於以往使用Tomcat�
 
 ## BackPressure in WebFlux
 
-![圖 2](images/3f2eeec750f84f227fb0d74ffa9456c6c5d30d36d7424b7bf44cdf9d3d150cfa.png)  
+![圖 2](../images/3f2eeec750f84f227fb0d74ffa9456c6c5d30d36d7424b7bf44cdf9d3d150cfa.png)  
 
 - WebFlux uses TCP flow control to regulate the backpressure in bytes. 
     - But it does not handle the logical elements the consumer can receive. 
