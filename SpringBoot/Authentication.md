@@ -14,18 +14,17 @@ Authorization : give a permission (the things you can do, things you cant do). I
   - **In a security context, a subject is any entity that requests access to an object**.
   - (e.g. when you log onto an application you are the subject and the application is the object)
   - (In reality world) when someone knocks on your door the visitor is the subject requesting access and your home is the object access is requested of.
-- Principal (A User who is authenticated)
-  - **A subset of subject that is represented by an account, role or other unique identifier.** It may represent human users, automation, applications, connections, etc...
+- Principal 
+  - **A subset of subject that is represented by an account, role or other unique identifier.(A User who is authenticated by Server Side)** It may represent human users, automation, applications, connections, etc...
   - **When we get to the level of implementation details(interface `UserDetails`), principals are the unique keys we use in access control lists.**  
 - User (
-  - **A subset of principal usually referring to a human operator.**  
+  - **A subset of principal usually referring to a human operator.(e.g Client who sent the request to Server)**  
   - When you need to make the distinction between the broad class of things that are principals and the subset of these that are interactive operators driving transactions in a non-deterministic fashion, "user" is the right word.  
 
 ## Authentication Architecture 
 ![](https://i.imgur.com/XSbxJTh.png)
 
 ### SecurityContextHolder
-
 SecurityContextHolder creates ThreadLocal to store current Spring Security's Context (containing any related with Spring Security) for Current thread
 
 ### SecurityContext
@@ -54,7 +53,7 @@ public interface Authentication extends Principal, Serializable {
 	Collection<? extends GrantedAuthority> getAuthorities();
 
 	/**
-	 * The credentials that prove the principal is correct. 
+	 * The credentials that prove the principal is correct. (e.g. ID number in reality)
 	 * This is usually a password,
 	 * but could be anything relevant to the <code>AuthenticationManager</code>. 
 	 * Callers are expected to populate the credentials.
@@ -71,7 +70,7 @@ public interface Authentication extends Principal, Serializable {
 	Object getDetails();
 
 	/**
-	 - The identity of the principal being authenticated. 
+	 - The identity of the principal being authenticated. (e.g. Personal ID card in reality)
 	 - In the case of an authentication request with username and password, this would be the username. 
 	 - Callers are expected to populate the principal for an authentication request.
 	 - The <tt>AuthenticationManager</tt> implementation will often return an
@@ -109,6 +108,11 @@ public interface Authentication extends Principal, Serializable {
 }
 ```
 
+#### Principal
+
+- [Methods In Principal](https://docs.oracle.com/javase/6/docs/api/java/security/Principal.html?is-external=true)
+
+
 To get a **Authenticated User** from Spring Security of the Current Thread using `.getPrincipal()`
 ```java
 Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -120,16 +124,41 @@ if (principal instanceof UserDetails) {
 ```
 - `.getContext()` : get Current Security Context  
 - `.getAuthentication()`: get the currently **authenticated principal**, or an authentication **request token**
+- `UserDetails` encapsulated principle object in Spring Security 
+
+#### credentials
+
+Credential（憑證）is used to proved the validity of Principal(e.g. password)  
+To get an Credentials in Java Spring
+```java 
+Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+Object credentials = auth.getCredentials();
+String password = (String) credentials;
+Authentication.getCredentials() //取出的credential是Object型別的物件。
+```
+- 如果是使用Token驗證，通常`credential`會封裝在token內
 
 
-## Authentication Manager and Provider
+### Authentication, AuthenticationManager and AuthenticationProvider
+
 [GoodeReference](https://blog.csdn.net/weixin_42281735/article/details/105289155)
 
-#### Relationship of `AuthenticationManager`, `ProviderManager` and `AuthenticationProviders`  
+Simply put, the `AuthenticationManager` is the main strategy interface for `authentication`.
+```java
+public interface AuthenticationManager {
+	Authentication authenticate(
+		Authentication authentication) 
+		throws AuthenticationException;
+}
+```
+- If the principal of the input authentication is valid and verified, `AuthenticationManager#authenticate` returns an `Authentication` instance with the authenticated flag set to `true`.  
+Otherwise, if the principal is not valid, it will throw an `AuthenticationException`.  
+For the last case, it returns `null` if it can't decide.
 
-![](https://i.imgur.com/e5L19Cv.png)  
+
+![image](https://user-images.githubusercontent.com/68631186/172286675-d376678a-e082-4336-b1f2-e2631ae17ce3.png)
 - Spring Security checks the Authentication of Client's Request using `ProviderManager` that implements `AuthenticationManager`.  
-- `ProviderManager` then delegates* the numbers of `AuthenticationProvider` implementations to do the actual authentication procedure
+- `ProviderManager` then delegates the authentication process to the numbers/list of `AuthenticationProvider` implementations to do the actual authentication procedure
 
 ![](https://i.imgur.com/wddCsgT.png)  
 
