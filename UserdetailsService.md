@@ -14,7 +14,41 @@ For example the relationship btw `UserDetailsService` and `DaoAuthenticationProv
 - [SourceCode Userdetails](https://reurl.cc/NAOgL9)  
 - [Specification](https://reurl.cc/M0WgLL)  
 
-To build up a PRINCIPAL by `UserDetails` implementation
+
+```java
+public interface UserDetails extends Serializable {
+
+	Collection<? extends GrantedAuthority> getAuthorities();
+	String getPassword();
+	String getUsername();
+
+	//An expired account cannot be authenticated.
+	boolean isAccountNonExpired();
+
+	/**
+	 * A locked user cannot be authenticated.
+	 */
+	boolean isAccountNonLocked();
+
+	/**
+	 * Indicates whether the user's credentials 
+     	 * (password) has expired. 
+         * Expired credentials prevent authentication.
+	 */
+	boolean isCredentialsNonExpired();
+
+	/**
+	 * disabled user cannot be authenticated.
+	 */
+	boolean isEnabled();
+
+}
+```
+- Interface `UserDetails` will be used by interface `UserDetailsService` (Read-Only)  
+
+
+We can have implementation of `UserDetails` to have more advanced operations for authentication 
+for example Build up a PRINCIPAL by `UserDetails` implementation
 ```java
 public class UserPrincipal implements UserDetails {
     // Login User (password, name, ... etc ) 
@@ -62,6 +96,20 @@ public User(String username,
 - `authorities` the authorities that should be granted to the caller if they presented the correct username and password and the user is enabled. Not `null`.
 
 ## UserDetailsService
+
+```java
+public interface UserDetailsService {
+
+	/**
+	 * @param username the username identifying the user whose data is required.
+	 * @return a fully populated user record (never <code>null</code>)
+	 * @throws UsernameNotFoundException if the user could not be found or the user has no
+	 * GrantedAuthority
+	 */
+	UserDetails loadUserByUsername(String username) throws UsernameNotFoundException;
+
+}
+```
 
 A `UserDetailsService` implementation returns a `UserDetails` type object containing the needed `GrantedAuthorities` in Spring Security.
 
