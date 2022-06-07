@@ -196,7 +196,7 @@ Alternatively, we can also just expose one of a `UserDetailsService`, `Authentic
 public class MySecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.inMemoryAuthentication()
           .withUser("user").password("password").roles("USER").and()
           .withUser("admin").password("password").roles("USER", "ADMIN");
